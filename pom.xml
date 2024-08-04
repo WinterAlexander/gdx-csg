@@ -6,6 +6,13 @@
     <version>0.0.0</version>
     <packaging>jar</packaging>
 
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>com.badlogicgames.gdx</groupId>
@@ -13,10 +20,31 @@
             <version>1.12.1</version>
         </dependency>
         <dependency>
+            <groupId>com.github.WinterAlexander</groupId>
+            <artifactId>gdx-utils</artifactId>
+            <version>6.14.0</version>
+        </dependency>
+        <!-- Test dependencies -->
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.13.1</version>
+            <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.badlogicgames.gdx</groupId>
+            <artifactId>gdx-backend-lwjgl</artifactId>
+            <version>1.12.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.badlogicgames.gdx</groupId>
+            <artifactId>gdx-platform</artifactId>
+            <version>1.12.1</version>
+            <classifier>natives-desktop</classifier>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
