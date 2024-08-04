@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.glutils.IndexData;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.VertexData;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Queue;
 
@@ -33,6 +34,12 @@ public class Face {
 
 	public Color color = Color.WHITE;
 
+	private final Vector3 tmpPos1 = new Vector3(),
+			tmpPos2 = new Vector3(),
+			tmpPos3 = new Vector3();
+
+	private final Vector3 tmpNormal = new Vector3();
+
 	public Face(Mesh mesh, int triangleIndex) {
 		ensureNotNull(mesh, "mesh");
 		this.mesh = mesh;
@@ -50,9 +57,42 @@ public class Face {
 		});
 	}
 
-	private final Vector3 tmpPos1 = new Vector3(),
-			tmpPos2 = new Vector3(),
-			tmpPos3 = new Vector3();
+	public Vector3 getNormal() {
+		Vector3 p1 = getPosition1();
+		Vector3 p2 = getPosition2();
+		Vector3 p3 = getPosition3();
+
+		tmpNormal.set(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
+		tmpNormal.crs(p3.x-p1.x, p3.y-p1.y, p3.z-p1.z);
+		tmpNormal.nor();
+
+		return tmpNormal;
+	}
+
+	public float signedDistanceFromPlane(Vector3 point) {
+		Vector3 normal = getNormal();
+		float a = normal.x;
+		float b = normal.y;
+		float c = normal.z;
+		Vector3 v1 = getPosition1();
+		float d = -(a * v1.x + b * v1.y + c * v1.z);
+		return a * point.x + b * point.y + c * point.z + d;
+	}
+
+	public boolean intersects(Face other) {
+
+		//distance from the face1 vertices to the face2 plane
+		float distFace1Vert1 = other.signedDistanceFromPlane(getPosition1());
+		float distFace1Vert2 = other.signedDistanceFromPlane(getPosition2());
+		float distFace1Vert3 = other.signedDistanceFromPlane(getPosition3());
+
+		//distances signs from the face1 vertices to the face2 plane
+		int signFace1Vert1 = (distFace1Vert1>TOL? 1 :(distFace1Vert1<-TOL? -1 : 0));
+		signFace1Vert2 = (distFace1Vert2>TOL? 1 :(distFace1Vert2<-TOL? -1 : 0));
+		signFace1Vert3 = (distFace1Vert3>TOL? 1 :(distFace1Vert3<-TOL? -1 : 0));
+
+	}
+
 
 	public Vector3 getPosition1() {
 		getVertexPosition(mesh, v1, tmpPos1);

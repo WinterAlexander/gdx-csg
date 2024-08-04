@@ -61,7 +61,10 @@ public class Main {
 				model1 = generateSixFacedCube(builder);
 
 				model2 = generateSixFacedCube(builder);
-				model2.meshes.get(0).transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 45f));
+				model2.meshes.get(0).transform(
+						new Matrix4()
+								.setToRotation(new Vector3(0f, 1f, 0f), 45f)
+								.translate(0f, 0.8f, 0f));
 
 				instance1 = new ModelInstance(model1);
 				instance2 = new ModelInstance(model2);
