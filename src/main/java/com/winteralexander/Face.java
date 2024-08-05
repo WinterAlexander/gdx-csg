@@ -9,6 +9,8 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.VertexData;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.Ray;
+import com.badlogic.gdx.math.collision.Segment;
 import com.badlogic.gdx.utils.Queue;
 
 import java.nio.FloatBuffer;
@@ -39,6 +41,11 @@ public class Face {
 			tmpPos3 = new Vector3();
 
 	private final Vector3 tmpNormal = new Vector3();
+
+	private final Ray intersectRay = new Ray();
+
+	private final Segment segment1 = new Segment(0f, 0f, 0f, 0f, 0f, 0f),
+			segment2 = new Segment(0f, 0f, 0f, 0f, 0f, 0f);
 
 	public Face(Mesh mesh, int triangleIndex) {
 		ensureNotNull(mesh, "mesh");
@@ -79,7 +86,7 @@ public class Face {
 		return a * point.x + b * point.y + c * point.z + d;
 	}
 
-	public boolean intersects(Face other) {
+	public boolean intersects(Face other, float tol) {
 
 		//distance from the face1 vertices to the face2 plane
 		float distFace1Vert1 = other.signedDistanceFromPlane(getPosition1());
@@ -87,10 +94,119 @@ public class Face {
 		float distFace1Vert3 = other.signedDistanceFromPlane(getPosition3());
 
 		//distances signs from the face1 vertices to the face2 plane
-		int signFace1Vert1 = (distFace1Vert1>TOL? 1 :(distFace1Vert1<-TOL? -1 : 0));
-		signFace1Vert2 = (distFace1Vert2>TOL? 1 :(distFace1Vert2<-TOL? -1 : 0));
-		signFace1Vert3 = (distFace1Vert3>TOL? 1 :(distFace1Vert3<-TOL? -1 : 0));
+		int signFace1Vert1 = (distFace1Vert1 > tol ? 1 : (distFace1Vert1 < -tol ? -1 : 0));
+		int signFace1Vert2 = (distFace1Vert2 > tol ? 1 : (distFace1Vert2 < -tol ? -1 : 0));
+		int signFace1Vert3 = (distFace1Vert3 > tol ? 1 : (distFace1Vert3 < -tol ? -1 : 0));
 
+		if(!(signFace1Vert1 == signFace1Vert2 && signFace1Vert2 == signFace1Vert3)) {
+			//distance from the face2 vertices to the face1 plane
+			float distFace2Vert1 = signedDistanceFromPlane(other.getPosition1());
+			float distFace2Vert2 = signedDistanceFromPlane(other.getPosition2());
+			float distFace2Vert3 = signedDistanceFromPlane(other.getPosition3());
+
+			//distances signs from the face2 vertices to the face1 plane
+			int signFace2Vert1 = (distFace2Vert1 > tol ? 1 : (distFace2Vert1 < -tol ? -1 : 0));
+			int signFace2Vert2 = (distFace2Vert2 > tol ? 1 : (distFace2Vert2 < -tol ? -1 : 0));
+			int signFace2Vert3 = (distFace2Vert3 > tol ? 1 : (distFace2Vert3 < -tol ? -1 : 0));
+
+			//if the signs are not equal...
+			if(!(signFace2Vert1 == signFace2Vert2 && signFace2Vert2 == signFace2Vert3)) {
+				rayFromIntersection(this, other, tol, intersectRay);
+				intersectRay.getEndPoint(segment1.a, )
+
+			}
+		}
+	}
+
+	private static void rayFromIntersection(Face face1, Face face2, float tol, Ray out) {
+		Vector3 normalFace1 = face1.getNormal();
+		Vector3 normalFace2 = face2.getNormal();
+
+		//direction: cross product of the faces normals
+		out.direction.set(normalFace1).crs(normalFace2);
+
+		//if direction lenght is not zero (the planes aren't parallel )...
+		if (!(out.direction.len() < tol)) {
+			//getting a line point, zero is set to a coordinate whose direction
+			//component isn't zero (line intersecting its origin plan)
+			Vector3 v1p = face1.getPosition1();
+			Vector3 v2p = face2.getPosition1();
+
+			float d1 = -(normalFace1.x * v1p.x + normalFace1.y * v1p.y + normalFace1.z * v1p.z);
+			float d2 = -(normalFace2.x * v2p.x + normalFace2.y * v2p.y + normalFace2.z * v2p.z);
+			if(Math.abs(out.direction.x) > tol) {
+				out.origin.x = 0;
+				out.origin.y = (d2 * normalFace1.z - d1 * normalFace2.z) / out.direction.x;
+				out.origin.z = (d1 * normalFace2.y - d2 * normalFace1.y) / out.direction.x;
+			} else if(Math.abs(out.direction.y) > tol) {
+				out.origin.x = (d1 * normalFace2.z - d2 * normalFace1.z) / out.direction.y;
+				out.origin.y = 0;
+				out.origin.z = (d2 * normalFace1.x - d1 * normalFace2.x) / out.direction.y;
+			} else {
+				out.origin.x = (d2 * normalFace1.y - d1 * normalFace2.y) / out.direction.z;
+				out.origin.y = (d1 * normalFace2.x - d2 * normalFace1.x) / out.direction.z;
+				out.origin.z = 0;
+			}
+		}
+
+		out.direction.nor();
+	}
+
+	private static void segmentFromIntersection(Face face,
+	                                            int signV1, int signV2, int signV3,
+	                                            Segment out) {
+		int countSet = 0;
+		if(signV1 == 0) {
+			out.a.set(face.getPosition1());
+			countSet++;
+			if(signV2 == signV3) {
+				out.b.set(out.a);
+				return;
+			}
+		}
+
+		if(signV2 == 0) {
+			(countSet == 0 ? out.a : out.b).set(face.getPosition2());
+			countSet++;
+			if(countSet == 2)
+				return;
+			if(signV1 == signV3) {
+				out.b.set(out.a);
+				return;
+			}
+		}
+
+		if(signV3 == 0) {
+			(countSet == 0 ? out.a : out.b).set(face.getPosition3());
+			countSet++;
+			if(countSet == 2)
+				return;
+			if(signV1 == signV2) {
+				out.b.set(out.a);
+				return;
+			}
+		}
+
+		//EDGE is an end
+		if((signV1 == 1 && signV2 == -1) || (signV1 == -1 && signV2 == 1)) {
+			setEdge(face.v1, face.v2);			countSet++;
+			if(countSet == 2)
+				return;
+		}
+
+		//EDGE is an end
+		if((signV2 == 1 && signV3 == -1) || (signV2 == -1 && signV3 == 1)) {
+			setEdge(face.v2, face.v3);			countSet++;
+			if(countSet == 2)
+				return;
+		}
+
+		//EDGE is an end
+		if((signV3 == 1 && signV1 == -1) || (signV3 == -1 && signV1 == 1)) {
+			setEdge(face.v3, face.v1);			countSet++;
+			if(countSet == 2)
+				return;
+		}
 	}
 
 
