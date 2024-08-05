@@ -112,10 +112,17 @@ public class Face {
 			//if the signs are not equal...
 			if(!(signFace2Vert1 == signFace2Vert2 && signFace2Vert2 == signFace2Vert3)) {
 				rayFromIntersection(this, other, tol, intersectRay);
-				intersectRay.getEndPoint(segment1.a, )
+				segmentFromIntersection(this,
+						signFace1Vert1, signFace1Vert2, signFace1Vert3,
+						intersectRay, segment1);
+				segmentFromIntersection(other,
+						signFace2Vert1, signFace2Vert2, signFace2Vert3,
+						intersectRay, segment2);
+				//intersectRay.getEndPoint(segment1.a, )
 
 			}
 		}
+		return false;
 	}
 
 	private static void rayFromIntersection(Face face1, Face face2, float tol, Ray out) {
@@ -154,6 +161,7 @@ public class Face {
 
 	private static void segmentFromIntersection(Face face,
 	                                            int signV1, int signV2, int signV3,
+												Ray ray,
 	                                            Segment out) {
 		int countSet = 0;
 		if(signV1 == 0) {
@@ -189,21 +197,27 @@ public class Face {
 
 		//EDGE is an end
 		if((signV1 == 1 && signV2 == -1) || (signV1 == -1 && signV2 == 1)) {
-			setEdge(face.v1, face.v2);			countSet++;
+
+			//Intersector.intersectRayRay()
+			//(countSet == 0 ? out.a : out.b).set()
+			//setEdge(face.v1, face.v2);
+			countSet++;
 			if(countSet == 2)
 				return;
 		}
 
 		//EDGE is an end
 		if((signV2 == 1 && signV3 == -1) || (signV2 == -1 && signV3 == 1)) {
-			setEdge(face.v2, face.v3);			countSet++;
+			//setEdge(face.v2, face.v3);
+			countSet++;
 			if(countSet == 2)
 				return;
 		}
 
 		//EDGE is an end
 		if((signV3 == 1 && signV1 == -1) || (signV3 == -1 && signV1 == 1)) {
-			setEdge(face.v3, face.v1);			countSet++;
+			//setEdge(face.v3, face.v1);
+			countSet++;
 			if(countSet == 2)
 				return;
 		}
