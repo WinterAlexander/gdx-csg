@@ -114,10 +114,10 @@ public class Face {
 				rayFromIntersection(this, other, tol, intersectRay);
 				segmentFromIntersection(this,
 						signFace1Vert1, signFace1Vert2, signFace1Vert3,
-						intersectRay, segment1);
+						intersectRay, tol, segment1);
 				segmentFromIntersection(other,
 						signFace2Vert1, signFace2Vert2, signFace2Vert3,
-						intersectRay, segment2);
+						intersectRay, tol, segment2);
 				//intersectRay.getEndPoint(segment1.a, )
 
 			}
@@ -162,6 +162,7 @@ public class Face {
 	private static void segmentFromIntersection(Face face,
 	                                            int signV1, int signV2, int signV3,
 												Ray ray,
+												float tol,
 	                                            Segment out) {
 		int countSet = 0;
 		if(signV1 == 0) {
@@ -195,34 +196,63 @@ public class Face {
 			}
 		}
 
-		//EDGE is an end
+		Ray edgeRay = new Ray();
+		Vector3 point = new Vector3();
+
 		if((signV1 == 1 && signV2 == -1) || (signV1 == -1 && signV2 == 1)) {
-
-			//Intersector.intersectRayRay()
-			//(countSet == 0 ? out.a : out.b).set()
-			//setEdge(face.v1, face.v2);
+			edgeRay.origin.set(face.getPosition1());
+			edgeRay.direction.set(face.getPosition2()).sub(edgeRay.origin).nor();
+			if(!IntersectorPlus.rayRayIntersection(ray, edgeRay, tol, point))
+				throw new IllegalStateException("Rays do not intersect");
+			(countSet == 0 ? out.a : out.b).set(point);
 			countSet++;
-			if(countSet == 2)
+			if(countSet == 2) {
+				swapIfNeeded(ray, out);
 				return;
+			}
 		}
 
-		//EDGE is an end
 		if((signV2 == 1 && signV3 == -1) || (signV2 == -1 && signV3 == 1)) {
-			//setEdge(face.v2, face.v3);
+			edgeRay.origin.set(face.getPosition2());
+			edgeRay.direction.set(face.getPosition3()).sub(edgeRay.origin).nor();
+			if(!IntersectorPlus.rayRayIntersection(ray, edgeRay, tol, point))
+				throw new IllegalStateException("Rays do not intersect");
+			(countSet == 0 ? out.a : out.b).set(point);
 			countSet++;
-			if(countSet == 2)
+			if(countSet == 2) {
+				swapIfNeeded(ray, out);
 				return;
+			}
 		}
 
-		//EDGE is an end
 		if((signV3 == 1 && signV1 == -1) || (signV3 == -1 && signV1 == 1)) {
-			//setEdge(face.v3, face.v1);
+			edgeRay.origin.set(face.getPosition3());
+			edgeRay.direction.set(face.getPosition1()).sub(edgeRay.origin).nor();
+			if(!IntersectorPlus.rayRayIntersection(ray, edgeRay, tol, point))
+				throw new IllegalStateException("Rays do not intersect");
+			(countSet == 0 ? out.a : out.b).set(point);
 			countSet++;
-			if(countSet == 2)
-				return;
+			if(countSet == 2) {
+				swapIfNeeded(ray, out);
+			}
 		}
 	}
 
+	private static void swapIfNeeded(Ray ray, Segment segment) {
+		float startDist = ray.direction.dot(segment.a.x - ray.origin.x,
+				segment.a.y - ray.origin.y,
+				segment.a.z - ray.origin.z);
+		float endDist = ray.direction.dot(segment.b.x - ray.origin.x,
+				segment.b.y - ray.origin.y,
+				segment.b.z - ray.origin.z);
+
+		if(startDist > endDist) {
+			Vector3 vec = new Vector3();
+			vec.set(segment.a);
+			segment.a.set(segment.b);
+			segment.b.set(vec);
+		}
+	}
 
 	public Vector3 getPosition1() {
 		getVertexPosition(mesh, v1, tmpPos1);
