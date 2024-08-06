@@ -98,31 +98,49 @@ public class Face {
 		int signFace1Vert2 = (distFace1Vert2 > tol ? 1 : (distFace1Vert2 < -tol ? -1 : 0));
 		int signFace1Vert3 = (distFace1Vert3 > tol ? 1 : (distFace1Vert3 < -tol ? -1 : 0));
 
-		if(!(signFace1Vert1 == signFace1Vert2 && signFace1Vert2 == signFace1Vert3)) {
-			//distance from the face2 vertices to the face1 plane
-			float distFace2Vert1 = signedDistanceFromPlane(other.getPosition1());
-			float distFace2Vert2 = signedDistanceFromPlane(other.getPosition2());
-			float distFace2Vert3 = signedDistanceFromPlane(other.getPosition3());
+		if(signFace1Vert1 == signFace1Vert2 && signFace1Vert2 == signFace1Vert3)
+			return false;
 
-			//distances signs from the face2 vertices to the face1 plane
-			int signFace2Vert1 = (distFace2Vert1 > tol ? 1 : (distFace2Vert1 < -tol ? -1 : 0));
-			int signFace2Vert2 = (distFace2Vert2 > tol ? 1 : (distFace2Vert2 < -tol ? -1 : 0));
-			int signFace2Vert3 = (distFace2Vert3 > tol ? 1 : (distFace2Vert3 < -tol ? -1 : 0));
+		//distance from the face2 vertices to the face1 plane
+		float distFace2Vert1 = signedDistanceFromPlane(other.getPosition1());
+		float distFace2Vert2 = signedDistanceFromPlane(other.getPosition2());
+		float distFace2Vert3 = signedDistanceFromPlane(other.getPosition3());
 
-			//if the signs are not equal...
-			if(!(signFace2Vert1 == signFace2Vert2 && signFace2Vert2 == signFace2Vert3)) {
-				rayFromIntersection(this, other, tol, intersectRay);
-				segmentFromIntersection(this,
-						signFace1Vert1, signFace1Vert2, signFace1Vert3,
-						intersectRay, tol, segment1);
-				segmentFromIntersection(other,
-						signFace2Vert1, signFace2Vert2, signFace2Vert3,
-						intersectRay, tol, segment2);
-				//intersectRay.getEndPoint(segment1.a, )
+		//distances signs from the face2 vertices to the face1 plane
+		int signFace2Vert1 = (distFace2Vert1 > tol ? 1 : (distFace2Vert1 < -tol ? -1 : 0));
+		int signFace2Vert2 = (distFace2Vert2 > tol ? 1 : (distFace2Vert2 < -tol ? -1 : 0));
+		int signFace2Vert3 = (distFace2Vert3 > tol ? 1 : (distFace2Vert3 < -tol ? -1 : 0));
 
-			}
-		}
-		return false;
+		//if the signs are not equal...
+		if(signFace2Vert1 == signFace2Vert2 && signFace2Vert2 == signFace2Vert3)
+			return false;
+
+		rayFromIntersection(this, other, tol, intersectRay);
+		segmentFromIntersection(this,
+				signFace1Vert1, signFace1Vert2, signFace1Vert3,
+				intersectRay, tol, segment1);
+		segmentFromIntersection(other,
+				signFace2Vert1, signFace2Vert2, signFace2Vert3,
+				intersectRay, tol, segment2);
+
+		float startDist1 = intersectRay.direction.dot(segment1.a.x - intersectRay.origin.x,
+				segment1.a.y - intersectRay.origin.y,
+				segment1.a.z - intersectRay.origin.z);
+		float endDist1 = intersectRay.direction.dot(segment1.b.x - intersectRay.origin.x,
+				segment1.b.y - intersectRay.origin.y,
+				segment1.b.z - intersectRay.origin.z);
+
+		float startDist2 = intersectRay.direction.dot(segment2.a.x - intersectRay.origin.x,
+				segment2.a.y - intersectRay.origin.y,
+				segment2.a.z - intersectRay.origin.z);
+		float endDist2 = intersectRay.direction.dot(segment2.b.x - intersectRay.origin.x,
+				segment2.b.y - intersectRay.origin.y,
+				segment2.b.z - intersectRay.origin.z);
+
+		boolean segmentsIntersect = endDist1 < startDist2 + tol
+				|| endDist2 < startDist1 + tol;
+
+		return segmentsIntersect;
 	}
 
 	private static void rayFromIntersection(Face face1, Face face2, float tol, Ray out) {
