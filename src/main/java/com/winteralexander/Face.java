@@ -70,7 +70,7 @@ public class Face {
 		Vector3 p3 = getPosition3();
 
 		tmpNormal.set(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
-		tmpNormal.crs(p3.x-p1.x, p3.y-p1.y, p3.z-p1.z);
+		tmpNormal.crs(p3.x - p1.x, p3.y - p1.y, p3.z - p1.z);
 		tmpNormal.nor();
 
 		return tmpNormal;
