@@ -1,6 +1,8 @@
+package com.winteralexander.gdx.csg.test;
+
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
-import com.winteralexander.IntersectorPlus;
+import com.winteralexander.gdx.csg.IntersectorPlus;
 import org.junit.Test;
 
 import java.util.Random;
@@ -28,7 +30,7 @@ public class IntersectorPlusTest {
 
 		Vector3 intersection = new Vector3();
 
-		IntersectorPlus.rayRayIntersection(ray1, ray2, 1e-5f, intersection);
+		IntersectorPlus.intersectRayRay(ray1, ray2, 1e-5f, intersection);
 		assertEquals(new Vector3(15f, 15f, 15f), intersection);
 
 		ray1.origin.set(0f, 0f, 0f);
@@ -37,7 +39,7 @@ public class IntersectorPlusTest {
 		ray2.origin.set(15f, 15f, 15f);
 		ray2.direction.set(-9f, 10f, 55f).nor();
 
-		boolean result = IntersectorPlus.rayRayIntersection(ray1, ray2, 1e-5f, intersection);
+		boolean result = IntersectorPlus.intersectRayRay(ray1, ray2, 1e-5f, intersection);
 		//assertFalse(result);
 	}
 
@@ -69,7 +71,7 @@ public class IntersectorPlusTest {
 			ray1.getEndPoint(tmpIntersection, posRay1);
 			ray2.origin.set(tmpIntersection);
 			ray2.origin.mulAdd(ray2.direction, posRay2);
-			assertTrue(IntersectorPlus.rayRayIntersection(ray1, ray2, 1e-5f,
+			assertTrue(IntersectorPlus.intersectRayRay(ray1, ray2, 1e-5f,
 					tmpComputedIntersection));
 			assertTrue(tmpIntersection.epsilonEquals(tmpComputedIntersection, 1e-3f));
 		}

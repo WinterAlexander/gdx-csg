@@ -1,4 +1,4 @@
-package com.winteralexander;
+package com.winteralexander.gdx.csg;
 
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
@@ -12,7 +12,7 @@ import com.badlogic.gdx.math.collision.Segment;
  * @author Alexander Winter
  */
 public class IntersectorPlus {
-	public static boolean rayRayIntersection(Ray first, Ray second, float tol, Vector3 out) {
+	public static boolean intersectRayRay(Ray first, Ray second, float tol, Vector3 out) {
 		//x = x1 + a1*t = x2 + b1*s
 		//y = y1 + a2*t = y2 + b2*s
 		//z = z1 + a3*t = z2 + b3*s
@@ -47,66 +47,52 @@ public class IntersectorPlus {
 	 * Performs triangle-triangle intersection. If the result is
 	 * {@link TriangleIntersectionResult#NONE}, the segment output parameter is left untouched. If
 	 * it is {@link TriangleIntersectionResult#POINT} both ends of the segment will be set to the
-	 * intersection point. If the result is {@link TriangleIntersectionResult#FACE_FACE} the output
-	 * segment is left unset. In any other cases, the output segment is set to be the intersection
-	 * of the 2 triangles as specified in the corresponding {@link TriangleIntersectionResult}.
+	 * intersection point. If the result is {@link TriangleIntersectionResult#COPLANAR_FACE_FACE}
+	 * the output segment is left unset. In any other cases, the output segment is set to be the
+	 * intersection of the 2 triangles as specified in the corresponding
+	 * {@link TriangleIntersectionResult}.
 	 *
-	 * @param tri1p1 point 1 of triangle 1
-	 * @param tri1p2 point 2 of triangle 1
-	 * @param tri1p3 point 3 of triangle 1
-	 * @param tri2p1 point 1 of triangle 2
-	 * @param tri2p2 point 2 of triangle 2
-	 * @param tri2p3 point 3 of triangle 2
-	 * @param tolerance distance at which 2 floating points are considered to be the same
+	 * @param first first triangle
+	 * @param second second triangle
+	 * @param tol distance at which 2 floating points are considered to be the same
 	 * @param out segment of the intersection, only set if applicable based on the result.
 	 * @return result of the intersection
 	 */
-	public static TriangleIntersectionResult triangleTriangleIntersection(Vector3 tri1p1,
-	                                                                      Vector3 tri1p2,
-	                                                                      Vector3 tri1p3,
-	                                                                      Vector3 tri2p1,
-	                                                                      Vector3 tri2p2,
-	                                                                      Vector3 tri2p3,
-																		  float tolerance,
-	                                                                      Segment out) {
-		/*Vector3 tri1Nor = new Vector3();
-		Vector3 tri2Nor = new Vector3();
-
-		tri1Nor.set(tri1p2.x - tri1p1.x, tri1p2.y - tri1p1.y, tri1p2.z - tri1p1.z);
-		tri1Nor.crs(tri1p3.x - tri1p1.x, tri1p3.y - tri1p1.y, tri1p3.z - tri1p1.z);
-		tri1Nor.nor();
-
-		tri2Nor.set(tri2p2.x - tri2p1.x, tri2p2.y - tri2p1.y, tri2p2.z - tri2p1.z);
-		tri2Nor.crs(tri2p3.x - tri2p1.x, tri2p3.y - tri2p1.y, tri2p3.z - tri2p1.z);
-		tri2Nor.nor();
+	public static TriangleIntersectionResult intersectTriangleTriangle(Triangle first,
+	                                                                   Triangle second,
+	                                                                   float tol,
+	                                                                   Segment out) {
+		Vector3 tri1Nor = first.getNormal();
+		Vector3 tri2Nor = second.getNormal();
 
 		//distance from the face1 vertices to the face2 plane
-		float distFace1Vert1 = signedDistanceFromPlane(getPosition1());
-		float distFace1Vert2 = signedDistanceFromPlane(getPosition2());
-		float distFace1Vert3 = signedDistanceFromPlane(getPosition3());
+		float distFace1Vert1 = signedDistanceFromPlane(second, first.p1);
+		float distFace1Vert2 = signedDistanceFromPlane(second, first.p2);
+		float distFace1Vert3 = signedDistanceFromPlane(second, first.p3);
 
 		//distances signs from the face1 vertices to the face2 plane
 		int signFace1Vert1 = (distFace1Vert1 > tol ? 1 : (distFace1Vert1 < -tol ? -1 : 0));
 		int signFace1Vert2 = (distFace1Vert2 > tol ? 1 : (distFace1Vert2 < -tol ? -1 : 0));
 		int signFace1Vert3 = (distFace1Vert3 > tol ? 1 : (distFace1Vert3 < -tol ? -1 : 0));
 
+		// if all points are on the same side of the plane
 		if(signFace1Vert1 == signFace1Vert2 && signFace1Vert2 == signFace1Vert3)
-			return false;
+			// if they are all 0, they are all in the same plane
+			return signFace1Vert1 == 0 && intersectCoplanarTriangles(first, second, tol)
+					? TriangleIntersectionResult.COPLANAR_FACE_FACE
+					: TriangleIntersectionResult.NONE; // otherwise all on one side, no intersection
 
 		//distance from the face2 vertices to the face1 plane
-		float distFace2Vert1 = signedDistanceFromPlane(other.getPosition1());
-		float distFace2Vert2 = signedDistanceFromPlane(other.getPosition2());
-		float distFace2Vert3 = signedDistanceFromPlane(other.getPosition3());
+		float distFace2Vert1 = signedDistanceFromPlane(first, second.p1);
+		float distFace2Vert2 = signedDistanceFromPlane(first, second.p2);
+		float distFace2Vert3 = signedDistanceFromPlane(first, second.p3);
 
 		//distances signs from the face2 vertices to the face1 plane
 		int signFace2Vert1 = (distFace2Vert1 > tol ? 1 : (distFace2Vert1 < -tol ? -1 : 0));
 		int signFace2Vert2 = (distFace2Vert2 > tol ? 1 : (distFace2Vert2 < -tol ? -1 : 0));
 		int signFace2Vert3 = (distFace2Vert3 > tol ? 1 : (distFace2Vert3 < -tol ? -1 : 0));
 
-		//if the signs are not equal...
-		if(signFace2Vert1 == signFace2Vert2 && signFace2Vert2 == signFace2Vert3)
-			return false;
-
+/*
 		rayFromIntersection(this, other, tol, intersectRay);
 		segmentFromIntersection(this,
 				signFace1Vert1, signFace1Vert2, signFace1Vert3,
@@ -137,17 +123,31 @@ public class IntersectorPlus {
 		return TriangleIntersectionResult.NONE;
 	}
 
-/*
-	private static float signedDistanceFromPlane(Vector3 point) {
-		Vector3 normal = getNormal();
+	/**
+	 * Test whether 2 given co-planar triangles are intersecting or not. This function assumes the
+	 * provided triangles are co-planar and if they aren't, the result is undefined.
+	 *
+	 * @param first first triangle to check
+	 * @param second second triangle to check
+	 * @param tolerance distance at which 2 floating points are considered to be the same
+	 * @return true if they are intersecting, otherwise false
+	 */
+	public static boolean intersectCoplanarTriangles(Triangle first,
+	                                                 Triangle second,
+	                                                 float tolerance) {
+		return false;
+	}
+
+	private static float signedDistanceFromPlane(Triangle triangle, Vector3 point) {
+		Vector3 normal = triangle.getNormal();
 		float a = normal.x;
 		float b = normal.y;
 		float c = normal.z;
-		Vector3 v1 = getPosition1();
+		Vector3 v1 = triangle.p1;
 		float d = -(a * v1.x + b * v1.y + c * v1.z);
 		return a * point.x + b * point.y + c * point.z + d;
 	}
-*/
+
 	/**
 	 * Result of a Triangle Triangle intersection
 	 */
@@ -181,13 +181,13 @@ public class IntersectorPlus {
 		 * In this case the intersection is defined by a polygon which corresponds to the shared
 		 * area of both triangles.
 		 */
-		FACE_FACE,
+		COPLANAR_FACE_FACE,
 
 		/**
-		 * Result when the 2 triangles cross each other in none of the cases described above.
+		 * Result when the 2 triangles are not coplanar and their faces cross.
 		 * In this case the intersection is defined by a line segment which corresponds to the
 		 * line at which the 2 triangles are crossing.
 		 */
-		CROSS
+		NONCOPLANAR_FACE_FACE
 	}
 }

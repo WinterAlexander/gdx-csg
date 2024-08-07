@@ -1,4 +1,4 @@
-package com.winteralexander;
+package com.winteralexander.gdx.csg;
 
 import com.badlogic.gdx.math.Vector3;
 

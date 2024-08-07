@@ -1,13 +1,9 @@
-package com.winteralexander;
+package com.winteralexander.gdx.csg;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttribute;
-import com.badlogic.gdx.graphics.VertexAttributes;
-import com.badlogic.gdx.graphics.glutils.IndexData;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.graphics.glutils.VertexData;
-import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.math.collision.Segment;
@@ -220,7 +216,7 @@ public class Face {
 		if((signV1 == 1 && signV2 == -1) || (signV1 == -1 && signV2 == 1)) {
 			edgeRay.origin.set(face.getPosition1());
 			edgeRay.direction.set(face.getPosition2()).sub(edgeRay.origin).nor();
-			if(!IntersectorPlus.rayRayIntersection(ray, edgeRay, tol, point))
+			if(!IntersectorPlus.intersectRayRay(ray, edgeRay, tol, point))
 				throw new IllegalStateException("Rays do not intersect");
 			(countSet == 0 ? out.a : out.b).set(point);
 			countSet++;
@@ -233,7 +229,7 @@ public class Face {
 		if((signV2 == 1 && signV3 == -1) || (signV2 == -1 && signV3 == 1)) {
 			edgeRay.origin.set(face.getPosition2());
 			edgeRay.direction.set(face.getPosition3()).sub(edgeRay.origin).nor();
-			if(!IntersectorPlus.rayRayIntersection(ray, edgeRay, tol, point))
+			if(!IntersectorPlus.intersectRayRay(ray, edgeRay, tol, point))
 				throw new IllegalStateException("Rays do not intersect");
 			(countSet == 0 ? out.a : out.b).set(point);
 			countSet++;
@@ -246,7 +242,7 @@ public class Face {
 		if((signV3 == 1 && signV1 == -1) || (signV3 == -1 && signV1 == 1)) {
 			edgeRay.origin.set(face.getPosition3());
 			edgeRay.direction.set(face.getPosition1()).sub(edgeRay.origin).nor();
-			if(!IntersectorPlus.rayRayIntersection(ray, edgeRay, tol, point))
+			if(!IntersectorPlus.intersectRayRay(ray, edgeRay, tol, point))
 				throw new IllegalStateException("Rays do not intersect");
 			(countSet == 0 ? out.a : out.b).set(point);
 			countSet++;
