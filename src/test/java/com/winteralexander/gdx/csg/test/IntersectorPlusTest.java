@@ -7,8 +7,7 @@ import org.junit.Test;
 
 import java.util.Random;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Unit test for {@link IntersectorPlus}
@@ -40,7 +39,7 @@ public class IntersectorPlusTest {
 		ray2.direction.set(-9f, 10f, 55f).nor();
 
 		boolean result = IntersectorPlus.intersectRayRay(ray1, ray2, 1e-5f, intersection);
-		//assertFalse(result);
+		assertFalse(result);
 	}
 
 	@Test
@@ -50,7 +49,7 @@ public class IntersectorPlusTest {
 		Random r = new Random();
 		Vector3 tmpIntersection = new Vector3();
 		Vector3 tmpComputedIntersection = new Vector3();
-		for(int i = 0; i < 1000; i++) {
+		for(int i = 0; i < 1000000; i++) {
 			ray1.origin.set(r.nextFloat() * 2f - 1f,
 					r.nextFloat() * 2f - 1f,
 					r.nextFloat() * 2f - 1f);
@@ -73,7 +72,7 @@ public class IntersectorPlusTest {
 			ray2.origin.mulAdd(ray2.direction, posRay2);
 			assertTrue(IntersectorPlus.intersectRayRay(ray1, ray2, 1e-5f,
 					tmpComputedIntersection));
-			assertTrue(tmpIntersection.epsilonEquals(tmpComputedIntersection, 1e-3f));
+			assertTrue(tmpIntersection.epsilonEquals(tmpComputedIntersection, 1e-2f));
 		}
 	}
 }

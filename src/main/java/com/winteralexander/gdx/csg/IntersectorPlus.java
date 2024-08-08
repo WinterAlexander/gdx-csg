@@ -39,6 +39,19 @@ public class IntersectorPlus {
 		float y = o1.y + d1.y * t;
 		float z = o1.z + d1.z * t;
 
+		float dst = second.direction.dot(x - second.origin.x,
+				y - second.origin.y,
+				z - second.origin.z);
+
+		float prevX = out.x;
+		float prevY = out.y;
+		float prevZ = out.z;
+		second.getEndPoint(out, dst);
+		if(!out.epsilonEquals(x, y, z, tol * 1e3f)) {
+			out.set(prevX, prevY, prevZ);
+			return false;
+		}
+
 		out.set(x, y, z);
 		return true;
 	}
@@ -62,9 +75,6 @@ public class IntersectorPlus {
 	                                                                   Triangle second,
 	                                                                   float tol,
 	                                                                   Segment out) {
-		Vector3 tri1Nor = first.getNormal();
-		Vector3 tri2Nor = second.getNormal();
-
 		//distance from the face1 vertices to the face2 plane
 		float distFace1Vert1 = signedDistanceFromPlane(second, first.p1);
 		float distFace1Vert2 = signedDistanceFromPlane(second, first.p2);
@@ -92,35 +102,148 @@ public class IntersectorPlus {
 		int signFace2Vert2 = (distFace2Vert2 > tol ? 1 : (distFace2Vert2 < -tol ? -1 : 0));
 		int signFace2Vert3 = (distFace2Vert3 > tol ? 1 : (distFace2Vert3 < -tol ? -1 : 0));
 
-/*
-		rayFromIntersection(this, other, tol, intersectRay);
-		segmentFromIntersection(this,
+		Ray intersectRay = new Ray();
+		Segment segment1 = new Segment(0f, 0f, 0f, 0f, 0f, 0f);
+		Segment segment2 = new Segment(0f, 0f, 0f, 0f, 0f, 0f);
+		rayFromIntersection(first, second, tol, intersectRay);
+		segmentFromIntersection(first,
 				signFace1Vert1, signFace1Vert2, signFace1Vert3,
 				intersectRay, tol, segment1);
-		segmentFromIntersection(other,
+		segmentFromIntersection(second,
 				signFace2Vert1, signFace2Vert2, signFace2Vert3,
 				intersectRay, tol, segment2);
 
-		float startDist1 = intersectRay.direction.dot(segment1.a.x - intersectRay.origin.x,
+		float distA1 = intersectRay.direction.dot(segment1.a.x - intersectRay.origin.x,
 				segment1.a.y - intersectRay.origin.y,
 				segment1.a.z - intersectRay.origin.z);
-		float endDist1 = intersectRay.direction.dot(segment1.b.x - intersectRay.origin.x,
+		float distB1 = intersectRay.direction.dot(segment1.b.x - intersectRay.origin.x,
 				segment1.b.y - intersectRay.origin.y,
 				segment1.b.z - intersectRay.origin.z);
 
-		float startDist2 = intersectRay.direction.dot(segment2.a.x - intersectRay.origin.x,
+		float distA2 = intersectRay.direction.dot(segment2.a.x - intersectRay.origin.x,
 				segment2.a.y - intersectRay.origin.y,
 				segment2.a.z - intersectRay.origin.z);
-		float endDist2 = intersectRay.direction.dot(segment2.b.x - intersectRay.origin.x,
+		float distB2 = intersectRay.direction.dot(segment2.b.x - intersectRay.origin.x,
 				segment2.b.y - intersectRay.origin.y,
 				segment2.b.z - intersectRay.origin.z);
+
+		float startDist1 = Math.min(distA1, distB1);
+		float endDist1 = Math.max(distA1, distB1);
+
+		float startDist2 = Math.min(distA2, distB2);
+		float endDist2 = Math.max(distA2, distB2);
 
 		boolean segmentsIntersect = endDist1 < startDist2 + tol
 				|| endDist2 < startDist1 + tol;
 
-		return segmentsIntersect;*/
+		return segmentsIntersect
+				? TriangleIntersectionResult.NONCOPLANAR_FACE_FACE
+				: TriangleIntersectionResult.NONE;
+	}
 
-		return TriangleIntersectionResult.NONE;
+	private static void rayFromIntersection(Triangle first,
+	                                        Triangle second,
+	                                        float tol,
+	                                        Ray out) {
+		Vector3 normalFace1 = first.getNormal();
+		Vector3 normalFace2 = second.getNormal();
+
+		// direction: cross product of the faces normals
+		out.direction.set(normalFace1).crs(normalFace2);
+
+		// getting a line point, zero is set to a coordinate whose direction
+		// component isn't zero (line intersecting its origin plan)
+		Vector3 v1p = first.p1;
+		Vector3 v2p = second.p2;
+
+		float d1 = -(normalFace1.x * v1p.x + normalFace1.y * v1p.y + normalFace1.z * v1p.z);
+		float d2 = -(normalFace2.x * v2p.x + normalFace2.y * v2p.y + normalFace2.z * v2p.z);
+		if(Math.abs(out.direction.x) > tol) {
+			out.origin.x = 0;
+			out.origin.y = (d2 * normalFace1.z - d1 * normalFace2.z) / out.direction.x;
+			out.origin.z = (d1 * normalFace2.y - d2 * normalFace1.y) / out.direction.x;
+		} else if(Math.abs(out.direction.y) > tol) {
+			out.origin.x = (d1 * normalFace2.z - d2 * normalFace1.z) / out.direction.y;
+			out.origin.y = 0;
+			out.origin.z = (d2 * normalFace1.x - d1 * normalFace2.x) / out.direction.y;
+		} else {
+			out.origin.x = (d2 * normalFace1.y - d1 * normalFace2.y) / out.direction.z;
+			out.origin.y = (d1 * normalFace2.x - d2 * normalFace1.x) / out.direction.z;
+			out.origin.z = 0;
+		}
+
+		out.direction.nor();
+	}
+
+	private static void segmentFromIntersection(Triangle triangle,
+	                                            int signV1, int signV2, int signV3,
+	                                            Ray ray,
+	                                            float tol,
+	                                            Segment out) {
+		int countSet = 0;
+		if(signV1 == 0) {
+			out.a.set(triangle.p1);
+			countSet++;
+			if(signV2 == signV3) {
+				out.b.set(out.a);
+				return;
+			}
+		}
+
+		if(signV2 == 0) {
+			(countSet == 0 ? out.a : out.b).set(triangle.p2);
+			countSet++;
+			if(countSet == 2)
+				return;
+			if(signV1 == signV3) {
+				out.b.set(out.a);
+				return;
+			}
+		}
+
+		if(signV3 == 0) {
+			(countSet == 0 ? out.a : out.b).set(triangle.p3);
+			countSet++;
+			if(countSet == 2)
+				return;
+			if(signV1 == signV2) {
+				out.b.set(out.a);
+				return;
+			}
+		}
+
+		Ray edgeRay = new Ray();
+		Vector3 point = new Vector3();
+
+		if((signV1 == 1 && signV2 == -1) || (signV1 == -1 && signV2 == 1)) {
+			edgeRay.origin.set(triangle.p1);
+			edgeRay.direction.set(triangle.p2).sub(edgeRay.origin).nor();
+			if(!IntersectorPlus.intersectRayRay(ray, edgeRay, tol, point))
+				throw new IllegalStateException("Rays do not intersect");
+			(countSet == 0 ? out.a : out.b).set(point);
+			countSet++;
+			if(countSet == 2)
+				return;
+		}
+
+		if((signV2 == 1 && signV3 == -1) || (signV2 == -1 && signV3 == 1)) {
+			edgeRay.origin.set(triangle.p2);
+			edgeRay.direction.set(triangle.p3).sub(edgeRay.origin).nor();
+			if(!IntersectorPlus.intersectRayRay(ray, edgeRay, tol, point))
+				throw new IllegalStateException("Rays do not intersect");
+			(countSet == 0 ? out.a : out.b).set(point);
+			countSet++;
+			if(countSet == 2)
+				return;
+		}
+
+		if((signV3 == 1 && signV1 == -1) || (signV3 == -1 && signV1 == 1)) {
+			edgeRay.origin.set(triangle.p3);
+			edgeRay.direction.set(triangle.p1).sub(edgeRay.origin).nor();
+			if(!IntersectorPlus.intersectRayRay(ray, edgeRay, tol, point))
+				throw new IllegalStateException("Rays do not intersect");
+			(countSet == 0 ? out.a : out.b).set(point);
+		}
 	}
 
 	/**
