@@ -3,7 +3,7 @@ package com.winteralexander.gdx.csg;
 import com.badlogic.gdx.math.Vector3;
 
 /**
- * TODO Undocumented :(
+ * A triangle in 3D space
  * <p>
  * Created on 2024-08-07.
  *

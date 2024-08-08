@@ -3,15 +3,28 @@ package com.winteralexander.gdx.csg;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.math.collision.Segment;
+import com.winteralexander.gdx.utils.math.FloatUtil;
 
 /**
- * Undocumented :(
+ * Extension of libGDX's {@link com.badlogic.gdx.math.Intersector} that adds support for some extra
+ * intersection detection
  * <p>
  * Created on 2024-08-04.
  *
  * @author Alexander Winter
  */
 public class IntersectorPlus {
+	/**
+	 * Computes the intersection of 2 rays in 3D space, if there is a single intersection. If there
+	 * an infinite amount of intersections (same rays), returns false. The output is only modified
+	 * when this function returns true.
+	 *
+	 * @param first first ray to find intersection
+	 * @param second second ray to find intersection
+	 * @param tol tolerance for the intersection
+	 * @param out output intersection point
+	 * @return true if there is one intersection between the two rays, false otherwise
+	 */
 	public static boolean intersectRayRay(Ray first, Ray second, float tol, Vector3 out) {
 		//x = x1 + a1*t = x2 + b1*s
 		//y = y1 + a2*t = y2 + b2*s
@@ -92,53 +105,49 @@ public class IntersectorPlus {
 					? TriangleIntersectionResult.COPLANAR_FACE_FACE
 					: TriangleIntersectionResult.NONE; // otherwise all on one side, no intersection
 
-		//distance from the face2 vertices to the face1 plane
-		float distFace2Vert1 = signedDistanceFromPlane(first, second.p1);
-		float distFace2Vert2 = signedDistanceFromPlane(first, second.p2);
-		float distFace2Vert3 = signedDistanceFromPlane(first, second.p3);
-
-		//distances signs from the face2 vertices to the face1 plane
-		int signFace2Vert1 = (distFace2Vert1 > tol ? 1 : (distFace2Vert1 < -tol ? -1 : 0));
-		int signFace2Vert2 = (distFace2Vert2 > tol ? 1 : (distFace2Vert2 < -tol ? -1 : 0));
-		int signFace2Vert3 = (distFace2Vert3 > tol ? 1 : (distFace2Vert3 < -tol ? -1 : 0));
-
 		Ray intersectRay = new Ray();
-		Segment segment1 = new Segment(0f, 0f, 0f, 0f, 0f, 0f);
-		Segment segment2 = new Segment(0f, 0f, 0f, 0f, 0f, 0f);
 		rayFromIntersection(first, second, tol, intersectRay);
-		segmentFromIntersection(first,
-				signFace1Vert1, signFace1Vert2, signFace1Vert3,
-				intersectRay, tol, segment1);
-		segmentFromIntersection(second,
-				signFace2Vert1, signFace2Vert2, signFace2Vert3,
-				intersectRay, tol, segment2);
 
-		float distA1 = intersectRay.direction.dot(segment1.a.x - intersectRay.origin.x,
-				segment1.a.y - intersectRay.origin.y,
-				segment1.a.z - intersectRay.origin.z);
-		float distB1 = intersectRay.direction.dot(segment1.b.x - intersectRay.origin.x,
-				segment1.b.y - intersectRay.origin.y,
-				segment1.b.z - intersectRay.origin.z);
+		float dist1A = intersectRay.direction.dot(first.p1.x - intersectRay.origin.x,
+				first.p1.y - intersectRay.origin.y,
+				first.p1.z - intersectRay.origin.z);
+		float dist1B = intersectRay.direction.dot(first.p2.x - intersectRay.origin.x,
+				first.p2.y - intersectRay.origin.y,
+				first.p2.z - intersectRay.origin.z);
+		float dist1C = intersectRay.direction.dot(first.p3.x - intersectRay.origin.x,
+				first.p3.y - intersectRay.origin.y,
+				first.p3.z - intersectRay.origin.z);
 
-		float distA2 = intersectRay.direction.dot(segment2.a.x - intersectRay.origin.x,
-				segment2.a.y - intersectRay.origin.y,
-				segment2.a.z - intersectRay.origin.z);
-		float distB2 = intersectRay.direction.dot(segment2.b.x - intersectRay.origin.x,
-				segment2.b.y - intersectRay.origin.y,
-				segment2.b.z - intersectRay.origin.z);
+		float dist2A = intersectRay.direction.dot(second.p1.x - intersectRay.origin.x,
+				second.p1.y - intersectRay.origin.y,
+				second.p1.z - intersectRay.origin.z);
+		float dist2B = intersectRay.direction.dot(second.p2.x - intersectRay.origin.x,
+				second.p2.y - intersectRay.origin.y,
+				second.p2.z - intersectRay.origin.z);
+		float dist2C = intersectRay.direction.dot(second.p3.x - intersectRay.origin.x,
+				second.p3.y - intersectRay.origin.y,
+				second.p3.z - intersectRay.origin.z);
 
-		float startDist1 = Math.min(distA1, distB1);
-		float endDist1 = Math.max(distA1, distB1);
+		float startDist1 = FloatUtil.min(dist1A, dist1B, dist1C);
+		float endDist1 = FloatUtil.max(dist1A, dist1B, dist1C);
 
-		float startDist2 = Math.min(distA2, distB2);
-		float endDist2 = Math.max(distA2, distB2);
+		float startDist2 = FloatUtil.min(dist2A, dist2B, dist2C);
+		float endDist2 = FloatUtil.max(dist2A, dist2B, dist2C);
 
-		boolean segmentsIntersect = endDist1 < startDist2 + tol
-				|| endDist2 < startDist1 + tol;
+		boolean intersection = endDist1 > startDist2 && startDist1 < endDist2
+				|| endDist2 < startDist1 + tol && startDist2 < endDist1;
 
-		return segmentsIntersect
-				? TriangleIntersectionResult.NONCOPLANAR_FACE_FACE
-				: TriangleIntersectionResult.NONE;
+		if(!intersection)
+			return TriangleIntersectionResult.NONE;
+
+		out.a.set(intersectRay.direction)
+				.scl(Math.max(startDist1, startDist2))
+				.add(intersectRay.origin);
+		out.b.set(intersectRay.direction)
+				.scl(Math.min(endDist1, endDist2))
+				.add(intersectRay.origin);
+
+		return TriangleIntersectionResult.NONCOPLANAR_FACE_FACE;
 	}
 
 	private static void rayFromIntersection(Triangle first,
@@ -175,77 +184,6 @@ public class IntersectorPlus {
 		out.direction.nor();
 	}
 
-	private static void segmentFromIntersection(Triangle triangle,
-	                                            int signV1, int signV2, int signV3,
-	                                            Ray ray,
-	                                            float tol,
-	                                            Segment out) {
-		int countSet = 0;
-		if(signV1 == 0) {
-			out.a.set(triangle.p1);
-			countSet++;
-			if(signV2 == signV3) {
-				out.b.set(out.a);
-				return;
-			}
-		}
-
-		if(signV2 == 0) {
-			(countSet == 0 ? out.a : out.b).set(triangle.p2);
-			countSet++;
-			if(countSet == 2)
-				return;
-			if(signV1 == signV3) {
-				out.b.set(out.a);
-				return;
-			}
-		}
-
-		if(signV3 == 0) {
-			(countSet == 0 ? out.a : out.b).set(triangle.p3);
-			countSet++;
-			if(countSet == 2)
-				return;
-			if(signV1 == signV2) {
-				out.b.set(out.a);
-				return;
-			}
-		}
-
-		Ray edgeRay = new Ray();
-		Vector3 point = new Vector3();
-
-		if((signV1 == 1 && signV2 == -1) || (signV1 == -1 && signV2 == 1)) {
-			edgeRay.origin.set(triangle.p1);
-			edgeRay.direction.set(triangle.p2).sub(edgeRay.origin).nor();
-			if(!IntersectorPlus.intersectRayRay(ray, edgeRay, tol, point))
-				throw new IllegalStateException("Rays do not intersect");
-			(countSet == 0 ? out.a : out.b).set(point);
-			countSet++;
-			if(countSet == 2)
-				return;
-		}
-
-		if((signV2 == 1 && signV3 == -1) || (signV2 == -1 && signV3 == 1)) {
-			edgeRay.origin.set(triangle.p2);
-			edgeRay.direction.set(triangle.p3).sub(edgeRay.origin).nor();
-			if(!IntersectorPlus.intersectRayRay(ray, edgeRay, tol, point))
-				throw new IllegalStateException("Rays do not intersect");
-			(countSet == 0 ? out.a : out.b).set(point);
-			countSet++;
-			if(countSet == 2)
-				return;
-		}
-
-		if((signV3 == 1 && signV1 == -1) || (signV3 == -1 && signV1 == 1)) {
-			edgeRay.origin.set(triangle.p3);
-			edgeRay.direction.set(triangle.p1).sub(edgeRay.origin).nor();
-			if(!IntersectorPlus.intersectRayRay(ray, edgeRay, tol, point))
-				throw new IllegalStateException("Rays do not intersect");
-			(countSet == 0 ? out.a : out.b).set(point);
-		}
-	}
-
 	/**
 	 * Test whether 2 given co-planar triangles are intersecting or not. This function assumes the
 	 * provided triangles are co-planar and if they aren't, the result is undefined.
@@ -258,6 +196,8 @@ public class IntersectorPlus {
 	public static boolean intersectCoplanarTriangles(Triangle first,
 	                                                 Triangle second,
 	                                                 float tolerance) {
+
+
 		return false;
 	}
 
