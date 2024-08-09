@@ -18,6 +18,10 @@ import static java.lang.Math.max;
  * @author Alexander Winter
  */
 public class IntersectorPlus {
+	private static final Ray tmpIntersectRay = new Ray(), tmpEdgeLine = new Ray();
+	private static final Vector3 tmpIntersection = new Vector3();
+	private static final Segment tmpSegment1 = new SegmentPlus(), tmpSegment2 = new SegmentPlus();
+
 	/**
 	 * Computes the intersection of 2 rays in 3D space, if there is a single intersection. If there
 	 * an infinite amount of intersections (same rays), returns false. The output is only modified
@@ -118,31 +122,28 @@ public class IntersectorPlus {
 					? TriangleIntersectionResult.COPLANAR_FACE_FACE
 					: TriangleIntersectionResult.NONE; // otherwise all on one side, no intersection
 
-		Ray intersectRay = new Ray();
-		rayFromIntersection(first, second, tol, intersectRay);
-		Segment segment1 = new Segment(0f, 0f, 0f, 0f, 0f, 0f);
-		Segment segment2 = new Segment(0f, 0f, 0f, 0f, 0f, 0f);
+		rayFromIntersection(first, second, tol, tmpIntersectRay);
 
-		intersectTriangleRay(first, intersectRay, tol, segment1);
-		intersectTriangleRay(second, intersectRay, tol, segment2);
+		intersectTriangleRay(first, tmpIntersectRay, tol, tmpSegment1);
+		intersectTriangleRay(second, tmpIntersectRay, tol, tmpSegment2);
 
-		float dist1A = intersectRay.direction.dot(
-				segment1.a.x - intersectRay.origin.x,
-				segment1.a.y - intersectRay.origin.y,
-				segment1.a.z - intersectRay.origin.z);
-		float dist1B = intersectRay.direction.dot(
-				segment1.b.x - intersectRay.origin.x,
-				segment1.b.y - intersectRay.origin.y,
-				segment1.b.z - intersectRay.origin.z);
+		float dist1A = tmpIntersectRay.direction.dot(
+				tmpSegment1.a.x - tmpIntersectRay.origin.x,
+				tmpSegment1.a.y - tmpIntersectRay.origin.y,
+				tmpSegment1.a.z - tmpIntersectRay.origin.z);
+		float dist1B = tmpIntersectRay.direction.dot(
+				tmpSegment1.b.x - tmpIntersectRay.origin.x,
+				tmpSegment1.b.y - tmpIntersectRay.origin.y,
+				tmpSegment1.b.z - tmpIntersectRay.origin.z);
 
-		float dist2A = intersectRay.direction.dot(
-				segment2.a.x - intersectRay.origin.x,
-				segment2.a.y - intersectRay.origin.y,
-				segment2.a.z - intersectRay.origin.z);
-		float dist2B = intersectRay.direction.dot(
-				segment2.b.x - intersectRay.origin.x,
-				segment2.b.y - intersectRay.origin.y,
-				segment2.b.z - intersectRay.origin.z);
+		float dist2A = tmpIntersectRay.direction.dot(
+				tmpSegment2.a.x - tmpIntersectRay.origin.x,
+				tmpSegment2.a.y - tmpIntersectRay.origin.y,
+				tmpSegment2.a.z - tmpIntersectRay.origin.z);
+		float dist2B = tmpIntersectRay.direction.dot(
+				tmpSegment2.b.x - tmpIntersectRay.origin.x,
+				tmpSegment2.b.y - tmpIntersectRay.origin.y,
+				tmpSegment2.b.z - tmpIntersectRay.origin.z);
 
 		float startDist1 = Math.min(dist1A, dist1B);
 		float endDist1 = max(dist1A, dist1B);
@@ -156,12 +157,12 @@ public class IntersectorPlus {
 		if(!intersection)
 			return TriangleIntersectionResult.NONE;
 
-		out.a.set(intersectRay.direction)
+		out.a.set(tmpIntersectRay.direction)
 				.scl(max(startDist1, startDist2))
-				.add(intersectRay.origin);
-		out.b.set(intersectRay.direction)
+				.add(tmpIntersectRay.origin);
+		out.b.set(tmpIntersectRay.direction)
 				.scl(Math.min(endDist1, endDist2))
-				.add(intersectRay.origin);
+				.add(tmpIntersectRay.origin);
 
 		return TriangleIntersectionResult.NONCOPLANAR_FACE_FACE;
 	}
@@ -264,40 +265,38 @@ public class IntersectorPlus {
 		if(abs(normal.dot(ray.origin) + d) > tolerance)
 			return false; // parallel but not coplanar
 
-		Ray edgeLine = new Ray();
-		edgeLine.origin.set(triangle.p1);
-		edgeLine.direction.set(triangle.p2).sub(triangle.p1);
+		tmpEdgeLine.origin.set(triangle.p1);
+		tmpEdgeLine.direction.set(triangle.p2).sub(triangle.p1);
 
-		Vector3 intersection = new Vector3();
 		int countIntersections = 0;
 
-		if(intersectRayRay(ray, edgeLine, tolerance, intersection)) {
-			float t = edgeLine.direction.dot(intersection.x - edgeLine.origin.x,
-					intersection.y - edgeLine.origin.y,
-					intersection.z - edgeLine.origin.z);
-			float tEnd = edgeLine.direction.dot(triangle.p2.x - edgeLine.origin.x,
-					triangle.p2.y - edgeLine.origin.y,
-					triangle.p2.z - edgeLine.origin.z);
+		if(intersectRayRay(ray, tmpEdgeLine, tolerance, tmpIntersection)) {
+			float t = tmpEdgeLine.direction.dot(tmpIntersection.x - tmpEdgeLine.origin.x,
+					tmpIntersection.y - tmpEdgeLine.origin.y,
+					tmpIntersection.z - tmpEdgeLine.origin.z);
+			float tEnd = tmpEdgeLine.direction.dot(triangle.p2.x - tmpEdgeLine.origin.x,
+					triangle.p2.y - tmpEdgeLine.origin.y,
+					triangle.p2.z - tmpEdgeLine.origin.z);
 
 			if(t >= -tolerance && t <= tEnd + tolerance) {
-				out.a.set(intersection);
+				out.a.set(tmpIntersection);
 				countIntersections++;
 			}
 		}
 
-		edgeLine.origin.set(triangle.p2);
-		edgeLine.direction.set(triangle.p3).sub(triangle.p2);
+		tmpEdgeLine.origin.set(triangle.p2);
+		tmpEdgeLine.direction.set(triangle.p3).sub(triangle.p2);
 
-		if(intersectRayRay(ray, edgeLine, tolerance, intersection)) {
-			float t = edgeLine.direction.dot(intersection.x - edgeLine.origin.x,
-					intersection.y - edgeLine.origin.y,
-					intersection.z - edgeLine.origin.z);
-			float tEnd = edgeLine.direction.dot(triangle.p3.x - edgeLine.origin.x,
-					triangle.p3.y - edgeLine.origin.y,
-					triangle.p3.z - edgeLine.origin.z);
+		if(intersectRayRay(ray, tmpEdgeLine, tolerance, tmpIntersection)) {
+			float t = tmpEdgeLine.direction.dot(tmpIntersection.x - tmpEdgeLine.origin.x,
+					tmpIntersection.y - tmpEdgeLine.origin.y,
+					tmpIntersection.z - tmpEdgeLine.origin.z);
+			float tEnd = tmpEdgeLine.direction.dot(triangle.p3.x - tmpEdgeLine.origin.x,
+					triangle.p3.y - tmpEdgeLine.origin.y,
+					triangle.p3.z - tmpEdgeLine.origin.z);
 
 			if(t >= -tolerance && t <= tEnd + tolerance) {
-				(countIntersections == 0 ? out.a : out.b).set(intersection);
+				(countIntersections == 0 ? out.a : out.b).set(tmpIntersection);
 				countIntersections++;
 
 				if(countIntersections == 2)
@@ -305,19 +304,19 @@ public class IntersectorPlus {
 			}
 		}
 
-		edgeLine.origin.set(triangle.p3);
-		edgeLine.direction.set(triangle.p1).sub(triangle.p3);
+		tmpEdgeLine.origin.set(triangle.p3);
+		tmpEdgeLine.direction.set(triangle.p1).sub(triangle.p3);
 
-		if(intersectRayRay(ray, edgeLine, tolerance, intersection)) {
-			float t = edgeLine.direction.dot(intersection.x - edgeLine.origin.x,
-					intersection.y - edgeLine.origin.y,
-					intersection.z - edgeLine.origin.z);
-			float tEnd = edgeLine.direction.dot(triangle.p1.x - edgeLine.origin.x,
-					triangle.p1.y - edgeLine.origin.y,
-					triangle.p1.z - edgeLine.origin.z);
+		if(intersectRayRay(ray, tmpEdgeLine, tolerance, tmpIntersection)) {
+			float t = tmpEdgeLine.direction.dot(tmpIntersection.x - tmpEdgeLine.origin.x,
+					tmpIntersection.y - tmpEdgeLine.origin.y,
+					tmpIntersection.z - tmpEdgeLine.origin.z);
+			float tEnd = tmpEdgeLine.direction.dot(triangle.p1.x - tmpEdgeLine.origin.x,
+					triangle.p1.y - tmpEdgeLine.origin.y,
+					triangle.p1.z - tmpEdgeLine.origin.z);
 
 			if(t >= -tolerance && t <= tEnd + tolerance) {
-				(countIntersections == 0 ? out.a : out.b).set(intersection);
+				(countIntersections == 0 ? out.a : out.b).set(tmpIntersection);
 				countIntersections++;
 
 				if(countIntersections == 2)
