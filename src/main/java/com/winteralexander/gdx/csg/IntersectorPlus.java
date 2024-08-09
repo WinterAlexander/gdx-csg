@@ -6,7 +6,8 @@ import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.math.collision.Segment;
 
 import static com.winteralexander.gdx.utils.math.MathUtil.pow2;
-import static com.winteralexander.gdx.utils.math.VectorUtil.getComponent;
+import static java.lang.Math.abs;
+import static java.lang.Math.max;
 
 /**
  * Extension of libGDX's {@link com.badlogic.gdx.math.Intersector} that adds support for some extra
@@ -34,48 +35,50 @@ public class IntersectorPlus {
 		Vector3 o1 = first.origin;
 		Vector3 o2 = second.origin;
 
-		int firstComp = 0, secondComp;
+		double sx = o1.x - o2.x;
+		double sy = o1.y - o2.y;
+		double sz = o1.z - o2.z;
 
-		for(int i = 1; i < 3; i++)
-			if(Math.abs(getComponent(d1, i)) > Math.abs(getComponent(d1, firstComp)))
-				firstComp = i;
+		double denom1 = d2.y * d1.x - d1.y * d2.x;
+		double denom2 = d2.z * d1.y - d1.z * d2.y;
+		double denom3 = d2.x * d1.z - d1.x * d2.z;
 
-		secondComp = firstComp == 0 ? 1 : 0;
+		double t;
 
-		for(int i = secondComp + 1; i < 3; i++) {
-			if(i == firstComp)
-				continue;
-			if(Math.abs(getComponent(d2, i)) > Math.abs(getComponent(d2, firstComp)))
-				secondComp = i;
-		}
-
-		double D1a = getComponent(d1, firstComp);
-		double D1b = getComponent(d1, secondComp);
-		double D2a = getComponent(d2, firstComp);
-		double D2b = getComponent(d2, secondComp);
-		double Sa = (double)getComponent(o1, firstComp) - getComponent(o2, firstComp);
-		double Sb = (double)getComponent(o1, secondComp) - getComponent(o2, secondComp);
-
-		double denom = 1.0 - D1b * D2a / (D2b * D1a);
-
-		if(denom == 0.0)
+		// means the rays are collinear
+		if(denom1 == 0 && denom2 == 0 && denom3 == 0)
 			return false;
 
-		double t = (Sb * D2a / (D2b * D1a) - Sa / D1a) / denom;
-		double t2 = t * D1b / D2b + Sb / D2b;
+		// for the sake of precision, use the largest dominator for the computation
+		if(abs(denom1) > max(abs(denom2), abs(denom3)))
+			t = (sy * d2.x - sx * d2.y) / denom1;
+		else if(abs(denom2) > abs(denom3))
+			t = (sz * d2.y - sy * d2.z) / denom2;
+		else
+			t = (sx * d2.z - sz * d2.x) / denom3;
 
-		float x1 = (float)(o1.x + d1.x * t);
-		float y1 = (float)(o1.y + d1.y * t);
-		float z1 = (float)(o1.z + d1.z * t);
+		double t2;
 
-		float x2 = (float)(o2.x + d2.x * t2);
-		float y2 = (float)(o2.y + d2.y * t2);
-		float z2 = (float)(o2.z + d2.z * t2);
+		// for the sake of precision, compute t2 from t using the largest component
+		if(abs(d2.x) > max(abs(d2.y), abs(d2.z)))
+			t2 = t * d1.x / d2.x + sx / d2.x;
+		else if(abs(d2.y) > abs(d2.z))
+			t2 = t * d1.y / d2.y + sy / d2.y;
+		else
+			t2 = t * d1.z / d2.z + sz / d2.z;
+
+		double x1 = o1.x + d1.x * t;
+		double y1 = o1.y + d1.y * t;
+		double z1 = o1.z + d1.z * t;
+
+		double x2 = o2.x + d2.x * t2;
+		double y2 = o2.y + d2.y * t2;
+		double z2 = o2.z + d2.z * t2;
 
 		if(pow2(x1 - x2) + pow2(y1 - y2) + pow2(z1 - z2) > tolerance)
 			return false;
 
-		out.set(x1, y1, z1);
+		out.set((float)x1, (float)y1, (float)z1);
 		return true;
 	}
 
@@ -142,10 +145,10 @@ public class IntersectorPlus {
 				segment2.b.z - intersectRay.origin.z);
 
 		float startDist1 = Math.min(dist1A, dist1B);
-		float endDist1 = Math.max(dist1A, dist1B);
+		float endDist1 = max(dist1A, dist1B);
 
 		float startDist2 = Math.min(dist2A, dist2B);
-		float endDist2 = Math.max(dist2A, dist2B);
+		float endDist2 = max(dist2A, dist2B);
 
 		boolean intersection = endDist1 > startDist2 && startDist1 < endDist2
 				|| endDist2 < startDist1 + tol && startDist2 < endDist1;
@@ -154,7 +157,7 @@ public class IntersectorPlus {
 			return TriangleIntersectionResult.NONE;
 
 		out.a.set(intersectRay.direction)
-				.scl(Math.max(startDist1, startDist2))
+				.scl(max(startDist1, startDist2))
 				.add(intersectRay.origin);
 		out.b.set(intersectRay.direction)
 				.scl(Math.min(endDist1, endDist2))
@@ -180,11 +183,11 @@ public class IntersectorPlus {
 
 		float d1 = -(normalFace1.x * v1p.x + normalFace1.y * v1p.y + normalFace1.z * v1p.z);
 		float d2 = -(normalFace2.x * v2p.x + normalFace2.y * v2p.y + normalFace2.z * v2p.z);
-		if(Math.abs(out.direction.x) > tol) {
+		if(abs(out.direction.x) > tol) {
 			out.origin.x = 0;
 			out.origin.y = (d2 * normalFace1.z - d1 * normalFace2.z) / out.direction.x;
 			out.origin.z = (d1 * normalFace2.y - d2 * normalFace1.y) / out.direction.x;
-		} else if(Math.abs(out.direction.y) > tol) {
+		} else if(abs(out.direction.y) > tol) {
 			out.origin.x = (d1 * normalFace2.z - d2 * normalFace1.z) / out.direction.y;
 			out.origin.y = 0;
 			out.origin.z = (d2 * normalFace1.x - d1 * normalFace2.x) / out.direction.y;
@@ -208,8 +211,8 @@ public class IntersectorPlus {
 	public static boolean areCoplanar(Plane plane,
 	                                  Ray ray,
 	                                  float tolerance) {
-		return Math.abs(plane.normal.dot(ray.direction)) <= tolerance
-				&& Math.abs(plane.normal.dot(ray.origin) + plane.getD()) <= tolerance;
+		return abs(plane.normal.dot(ray.direction)) <= tolerance
+				&& abs(plane.normal.dot(ray.origin) + plane.getD()) <= tolerance;
 	}
 
 	/**
@@ -224,8 +227,8 @@ public class IntersectorPlus {
 	                                  Ray ray,
 	                                  float tolerance) {
 		Vector3 normal = triangle.getNormal();
-		return Math.abs(normal.dot(ray.direction)) <= tolerance
-				&& Math.abs(normal.dot(ray.origin) - normal.dot(triangle.p1)) <= tolerance;
+		return abs(normal.dot(ray.direction)) <= tolerance
+				&& abs(normal.dot(ray.origin) - normal.dot(triangle.p1)) <= tolerance;
 	}
 
 
@@ -247,7 +250,7 @@ public class IntersectorPlus {
 		Vector3 normal = triangle.getNormal();
 		float d = -normal.dot(triangle.p1);
 		float denom = ray.direction.dot(triangle.getNormal());
-		if(Math.abs(denom) > tolerance) {
+		if(abs(denom) > tolerance) {
 			float t = -(ray.origin.dot(normal) + d) / denom;
 			if (t < 0) return false;
 
@@ -256,7 +259,7 @@ public class IntersectorPlus {
 			return true;
 		}
 
-		if(Math.abs(normal.dot(ray.origin) + d) > tolerance)
+		if(abs(normal.dot(ray.origin) + d) > tolerance)
 			return false; // parallel but not coplanar
 
 

@@ -58,7 +58,9 @@ public class IntersectorPlusTest {
 	}
 
 	@Test
-	public void testRayRayBadPrecision() {
+	public void testRayRayAdversarialCase() {
+		// this test case reproduced a precision issue with a prior version of the algorithm
+		// remains present to ensure good functioning of the new algorithm
 		Ray ray1 = new Ray();
 		ray1.origin.set(0.9067098f, -0.8748553f, 0.0036551952f);
 		ray1.direction.set(-0.26122704f, 0.6468483f, -0.71648294f);
@@ -79,8 +81,10 @@ public class IntersectorPlusTest {
 		precision = Math.max(precision, Math.abs(expectedIntersection.y - intersection.y));
 		precision = Math.max(precision, Math.abs(expectedIntersection.z - intersection.z));
 
-		if(precision > 1e-4f)
-			fail("Computed intersection point has too poor precision " + precision);
+		System.out.println("Precision: " + precision);
+
+		if(precision > 1e-6f)
+			fail("Computed intersection point has too poor precision");
 	}
 
 	@Test
@@ -90,8 +94,9 @@ public class IntersectorPlusTest {
 		Random r = new Random();
 		Vector3 tmpIntersection = new Vector3();
 		Vector3 tmpComputedIntersection = new Vector3();
+		float worstPrecision = 0f;
 
-		for(int i = 0; i < 1000_000; i++) {
+		for(int i = 0; i < 100_000; i++) {
 			ray1.origin.set(r.nextFloat() * 2f - 1f,
 					r.nextFloat() * 2f - 1f,
 					r.nextFloat() * 2f - 1f);
@@ -114,22 +119,20 @@ public class IntersectorPlusTest {
 			ray2.origin.set(tmpIntersection);
 			ray2.origin.mulAdd(ray2.direction, posRay2);
 
-			boolean intersect = IntersectorPlus.intersectRayRay(ray1, ray2, 1e-4f,
-					tmpComputedIntersection);
+			assertTrue(IntersectorPlus.intersectRayRay(ray1, ray2, 1e-6f,
+					tmpComputedIntersection));
 
 			float precision = 0f;
 
 			precision = Math.max(precision, Math.abs(tmpIntersection.x - tmpComputedIntersection.x));
 			precision = Math.max(precision, Math.abs(tmpIntersection.y - tmpComputedIntersection.y));
 			precision = Math.max(precision, Math.abs(tmpIntersection.z - tmpComputedIntersection.z));
+			worstPrecision = Math.max(worstPrecision, precision);
 
-			System.out.println("Precision: " + precision);
-			if(!intersect || precision > 4e-3f) {
-				IntersectorPlus.intersectRayRay(ray1, ray2, 1e-4f,
-						tmpComputedIntersection);
-				fail("Computed intersection point has too poor precision");
-			}
-			assertTrue(intersect);
+			if(precision > 1e-5f)
+				fail("Computed intersection point has too poor precision " + precision);
 		}
+
+		System.out.println("Worst precision: " + worstPrecision);
 	}
 }
