@@ -251,8 +251,10 @@ public class IntersectorPlus {
 		float d = -normal.dot(triangle.p1);
 		float denom = ray.direction.dot(triangle.getNormal());
 		if(abs(denom) > tolerance) {
+			// not coplanar, single point intersection
 			float t = -(ray.origin.dot(normal) + d) / denom;
-			if (t < 0) return false;
+			if(t < 0)
+				return false;
 
 			out.a.set(ray.origin).mulAdd(ray.direction, t);
 			out.b.set(ray.origin).mulAdd(ray.direction, t);
@@ -262,9 +264,72 @@ public class IntersectorPlus {
 		if(abs(normal.dot(ray.origin) + d) > tolerance)
 			return false; // parallel but not coplanar
 
+		Ray edgeLine = new Ray();
+		edgeLine.origin.set(triangle.p1);
+		edgeLine.direction.set(triangle.p2).sub(triangle.p1);
 
+		Vector3 intersection = new Vector3();
+		int countIntersections = 0;
 
-		return false;
+		if(intersectRayRay(ray, edgeLine, tolerance, intersection)) {
+			float t = edgeLine.direction.dot(intersection.x - edgeLine.origin.x,
+					intersection.y - edgeLine.origin.y,
+					intersection.z - edgeLine.origin.z);
+			float tEnd = edgeLine.direction.dot(triangle.p2.x - edgeLine.origin.x,
+					triangle.p2.y - edgeLine.origin.y,
+					triangle.p2.z - edgeLine.origin.z);
+
+			if(t >= -tolerance && t <= tEnd + tolerance) {
+				out.a.set(intersection);
+				countIntersections++;
+			}
+		}
+
+		edgeLine.origin.set(triangle.p2);
+		edgeLine.direction.set(triangle.p3).sub(triangle.p2);
+
+		if(intersectRayRay(ray, edgeLine, tolerance, intersection)) {
+			float t = edgeLine.direction.dot(intersection.x - edgeLine.origin.x,
+					intersection.y - edgeLine.origin.y,
+					intersection.z - edgeLine.origin.z);
+			float tEnd = edgeLine.direction.dot(triangle.p3.x - edgeLine.origin.x,
+					triangle.p3.y - edgeLine.origin.y,
+					triangle.p3.z - edgeLine.origin.z);
+
+			if(t >= -tolerance && t <= tEnd + tolerance) {
+				(countIntersections == 0 ? out.a : out.b).set(intersection);
+				countIntersections++;
+
+				if(countIntersections == 2)
+					return true;
+			}
+		}
+
+		edgeLine.origin.set(triangle.p3);
+		edgeLine.direction.set(triangle.p1).sub(triangle.p3);
+
+		if(intersectRayRay(ray, edgeLine, tolerance, intersection)) {
+			float t = edgeLine.direction.dot(intersection.x - edgeLine.origin.x,
+					intersection.y - edgeLine.origin.y,
+					intersection.z - edgeLine.origin.z);
+			float tEnd = edgeLine.direction.dot(triangle.p1.x - edgeLine.origin.x,
+					triangle.p1.y - edgeLine.origin.y,
+					triangle.p1.z - edgeLine.origin.z);
+
+			if(t >= -tolerance && t <= tEnd + tolerance) {
+				(countIntersections == 0 ? out.a : out.b).set(intersection);
+				countIntersections++;
+
+				if(countIntersections == 2)
+					return true;
+			}
+		}
+
+		if(countIntersections == 0)
+			return false;
+
+		throw new IllegalStateException("Only intersected with 1 side of a triangle, " +
+				"which shouldn't happen");
 	}
 
 	/**

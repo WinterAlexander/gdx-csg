@@ -2,7 +2,10 @@ package com.winteralexander.gdx.csg.test;
 
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
+import com.badlogic.gdx.math.collision.Segment;
 import com.winteralexander.gdx.csg.IntersectorPlus;
+import com.winteralexander.gdx.csg.SegmentPlus;
+import com.winteralexander.gdx.csg.Triangle;
 import org.junit.Test;
 
 import java.util.Random;
@@ -134,5 +137,36 @@ public class IntersectorPlusTest {
 		}
 
 		System.out.println("Worst precision: " + worstPrecision);
+	}
+
+	@Test
+	public void testTriangleRay() {
+		Triangle triangle = new Triangle(0f, 0f, 0f,
+				0f, 1f, 0f,
+				0f, 1f, 1f);
+
+		Ray ray = new Ray();
+		ray.origin.set(0f, 0.5f, 0f);
+		ray.direction.set(0f, 0f, 1f);
+
+		Segment segment = new SegmentPlus();
+
+		assertTrue(IntersectorPlus.intersectTriangleRay(triangle, ray, 1e-5f, segment));
+
+		assertTrue(segment.a.epsilonEquals(0.0f, 0.5f, 0.0f));
+		assertTrue(segment.b.epsilonEquals(0.0f, 0.5f, 0.5f));
+
+		ray.origin.set(-1f, 0.5f, 0.25f);
+		ray.direction.set(1f, 0f, 0f);
+
+		assertTrue(IntersectorPlus.intersectTriangleRay(triangle, ray, 1e-5f, segment));
+
+		assertTrue(segment.a.epsilonEquals(0.0f, 0.5f, 0.25f));
+		assertTrue(segment.b.epsilonEquals(0.0f, 0.5f, 0.25f));
+
+		ray.origin.set(-1f, 0.5f, 0.25f);
+		ray.direction.set(0f, 1f, 0f);
+
+		assertFalse(IntersectorPlus.intersectTriangleRay(triangle, ray, 1e-5f, segment));
 	}
 }
