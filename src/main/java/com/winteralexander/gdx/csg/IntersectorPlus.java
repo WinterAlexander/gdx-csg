@@ -1,9 +1,12 @@
 package com.winteralexander.gdx.csg;
 
+import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.math.collision.Segment;
-import com.winteralexander.gdx.utils.math.FloatUtil;
+
+import static com.winteralexander.gdx.utils.math.MathUtil.pow2;
+import static com.winteralexander.gdx.utils.math.VectorUtil.getComponent;
 
 /**
  * Extension of libGDX's {@link com.badlogic.gdx.math.Intersector} that adds support for some extra
@@ -21,51 +24,58 @@ public class IntersectorPlus {
 	 *
 	 * @param first first ray to find intersection
 	 * @param second second ray to find intersection
-	 * @param tol tolerance for the intersection
+	 * @param tolerance tolerance to use to determine if the rays intersect or not
 	 * @param out output intersection point
 	 * @return true if there is one intersection between the two rays, false otherwise
 	 */
-	public static boolean intersectRayRay(Ray first, Ray second, float tol, Vector3 out) {
-		//x = x1 + a1*t = x2 + b1*s
-		//y = y1 + a2*t = y2 + b2*s
-		//z = z1 + a3*t = z2 + b3*s
-
+	public static boolean intersectRayRay(Ray first, Ray second, float tolerance, Vector3 out) {
 		Vector3 d1 = first.direction;
 		Vector3 d2 = second.direction;
 		Vector3 o1 = first.origin;
 		Vector3 o2 = second.origin;
 
-		float t;
-		if(Math.abs(d1.y * d2.x - d1.x * d2.y) > tol) {
-			t = (-o1.y * d2.x + o2.y * d2.x + d2.y * o1.x - d2.y * o2.x)
-					/ (d1.y * d2.x - d1.x * d2.y);
-		} else if(Math.abs(-d1.x * d2.z + d1.z * d2.x) > tol) {
-			t = -(-d2.z * o1.x + d2.z * o2.x + d2.x * o1.z - d2.x * o2.z)
-					/ (-d1.x * d2.z + d1.z * d2.x);
-		} else if(Math.abs(-d1.z * d2.y + d1.y * d2.z) > tol) {
-			t = (o1.z * d2.y - o2.z * d2.y - d2.z * o1.y + d2.z * o2.y)
-					/ (-d1.z * d2.y + d1.y * d2.z);
-		} else
-			return false;
+		int firstComp = 0, secondComp;
 
-		float x = o1.x + d1.x * t;
-		float y = o1.y + d1.y * t;
-		float z = o1.z + d1.z * t;
+		for(int i = 1; i < 3; i++)
+			if(Math.abs(getComponent(d1, i)) > Math.abs(getComponent(d1, firstComp)))
+				firstComp = i;
 
-		float dst = second.direction.dot(x - second.origin.x,
-				y - second.origin.y,
-				z - second.origin.z);
+		secondComp = firstComp == 0 ? 1 : 0;
 
-		float prevX = out.x;
-		float prevY = out.y;
-		float prevZ = out.z;
-		second.getEndPoint(out, dst);
-		if(!out.epsilonEquals(x, y, z, tol * 1e3f)) {
-			out.set(prevX, prevY, prevZ);
-			return false;
+		for(int i = secondComp + 1; i < 3; i++) {
+			if(i == firstComp)
+				continue;
+			if(Math.abs(getComponent(d2, i)) > Math.abs(getComponent(d2, firstComp)))
+				secondComp = i;
 		}
 
-		out.set(x, y, z);
+		double D1a = getComponent(d1, firstComp);
+		double D1b = getComponent(d1, secondComp);
+		double D2a = getComponent(d2, firstComp);
+		double D2b = getComponent(d2, secondComp);
+		double Sa = (double)getComponent(o1, firstComp) - getComponent(o2, firstComp);
+		double Sb = (double)getComponent(o1, secondComp) - getComponent(o2, secondComp);
+
+		double denom = 1.0 - D1b * D2a / (D2b * D1a);
+
+		if(denom == 0.0)
+			return false;
+
+		double t = (Sb * D2a / (D2b * D1a) - Sa / D1a) / denom;
+		double t2 = t * D1b / D2b + Sb / D2b;
+
+		float x1 = (float)(o1.x + d1.x * t);
+		float y1 = (float)(o1.y + d1.y * t);
+		float z1 = (float)(o1.z + d1.z * t);
+
+		float x2 = (float)(o2.x + d2.x * t2);
+		float y2 = (float)(o2.y + d2.y * t2);
+		float z2 = (float)(o2.z + d2.z * t2);
+
+		if(pow2(x1 - x2) + pow2(y1 - y2) + pow2(z1 - z2) > tolerance)
+			return false;
+
+		out.set(x1, y1, z1);
 		return true;
 	}
 
@@ -107,32 +117,35 @@ public class IntersectorPlus {
 
 		Ray intersectRay = new Ray();
 		rayFromIntersection(first, second, tol, intersectRay);
+		Segment segment1 = new Segment(0f, 0f, 0f, 0f, 0f, 0f);
+		Segment segment2 = new Segment(0f, 0f, 0f, 0f, 0f, 0f);
 
-		float dist1A = intersectRay.direction.dot(first.p1.x - intersectRay.origin.x,
-				first.p1.y - intersectRay.origin.y,
-				first.p1.z - intersectRay.origin.z);
-		float dist1B = intersectRay.direction.dot(first.p2.x - intersectRay.origin.x,
-				first.p2.y - intersectRay.origin.y,
-				first.p2.z - intersectRay.origin.z);
-		float dist1C = intersectRay.direction.dot(first.p3.x - intersectRay.origin.x,
-				first.p3.y - intersectRay.origin.y,
-				first.p3.z - intersectRay.origin.z);
+		intersectTriangleRay(first, intersectRay, tol, segment1);
+		intersectTriangleRay(second, intersectRay, tol, segment2);
 
-		float dist2A = intersectRay.direction.dot(second.p1.x - intersectRay.origin.x,
-				second.p1.y - intersectRay.origin.y,
-				second.p1.z - intersectRay.origin.z);
-		float dist2B = intersectRay.direction.dot(second.p2.x - intersectRay.origin.x,
-				second.p2.y - intersectRay.origin.y,
-				second.p2.z - intersectRay.origin.z);
-		float dist2C = intersectRay.direction.dot(second.p3.x - intersectRay.origin.x,
-				second.p3.y - intersectRay.origin.y,
-				second.p3.z - intersectRay.origin.z);
+		float dist1A = intersectRay.direction.dot(
+				segment1.a.x - intersectRay.origin.x,
+				segment1.a.y - intersectRay.origin.y,
+				segment1.a.z - intersectRay.origin.z);
+		float dist1B = intersectRay.direction.dot(
+				segment1.b.x - intersectRay.origin.x,
+				segment1.b.y - intersectRay.origin.y,
+				segment1.b.z - intersectRay.origin.z);
 
-		float startDist1 = FloatUtil.min(dist1A, dist1B, dist1C);
-		float endDist1 = FloatUtil.max(dist1A, dist1B, dist1C);
+		float dist2A = intersectRay.direction.dot(
+				segment2.a.x - intersectRay.origin.x,
+				segment2.a.y - intersectRay.origin.y,
+				segment2.a.z - intersectRay.origin.z);
+		float dist2B = intersectRay.direction.dot(
+				segment2.b.x - intersectRay.origin.x,
+				segment2.b.y - intersectRay.origin.y,
+				segment2.b.z - intersectRay.origin.z);
 
-		float startDist2 = FloatUtil.min(dist2A, dist2B, dist2C);
-		float endDist2 = FloatUtil.max(dist2A, dist2B, dist2C);
+		float startDist1 = Math.min(dist1A, dist1B);
+		float endDist1 = Math.max(dist1A, dist1B);
+
+		float startDist2 = Math.min(dist2A, dist2B);
+		float endDist2 = Math.max(dist2A, dist2B);
 
 		boolean intersection = endDist1 > startDist2 && startDist1 < endDist2
 				|| endDist2 < startDist1 + tol && startDist2 < endDist1;
@@ -182,6 +195,73 @@ public class IntersectorPlus {
 		}
 
 		out.direction.nor();
+	}
+
+	/**
+	 * Tests whether the given plane and the ray are coplanar
+	 *
+	 * @param plane plane to check
+	 * @param ray ray to check
+	 * @param tolerance tolerance to use for computations
+	 * @return true if coplanar, otherwise false
+	 */
+	public static boolean areCoplanar(Plane plane,
+	                                  Ray ray,
+	                                  float tolerance) {
+		return Math.abs(plane.normal.dot(ray.direction)) <= tolerance
+				&& Math.abs(plane.normal.dot(ray.origin) + plane.getD()) <= tolerance;
+	}
+
+	/**
+	 * Tests whether the given triangle and the ray are coplanar
+	 *
+	 * @param triangle triangle to check
+	 * @param ray ray to check
+	 * @param tolerance tolerance to use for computations
+	 * @return true if coplanar, otherwise false
+	 */
+	public static boolean areCoplanar(Triangle triangle,
+	                                  Ray ray,
+	                                  float tolerance) {
+		Vector3 normal = triangle.getNormal();
+		return Math.abs(normal.dot(ray.direction)) <= tolerance
+				&& Math.abs(normal.dot(ray.origin) - normal.dot(triangle.p1)) <= tolerance;
+	}
+
+
+	/**
+	 * Finds the intersection between a ray and a triangle. This intersection can be either a point
+	 * or a segment of the ray, which only happens in the case where the ray and the triangle are
+	 * co planar.
+	 *
+	 * @param triangle the triangle to check for intersection
+	 * @param ray the ray to check for intersection
+	 * @param tolerance tolerance to use for computations
+	 * @param out segment of the intersection, both ends the same if the intersection is a point
+	 * @return true if the triangle and the ray intersect, otherwise false
+	 */
+	public static boolean intersectTriangleRay(Triangle triangle,
+	                                           Ray ray,
+	                                           float tolerance,
+	                                           Segment out) {
+		Vector3 normal = triangle.getNormal();
+		float d = -normal.dot(triangle.p1);
+		float denom = ray.direction.dot(triangle.getNormal());
+		if(Math.abs(denom) > tolerance) {
+			float t = -(ray.origin.dot(normal) + d) / denom;
+			if (t < 0) return false;
+
+			out.a.set(ray.origin).mulAdd(ray.direction, t);
+			out.b.set(ray.origin).mulAdd(ray.direction, t);
+			return true;
+		}
+
+		if(Math.abs(normal.dot(ray.origin) + d) > tolerance)
+			return false; // parallel but not coplanar
+
+
+
+		return false;
 	}
 
 	/**

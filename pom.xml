@@ -22,7 +22,7 @@
         <dependency>
             <groupId>com.github.WinterAlexander</groupId>
             <artifactId>gdx-utils</artifactId>
-            <version>6.14.0</version>
+            <version>b247784c39</version>
         </dependency>
         <!-- Test dependencies -->
         <dependency>
