@@ -4,14 +4,14 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.math.collision.Segment;
 import com.winteralexander.gdx.csg.IntersectorPlus;
-import com.winteralexander.gdx.csg.IntersectorPlus.RayIntersectionResult;
+import com.winteralexander.gdx.csg.IntersectorPlus.LineIntersectionResult;
 import com.winteralexander.gdx.csg.SegmentPlus;
 import com.winteralexander.gdx.csg.Triangle;
 import org.junit.Test;
 
 import java.util.Random;
 
-import static com.winteralexander.gdx.csg.IntersectorPlus.RayIntersectionResult.*;
+import static com.winteralexander.gdx.csg.IntersectorPlus.LineIntersectionResult.*;
 import static com.winteralexander.gdx.csg.IntersectorPlus.intersectRayRay;
 import static com.winteralexander.gdx.csg.IntersectorPlus.intersectSegmentSegment;
 import static org.junit.Assert.*;
@@ -45,12 +45,12 @@ public class IntersectorPlusTest {
 		ray2.origin.set(15f, 15f, 15f);
 		ray2.direction.set(-9f, 10f, 55f).nor();
 
-		RayIntersectionResult result = intersectRayRay(ray1, ray2, 1e-5f, intersection);
+		LineIntersectionResult result = intersectRayRay(ray1, ray2, 1e-5f, intersection);
 		assertEquals(NONE, result);
 	}
 
 	@Test
-	public void testRayRayColinear() {
+	public void testRayRayCollinear() {
 		Ray ray1 = new Ray();
 		ray1.origin.set(0f, 0f, 0f);
 		ray1.direction.set(1f, 1f, 1f).nor();
@@ -61,7 +61,7 @@ public class IntersectorPlusTest {
 
 		Vector3 intersection = new Vector3();
 
-		assertEquals(RayIntersectionResult.COLINEAR, intersectRayRay(ray1, ray2, 1e-5f, intersection));
+		assertEquals(LineIntersectionResult.COLLINEAR, intersectRayRay(ray1, ray2, 1e-5f, intersection));
 	}
 
 	@Test
@@ -169,7 +169,7 @@ public class IntersectorPlusTest {
 		segment2.a.set(0.5f, 0.5f, 0f);
 		segment2.b.set(6f, 6f, 0f);
 
-		assertEquals(COLINEAR, intersectSegmentSegment(segment1,
+		assertEquals(COLLINEAR, intersectSegmentSegment(segment1,
 				segment2, 1e-5f, intersection));
 
 		segment1.a.set(0f, 0f, 0f);

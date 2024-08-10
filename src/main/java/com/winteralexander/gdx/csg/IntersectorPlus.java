@@ -5,7 +5,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.math.collision.Segment;
 
-import static com.winteralexander.gdx.csg.IntersectorPlus.RayIntersectionResult.*;
+import static com.winteralexander.gdx.csg.IntersectorPlus.LineIntersectionResult.*;
 import static com.winteralexander.gdx.utils.math.MathUtil.pow2;
 import static java.lang.Math.*;
 
@@ -25,30 +25,32 @@ public class IntersectorPlus {
 
 	/**
 	 * Computes the intersection of 2 rays in 3D space. If there an infinite amount of intersections
-	 * (same rays), returns {@link RayIntersectionResult#COLINEAR} and the output is not set. The
-	 * output is only modified when this function returns {@link RayIntersectionResult#POINT}.
+	 * (same rays), returns {@link LineIntersectionResult#COLLINEAR} and the output is not set. The
+	 * output is only modified when this function returns {@link LineIntersectionResult#POINT}.
 	 *
 	 * @param first first ray to find intersection
 	 * @param second second ray to find intersection
 	 * @param tolerance tolerance to use to determine if the rays intersect or not
 	 * @param out output intersection point
-	 * @return true if there is one intersection between the two rays, false otherwise
+	 * @return result of the intersection, which is either no intersection, a point or collinear
 	 */
-	public static RayIntersectionResult intersectRayRay(Ray first,
-	                                                    Ray second,
-	                                                    float tolerance,
-	                                                    Vector3 out) {
+	public static LineIntersectionResult intersectRayRay(Ray first,
+	                                                     Ray second,
+	                                                     float tolerance,
+	                                                     Vector3 out) {
 		return intersectRayRay(first.origin, first.direction,
 				second.origin, second.direction, tolerance, out);
 	}
 
-	public static RayIntersectionResult intersectRayRay(Vector3 origin1,
-	                                                    Vector3 direction1,
-	                                                    Vector3 origin2,
-	                                                    Vector3 direction2,
-	                                                    float tolerance,
-	                                                    Vector3 out) {
-
+	/**
+	 * @see #intersectRayRay(Ray, Ray, float, Vector3)
+	 */
+	public static LineIntersectionResult intersectRayRay(Vector3 origin1,
+	                                                     Vector3 direction1,
+	                                                     Vector3 origin2,
+	                                                     Vector3 direction2,
+	                                                     float tolerance,
+	                                                     Vector3 out) {
 		double sx = origin1.x - origin2.x;
 		double sy = origin1.y - origin2.y;
 		double sz = origin1.z - origin2.z;
@@ -63,8 +65,8 @@ public class IntersectorPlus {
 		if(denom1 == 0 && denom2 == 0 && denom3 == 0) {
 			float len2 = (pow2((float)sx) + pow2((float)sy) + pow2((float)sz)) * direction1.len2();
 			return Math.abs(pow2(direction1.dot((float)sx, (float)sy, (float)sz)) - len2) <= tolerance
-					? RayIntersectionResult.COLINEAR
-					: RayIntersectionResult.NONE;
+					? LineIntersectionResult.COLLINEAR
+					: LineIntersectionResult.NONE;
 		}
 
 		// for the sake of precision, use the largest dominator for the computation
@@ -94,25 +96,39 @@ public class IntersectorPlus {
 		double z2 = origin2.z + direction2.z * t2;
 
 		if(pow2(x1 - x2) + pow2(y1 - y2) + pow2(z1 - z2) > tolerance)
-			return RayIntersectionResult.NONE;
+			return LineIntersectionResult.NONE;
 
 		out.set((float)x1, (float)y1, (float)z1);
 		return POINT;
 	}
 
-	public static RayIntersectionResult intersectSegmentSegment(Segment first,
-	                                                            Segment second,
-	                                                            float tol,
-	                                                            Vector3 out) {
+	/**
+	 * Computes the intersection of 2 segments. The intersection can either be a point or another
+	 * collinear segment. If the intersection is a point, it is set in the out parameter. If the
+	 * segments are collinear but not intersecting, {@link LineIntersectionResult#NONE} is returned.
+	 *
+	 * @param first first segment to check for intersection
+	 * @param second second segment to check for intersection
+	 * @param tol tolerance to use for computations
+	 * @param out intersection point if non-collinear intersection
+	 * @return result of the intersection
+	 */
+	public static LineIntersectionResult intersectSegmentSegment(Segment first,
+	                                                             Segment second,
+	                                                             float tol,
+	                                                             Vector3 out) {
 		return intersectSegmentSegment(first.a, first.b, second.a, second.b, tol, out);
 	}
 
-	public static RayIntersectionResult intersectSegmentSegment(Vector3 firstStart,
-	                                                            Vector3 firstEnd,
-	                                                            Vector3 secondStart,
-	                                                            Vector3 secondEnd,
-	                                                            float tol,
-	                                                            Vector3 out) {
+	/**
+	 * @see #intersectSegmentSegment(Segment, Segment, float, Vector3)
+	 */
+	public static LineIntersectionResult intersectSegmentSegment(Vector3 firstStart,
+	                                                             Vector3 firstEnd,
+	                                                             Vector3 secondStart,
+	                                                             Vector3 secondEnd,
+	                                                             float tol,
+	                                                             Vector3 out) {
 		tmpSegmentDir1.set(firstEnd).sub(firstStart);
 		tmpSegmentDir2.set(secondEnd).sub(secondStart);
 
@@ -120,20 +136,20 @@ public class IntersectorPlus {
 		float y = out.y;
 		float z = out.z;
 
-		RayIntersectionResult result = intersectRayRay(firstStart, tmpSegmentDir1,
+		LineIntersectionResult result = intersectRayRay(firstStart, tmpSegmentDir1,
 				secondStart, tmpSegmentDir2, tol, out);
 
 		if(result == NONE)
 			return NONE;
 
-		if(result == COLINEAR) {
+		if(result == COLLINEAR) {
 			float t1 = tmpSegmentDir1.dot(secondStart);
 			float t2 = tmpSegmentDir1.dot(secondEnd);
 
 			float tMin = min(t1, t2);
 			float tMax = max(t1, t2);
 
-			return tMin < 1f + tol && tMax > -tol ? COLINEAR : NONE;
+			return tMin < 1f + tol && tMax > -tol ? COLLINEAR : NONE;
 		}
 
 		float t1 = tmpSegmentDir1.dot(out);
@@ -145,6 +161,9 @@ public class IntersectorPlus {
 		return POINT;
 	}
 
+	/**
+	 * @see #intersectTriangleTriangle(Triangle, Triangle, float, Segment)
+	 */
 	public static TriangleIntersectionResult intersectTriangleTriangle(Triangle first,
 	                                                                   Triangle second,
 	                                                                   float tol,
@@ -414,7 +433,43 @@ public class IntersectorPlus {
 	public static boolean intersectCoplanarTriangles(Triangle first,
 	                                                 Triangle second,
 	                                                 float tolerance) {
+		if(intersectSegmentSegment(first.p1, first.p2,
+				second.p1, second.p2, tolerance, tmpIntersection) != NONE)
+			return true;
 
+		if(intersectSegmentSegment(first.p1, first.p2,
+				second.p2, second.p3, tolerance, tmpIntersection) != NONE)
+			return true;
+
+		if(intersectSegmentSegment(first.p1, first.p2,
+				second.p3, second.p1, tolerance, tmpIntersection) != NONE)
+			return true;
+
+		if(intersectSegmentSegment(first.p2, first.p3,
+				second.p1, second.p2, tolerance, tmpIntersection) != NONE)
+			return true;
+
+		if(intersectSegmentSegment(first.p2, first.p3,
+				second.p2, second.p3, tolerance, tmpIntersection) != NONE)
+			return true;
+
+		if(intersectSegmentSegment(first.p2, first.p3,
+				second.p3, second.p1, tolerance, tmpIntersection) != NONE)
+			return true;
+
+		if(intersectSegmentSegment(first.p3, first.p1,
+				second.p1, second.p2, tolerance, tmpIntersection) != NONE)
+			return true;
+
+		if(intersectSegmentSegment(first.p3, first.p1,
+				second.p2, second.p3, tolerance, tmpIntersection) != NONE)
+			return true;
+
+		if(intersectSegmentSegment(first.p3, first.p1,
+				second.p3, second.p1, tolerance, tmpIntersection) != NONE)
+			return true;
+
+		// TODO checks for points being side one another (in case of full encapsulation)
 
 		return false;
 	}
@@ -429,16 +484,28 @@ public class IntersectorPlus {
 		return a * point.x + b * point.y + c * point.z + d;
 	}
 
-	public enum RayIntersectionResult {
+	/**
+	 * Result of a Line-Line intersection where the lines can either be rays or segments
+	 */
+	public enum LineIntersectionResult {
+		/**
+		 * Result when the lines do not intersect
+		 */
 		NONE,
 
-		COLINEAR,
+		/**
+		 * Result when the lines are intersecting but collinear
+		 */
+		COLLINEAR,
 
+		/**
+		 * Result when the lines are intersecting at a single point
+		 */
 		POINT
 	}
 
 	/**
-	 * Result of a Triangle Triangle intersection
+	 * Result of a Triangle-Triangle intersection
 	 */
 	public enum TriangleIntersectionResult {
 		/**
