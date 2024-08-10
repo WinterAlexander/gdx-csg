@@ -1,5 +1,6 @@
 package com.winteralexander.gdx.csg;
 
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
@@ -22,6 +23,7 @@ public class IntersectorPlus {
 	private static final Vector3 tmpIntersection = new Vector3();
 	private static final Segment tmpSegment1 = new SegmentPlus(), tmpSegment2 = new SegmentPlus();
 	private static final Vector3 tmpSegmentDir1 = new Vector3(), tmpSegmentDir2 = new Vector3();
+	private static final Triangle tmpTriangle = new Triangle();
 
 	/**
 	 * Computes the intersection of 2 rays in 3D space. If there an infinite amount of intersections
@@ -427,49 +429,70 @@ public class IntersectorPlus {
 	 *
 	 * @param first first triangle to check
 	 * @param second second triangle to check
-	 * @param tolerance distance at which 2 floating points are considered to be the same
+	 * @param tol distance at which 2 floating points are considered to be the same
 	 * @return true if they are intersecting, otherwise false
 	 */
 	public static boolean intersectCoplanarTriangles(Triangle first,
 	                                                 Triangle second,
-	                                                 float tolerance) {
-		if(intersectSegmentSegment(first.p1, first.p2,
-				second.p1, second.p2, tolerance, tmpIntersection) != NONE)
+	                                                 float tol) {
+
+		tmpSegmentDir1.set(first.p2).sub(first.p1);
+		tmpSegmentDir2.set(first.p3).sub(first.p1);
+
+		float longestSide1 = Math.max(tmpSegmentDir1.len2(), tmpSegmentDir2.len2());
+		longestSide1 = Math.max(longestSide1,
+				pow2(first.p2.x - first.p3.x) +
+						pow2(first.p2.y - first.p3.y) +
+						pow2(first.p2.z - first.p3.z));
+
+		float longestSide2 = pow2(second.p2.x - second.p3.x) +
+				pow2(second.p2.y - second.p3.y) +
+				pow2(second.p2.z - second.p3.z);
+		longestSide2 = Math.max(longestSide2, pow2(second.p1.x - second.p2.x) +
+				pow2(second.p1.y - second.p2.y) +
+				pow2(second.p1.z - second.p2.z));
+		longestSide2 = Math.max(longestSide2, pow2(second.p1.x - second.p3.x) +
+				pow2(second.p1.y - second.p3.y) +
+				pow2(second.p1.z - second.p3.z));
+
+		// if the second triangle's longest side is larger than the largest side of the first one,
+		// we know for sure the second triangle can't fit into the first one
+		if(longestSide2 > longestSide1)
+			return intersectCoplanarTriangles(second, first, tol);
+
+		// otherwise the first triangle can't fit into the second one
+
+		tmpTriangle.set(second).sub(first.p1);
+
+		float len21 = tmpSegmentDir1.len2();
+		float len22 = tmpSegmentDir2.len2();
+
+		float p1U = tmpSegmentDir1.dot(tmpTriangle.p1) / len21;
+		float p1V = tmpSegmentDir2.dot(tmpTriangle.p1) / len22;
+
+		float p2U = tmpSegmentDir1.dot(tmpTriangle.p2) / len21;
+		float p2V = tmpSegmentDir2.dot(tmpTriangle.p2) / len22;
+
+		float p3U = tmpSegmentDir1.dot(tmpTriangle.p3) / len21;
+		float p3V = tmpSegmentDir2.dot(tmpTriangle.p3) / len22;
+
+		if(p1U >= -tol
+				&& p1U <= 1f + tol
+				&& p1V >= -tol
+				&& p1V <= 1f - p1U + tol)
 			return true;
 
-		if(intersectSegmentSegment(first.p1, first.p2,
-				second.p2, second.p3, tolerance, tmpIntersection) != NONE)
+		if(p2U >= -tol
+				&& p2U <= 1f + tol
+				&& p2V >= -tol
+				&& p2V <= 1f - p2U + tol)
 			return true;
 
-		if(intersectSegmentSegment(first.p1, first.p2,
-				second.p3, second.p1, tolerance, tmpIntersection) != NONE)
+		if(p3U >= -tol
+				&& p3U <= 1f + tol
+				&& p3V >= -tol
+				&& p3V <= 1f - p3U + tol)
 			return true;
-
-		if(intersectSegmentSegment(first.p2, first.p3,
-				second.p1, second.p2, tolerance, tmpIntersection) != NONE)
-			return true;
-
-		if(intersectSegmentSegment(first.p2, first.p3,
-				second.p2, second.p3, tolerance, tmpIntersection) != NONE)
-			return true;
-
-		if(intersectSegmentSegment(first.p2, first.p3,
-				second.p3, second.p1, tolerance, tmpIntersection) != NONE)
-			return true;
-
-		if(intersectSegmentSegment(first.p3, first.p1,
-				second.p1, second.p2, tolerance, tmpIntersection) != NONE)
-			return true;
-
-		if(intersectSegmentSegment(first.p3, first.p1,
-				second.p2, second.p3, tolerance, tmpIntersection) != NONE)
-			return true;
-
-		if(intersectSegmentSegment(first.p3, first.p1,
-				second.p3, second.p1, tolerance, tmpIntersection) != NONE)
-			return true;
-
-		// TODO checks for points being side one another (in case of full encapsulation)
 
 		return false;
 	}
