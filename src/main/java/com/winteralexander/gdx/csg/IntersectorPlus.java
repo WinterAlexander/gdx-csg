@@ -5,9 +5,9 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.math.collision.Segment;
 
+import static com.winteralexander.gdx.csg.IntersectorPlus.RayIntersectionResult.*;
 import static com.winteralexander.gdx.utils.math.MathUtil.pow2;
-import static java.lang.Math.abs;
-import static java.lang.Math.max;
+import static java.lang.Math.*;
 
 /**
  * Extension of libGDX's {@link com.badlogic.gdx.math.Intersector} that adds support for some extra
@@ -21,11 +21,12 @@ public class IntersectorPlus {
 	private static final Ray tmpIntersectRay = new Ray(), tmpEdgeLine = new Ray();
 	private static final Vector3 tmpIntersection = new Vector3();
 	private static final Segment tmpSegment1 = new SegmentPlus(), tmpSegment2 = new SegmentPlus();
+	private static final Vector3 tmpSegmentDir1 = new Vector3(), tmpSegmentDir2 = new Vector3();
 
 	/**
-	 * Computes the intersection of 2 rays in 3D space, if there is a single intersection. If there
-	 * an infinite amount of intersections (same rays), returns false. The output is only modified
-	 * when this function returns true.
+	 * Computes the intersection of 2 rays in 3D space. If there an infinite amount of intersections
+	 * (same rays), returns {@link RayIntersectionResult#COLINEAR} and the output is not set. The
+	 * output is only modified when this function returns {@link RayIntersectionResult#POINT}.
 	 *
 	 * @param first first ray to find intersection
 	 * @param second second ray to find intersection
@@ -33,57 +34,115 @@ public class IntersectorPlus {
 	 * @param out output intersection point
 	 * @return true if there is one intersection between the two rays, false otherwise
 	 */
-	public static boolean intersectRayRay(Ray first, Ray second, float tolerance, Vector3 out) {
-		Vector3 d1 = first.direction;
-		Vector3 d2 = second.direction;
-		Vector3 o1 = first.origin;
-		Vector3 o2 = second.origin;
+	public static RayIntersectionResult intersectRayRay(Ray first,
+	                                                    Ray second,
+	                                                    float tolerance,
+	                                                    Vector3 out) {
+		return intersectRayRay(first.origin, first.direction,
+				second.origin, second.direction, tolerance, out);
+	}
 
-		double sx = o1.x - o2.x;
-		double sy = o1.y - o2.y;
-		double sz = o1.z - o2.z;
+	public static RayIntersectionResult intersectRayRay(Vector3 origin1,
+	                                                    Vector3 direction1,
+	                                                    Vector3 origin2,
+	                                                    Vector3 direction2,
+	                                                    float tolerance,
+	                                                    Vector3 out) {
 
-		double denom1 = d2.y * d1.x - d1.y * d2.x;
-		double denom2 = d2.z * d1.y - d1.z * d2.y;
-		double denom3 = d2.x * d1.z - d1.x * d2.z;
+		double sx = origin1.x - origin2.x;
+		double sy = origin1.y - origin2.y;
+		double sz = origin1.z - origin2.z;
+
+		double denom1 = direction2.y * direction1.x - direction1.y * direction2.x;
+		double denom2 = direction2.z * direction1.y - direction1.z * direction2.y;
+		double denom3 = direction2.x * direction1.z - direction1.x * direction2.z;
 
 		double t;
 
 		// means the rays are collinear
-		if(denom1 == 0 && denom2 == 0 && denom3 == 0)
-			return false;
+		if(denom1 == 0 && denom2 == 0 && denom3 == 0) {
+			float len2 = (pow2((float)sx) + pow2((float)sy) + pow2((float)sz)) * direction1.len2();
+			return Math.abs(pow2(direction1.dot((float)sx, (float)sy, (float)sz)) - len2) <= tolerance
+					? RayIntersectionResult.COLINEAR
+					: RayIntersectionResult.NONE;
+		}
 
 		// for the sake of precision, use the largest dominator for the computation
 		if(abs(denom1) > max(abs(denom2), abs(denom3)))
-			t = (sy * d2.x - sx * d2.y) / denom1;
+			t = (sy * direction2.x - sx * direction2.y) / denom1;
 		else if(abs(denom2) > abs(denom3))
-			t = (sz * d2.y - sy * d2.z) / denom2;
+			t = (sz * direction2.y - sy * direction2.z) / denom2;
 		else
-			t = (sx * d2.z - sz * d2.x) / denom3;
+			t = (sx * direction2.z - sz * direction2.x) / denom3;
 
 		double t2;
 
 		// for the sake of precision, compute t2 from t using the largest component
-		if(abs(d2.x) > max(abs(d2.y), abs(d2.z)))
-			t2 = t * d1.x / d2.x + sx / d2.x;
-		else if(abs(d2.y) > abs(d2.z))
-			t2 = t * d1.y / d2.y + sy / d2.y;
+		if(abs(direction2.x) > max(abs(direction2.y), abs(direction2.z)))
+			t2 = t * direction1.x / direction2.x + sx / direction2.x;
+		else if(abs(direction2.y) > abs(direction2.z))
+			t2 = t * direction1.y / direction2.y + sy / direction2.y;
 		else
-			t2 = t * d1.z / d2.z + sz / d2.z;
+			t2 = t * direction1.z / direction2.z + sz / direction2.z;
 
-		double x1 = o1.x + d1.x * t;
-		double y1 = o1.y + d1.y * t;
-		double z1 = o1.z + d1.z * t;
+		double x1 = origin1.x + direction1.x * t;
+		double y1 = origin1.y + direction1.y * t;
+		double z1 = origin1.z + direction1.z * t;
 
-		double x2 = o2.x + d2.x * t2;
-		double y2 = o2.y + d2.y * t2;
-		double z2 = o2.z + d2.z * t2;
+		double x2 = origin2.x + direction2.x * t2;
+		double y2 = origin2.y + direction2.y * t2;
+		double z2 = origin2.z + direction2.z * t2;
 
 		if(pow2(x1 - x2) + pow2(y1 - y2) + pow2(z1 - z2) > tolerance)
-			return false;
+			return RayIntersectionResult.NONE;
 
 		out.set((float)x1, (float)y1, (float)z1);
-		return true;
+		return POINT;
+	}
+
+	public static RayIntersectionResult intersectSegmentSegment(Segment first,
+	                                                            Segment second,
+	                                                            float tol,
+	                                                            Vector3 out) {
+		return intersectSegmentSegment(first.a, first.b, second.a, second.b, tol, out);
+	}
+
+	public static RayIntersectionResult intersectSegmentSegment(Vector3 firstStart,
+	                                                            Vector3 firstEnd,
+	                                                            Vector3 secondStart,
+	                                                            Vector3 secondEnd,
+	                                                            float tol,
+	                                                            Vector3 out) {
+		tmpSegmentDir1.set(firstEnd).sub(firstStart);
+		tmpSegmentDir2.set(secondEnd).sub(secondStart);
+
+		float x = out.x;
+		float y = out.y;
+		float z = out.z;
+
+		RayIntersectionResult result = intersectRayRay(firstStart, tmpSegmentDir1,
+				secondStart, tmpSegmentDir2, tol, out);
+
+		if(result == NONE)
+			return NONE;
+
+		if(result == COLINEAR) {
+			float t1 = tmpSegmentDir1.dot(secondStart);
+			float t2 = tmpSegmentDir1.dot(secondEnd);
+
+			float tMin = min(t1, t2);
+			float tMax = max(t1, t2);
+
+			return tMin < 1f + tol && tMax > -tol ? COLINEAR : NONE;
+		}
+
+		float t1 = tmpSegmentDir1.dot(out);
+		float t2 = tmpSegmentDir2.dot(out);
+
+		if(t1 < -tol || t1 > 1f + tol || t2 < -tol || t2 > 1f + tol)
+			return NONE;
+
+		return POINT;
 	}
 
 	public static TriangleIntersectionResult intersectTriangleTriangle(Triangle first,
@@ -157,10 +216,10 @@ public class IntersectorPlus {
 				tmpSegment2.b.y - tmpIntersectRay.origin.y,
 				tmpSegment2.b.z - tmpIntersectRay.origin.z);
 
-		float startDist1 = Math.min(dist1A, dist1B);
+		float startDist1 = min(dist1A, dist1B);
 		float endDist1 = max(dist1A, dist1B);
 
-		float startDist2 = Math.min(dist2A, dist2B);
+		float startDist2 = min(dist2A, dist2B);
 		float endDist2 = max(dist2A, dist2B);
 
 		boolean intersection = endDist1 > startDist2 && startDist1 < endDist2
@@ -173,7 +232,7 @@ public class IntersectorPlus {
 				.scl(max(startDist1, startDist2))
 				.add(tmpIntersectRay.origin);
 		out.b.set(tmpIntersectRay.direction)
-				.scl(Math.min(endDist1, endDist2))
+				.scl(min(endDist1, endDist2))
 				.add(tmpIntersectRay.origin);
 
 		return TriangleIntersectionResult.NONCOPLANAR_FACE_FACE;
@@ -282,7 +341,7 @@ public class IntersectorPlus {
 
 		int countIntersections = 0;
 
-		if(intersectRayRay(ray, tmpEdgeLine, tolerance, tmpIntersection)) {
+		if(intersectRayRay(ray, tmpEdgeLine, tolerance, tmpIntersection) == POINT) {
 			float t = tmpEdgeLine.direction.dot(tmpIntersection.x - tmpEdgeLine.origin.x,
 					tmpIntersection.y - tmpEdgeLine.origin.y,
 					tmpIntersection.z - tmpEdgeLine.origin.z);
@@ -299,7 +358,7 @@ public class IntersectorPlus {
 		tmpEdgeLine.origin.set(triangle.p2);
 		tmpEdgeLine.direction.set(triangle.p3).sub(triangle.p2);
 
-		if(intersectRayRay(ray, tmpEdgeLine, tolerance, tmpIntersection)) {
+		if(intersectRayRay(ray, tmpEdgeLine, tolerance, tmpIntersection) == POINT) {
 			float t = tmpEdgeLine.direction.dot(tmpIntersection.x - tmpEdgeLine.origin.x,
 					tmpIntersection.y - tmpEdgeLine.origin.y,
 					tmpIntersection.z - tmpEdgeLine.origin.z);
@@ -319,7 +378,7 @@ public class IntersectorPlus {
 		tmpEdgeLine.origin.set(triangle.p3);
 		tmpEdgeLine.direction.set(triangle.p1).sub(triangle.p3);
 
-		if(intersectRayRay(ray, tmpEdgeLine, tolerance, tmpIntersection)) {
+		if(intersectRayRay(ray, tmpEdgeLine, tolerance, tmpIntersection) == POINT) {
 			float t = tmpEdgeLine.direction.dot(tmpIntersection.x - tmpEdgeLine.origin.x,
 					tmpIntersection.y - tmpEdgeLine.origin.y,
 					tmpIntersection.z - tmpEdgeLine.origin.z);
@@ -368,6 +427,14 @@ public class IntersectorPlus {
 		Vector3 v1 = triangle.p1;
 		float d = -(a * v1.x + b * v1.y + c * v1.z);
 		return a * point.x + b * point.y + c * point.z + d;
+	}
+
+	public enum RayIntersectionResult {
+		NONE,
+
+		COLINEAR,
+
+		POINT
 	}
 
 	/**

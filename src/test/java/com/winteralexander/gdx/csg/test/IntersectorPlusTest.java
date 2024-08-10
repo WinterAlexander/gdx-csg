@@ -4,12 +4,16 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.math.collision.Segment;
 import com.winteralexander.gdx.csg.IntersectorPlus;
+import com.winteralexander.gdx.csg.IntersectorPlus.RayIntersectionResult;
 import com.winteralexander.gdx.csg.SegmentPlus;
 import com.winteralexander.gdx.csg.Triangle;
 import org.junit.Test;
 
 import java.util.Random;
 
+import static com.winteralexander.gdx.csg.IntersectorPlus.RayIntersectionResult.*;
+import static com.winteralexander.gdx.csg.IntersectorPlus.intersectRayRay;
+import static com.winteralexander.gdx.csg.IntersectorPlus.intersectSegmentSegment;
 import static org.junit.Assert.*;
 
 /**
@@ -32,7 +36,7 @@ public class IntersectorPlusTest {
 
 		Vector3 intersection = new Vector3();
 
-		assertTrue(IntersectorPlus.intersectRayRay(ray1, ray2, 1e-5f, intersection));
+		assertEquals(POINT, intersectRayRay(ray1, ray2, 1e-5f, intersection));
 		assertTrue(intersection.epsilonEquals(15f, 15f, 15f, 1e-5f));
 
 		ray1.origin.set(0f, 0f, 0f);
@@ -41,8 +45,8 @@ public class IntersectorPlusTest {
 		ray2.origin.set(15f, 15f, 15f);
 		ray2.direction.set(-9f, 10f, 55f).nor();
 
-		boolean result = IntersectorPlus.intersectRayRay(ray1, ray2, 1e-5f, intersection);
-		assertFalse(result);
+		RayIntersectionResult result = intersectRayRay(ray1, ray2, 1e-5f, intersection);
+		assertEquals(NONE, result);
 	}
 
 	@Test
@@ -57,7 +61,7 @@ public class IntersectorPlusTest {
 
 		Vector3 intersection = new Vector3();
 
-		assertFalse(IntersectorPlus.intersectRayRay(ray1, ray2, 1e-5f, intersection));
+		assertEquals(RayIntersectionResult.COLINEAR, intersectRayRay(ray1, ray2, 1e-5f, intersection));
 	}
 
 	@Test
@@ -76,7 +80,8 @@ public class IntersectorPlusTest {
 
 		Vector3 intersection = new Vector3();
 
-		assertTrue(IntersectorPlus.intersectRayRay(ray1, ray2, 1e-4f, intersection));
+		assertEquals(POINT,
+				intersectRayRay(ray1, ray2, 1e-4f, intersection));
 
 		float precision = 0f;
 
@@ -122,8 +127,8 @@ public class IntersectorPlusTest {
 			ray2.origin.set(tmpIntersection);
 			ray2.origin.mulAdd(ray2.direction, posRay2);
 
-			assertTrue(IntersectorPlus.intersectRayRay(ray1, ray2, 1e-6f,
-					tmpComputedIntersection));
+			assertEquals(POINT,
+					intersectRayRay(ray1, ray2, 1e-6f, tmpComputedIntersection));
 
 			float precision = 0f;
 
@@ -137,6 +142,44 @@ public class IntersectorPlusTest {
 		}
 
 		System.out.println("Worst precision: " + worstPrecision);
+	}
+
+	@Test
+	public void testSegmentSegmentIntersection() {
+		Segment segment1 = new Segment(0f, 0f, 0f, 1f, 1f, 0f);
+		Segment segment2 = new Segment(0f, 1f, 0f, 1f, 0f, 0f);
+
+		Vector3 intersection = new Vector3();
+
+		assertEquals(POINT, intersectSegmentSegment(segment1, segment2, 1e-5f, intersection));
+		assertTrue(intersection.epsilonEquals(0.5f, 0.5f, 0f, 1e-5f));
+
+		segment1.a.set(0f, 0f, 0f);
+		segment1.b.set(1f, 1f, 0f);
+
+		segment2.a.set(0f, 5f, 0f);
+		segment2.b.set(5f, 0f, 0f);
+
+		assertEquals(NONE, intersectSegmentSegment(segment1,
+				segment2, 1e-5f, intersection));
+
+		segment1.a.set(0f, 0f, 0f);
+		segment1.b.set(1f, 1f, 0f);
+
+		segment2.a.set(0.5f, 0.5f, 0f);
+		segment2.b.set(6f, 6f, 0f);
+
+		assertEquals(COLINEAR, intersectSegmentSegment(segment1,
+				segment2, 1e-5f, intersection));
+
+		segment1.a.set(0f, 0f, 0f);
+		segment1.b.set(1f, 1f, 0f);
+
+		segment2.a.set(5f, 5f, 0f);
+		segment2.b.set(6f, 6f, 0f);
+
+		assertEquals(NONE, intersectSegmentSegment(segment1,
+				segment2, 1e-5f, intersection));
 	}
 
 	@Test
