@@ -86,6 +86,13 @@ public class IntersectorPlus {
 		return true;
 	}
 
+	public static TriangleIntersectionResult intersectTriangleTriangle(Triangle first,
+	                                                                   Triangle second,
+	                                                                   float tol,
+	                                                                   Segment out) {
+		return intersectTriangleTriangle(first, second, tol, out);
+	}
+
 	/**
 	 * Performs triangle-triangle intersection. If the result is
 	 * {@link TriangleIntersectionResult#NONE}, the segment output parameter is left untouched. If
@@ -98,12 +105,15 @@ public class IntersectorPlus {
 	 * @param first first triangle
 	 * @param second second triangle
 	 * @param tol distance at which 2 floating points are considered to be the same
+	 * @param ignoreCoplanar if true, coplanar triangles will be considered as non intersecting,
+	 * increasing performance as coplanar triangle intersection won't need to be checked
 	 * @param out segment of the intersection, only set if applicable based on the result.
 	 * @return result of the intersection
 	 */
 	public static TriangleIntersectionResult intersectTriangleTriangle(Triangle first,
 	                                                                   Triangle second,
 	                                                                   float tol,
+																	   boolean ignoreCoplanar,
 	                                                                   Segment out) {
 		//distance from the face1 vertices to the face2 plane
 		float distFace1Vert1 = signedDistanceFromPlane(second, first.p1);
@@ -118,9 +128,11 @@ public class IntersectorPlus {
 		// if all points are on the same side of the plane
 		if(signFace1Vert1 == signFace1Vert2 && signFace1Vert2 == signFace1Vert3)
 			// if they are all 0, they are all in the same plane
-			return signFace1Vert1 == 0 && intersectCoplanarTriangles(first, second, tol)
-					? TriangleIntersectionResult.COPLANAR_FACE_FACE
-					: TriangleIntersectionResult.NONE; // otherwise all on one side, no intersection
+			return !ignoreCoplanar
+					&& signFace1Vert1 == 0
+					&& intersectCoplanarTriangles(first, second, tol)
+						? TriangleIntersectionResult.COPLANAR_FACE_FACE
+						: TriangleIntersectionResult.NONE;
 
 		rayFromIntersection(first, second, tol, tmpIntersectRay);
 
