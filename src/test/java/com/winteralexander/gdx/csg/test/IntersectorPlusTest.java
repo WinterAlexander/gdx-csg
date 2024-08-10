@@ -11,9 +11,8 @@ import org.junit.Test;
 
 import java.util.Random;
 
+import static com.winteralexander.gdx.csg.IntersectorPlus.*;
 import static com.winteralexander.gdx.csg.IntersectorPlus.LineIntersectionResult.*;
-import static com.winteralexander.gdx.csg.IntersectorPlus.intersectRayRay;
-import static com.winteralexander.gdx.csg.IntersectorPlus.intersectSegmentSegment;
 import static org.junit.Assert.*;
 
 /**
@@ -211,5 +210,44 @@ public class IntersectorPlusTest {
 		ray.direction.set(0f, 1f, 0f);
 
 		assertFalse(IntersectorPlus.intersectTriangleRay(triangle, ray, 1e-5f, segment));
+	}
+
+	@Test
+	public void testCoplanarTriangleIntersection() {
+		Triangle tri1 = new Triangle(
+				0f, 0f, 0f,
+				0f, 1f, 0f,
+				0f, 0f, 1f
+		);
+
+		Triangle tri2 = new Triangle(
+				0f, 1f, 1f,
+				0f, -0.5f, 1f,
+				0f, 1f, -0.5f
+		);
+
+		assertTrue(intersectCoplanarTriangles(tri1, tri2, 1e-5f));
+
+		tri2.set(0f, 1f, 1f,
+				0f, 0.2f, 1f,
+				0f, 1f, 0.2f);
+
+		assertFalse(intersectCoplanarTriangles(tri1, tri2, 1e-5f));
+
+		tri2.set(0f, 1f, 1f,
+				0f, 0f, 1f,
+				0f, 1f, 0f);
+
+		assertTrue(intersectCoplanarTriangles(tri1, tri2, 1e-5f));
+
+		tri2.set(0f, 0f, 0f,
+				0f, 0f, -1f,
+				0f, -1f, 0f);
+
+		assertTrue(intersectCoplanarTriangles(tri1, tri2, 1e-5f));
+
+		tri2.set(tri1);
+
+		assertTrue(intersectCoplanarTriangles(tri1, tri2, 1e-5f));
 	}
 }
