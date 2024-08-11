@@ -250,4 +250,23 @@ public class IntersectorPlusTest {
 
 		assertTrue(intersectCoplanarTriangles(tri1, tri2, 1e-5f));
 	}
+
+	@Test
+	public void testTriangleTriangle() {
+		Triangle tri1 = new Triangle(), tri2 = new Triangle();
+
+		Segment segment = new SegmentPlus(), expected = new SegmentPlus();
+
+		tri1.set(0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+		tri2.set(0.49824142f, 0.0f, 0.0f, 0.14803512f, 1.0f, 0.0f, 0.14803512f, 0.0f, 1.0f);
+
+		assertEquals(TriangleIntersectionResult.NONE, intersectTriangleTriangle(tri1, tri2, 1e-5f, segment));
+
+		expected.a.set(0.0f, 0.0027782063f, 0.0027782067f);
+		expected.b.set(0.0f, 0.0027782063f, 0.0027782067f);
+		tri1.set(0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+		tri2.set(0.15553457f, 0.0f, 0.1826436f, 1.0338287f, 1.0f, 0.1826436f, 1.0338287f, 0.0f, 1.1826437f);
+
+		assertEquals(TriangleIntersectionResult.NONE, intersectTriangleTriangle(tri1, tri2, 1e-5f, segment));
+	}
 }

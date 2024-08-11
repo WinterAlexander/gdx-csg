@@ -2,6 +2,8 @@ package com.winteralexander.gdx.csg.test;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.Material;
@@ -14,16 +16,22 @@ import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.Segment;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.winteralexander.gdx.csg.Face;
+import com.winteralexander.gdx.csg.IntersectorPlus;
+import com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult;
+import com.winteralexander.gdx.csg.SegmentPlus;
+import com.winteralexander.gdx.csg.Triangle;
 import com.winteralexander.gdx.utils.input.InputUtil;
 
 import java.util.function.Consumer;
 
 import static com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT;
 import static com.badlogic.gdx.graphics.GL20.GL_DEPTH_BUFFER_BIT;
+import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.NONE;
 
 /**
  * TODO Undocumented :(
@@ -33,8 +41,6 @@ import static com.badlogic.gdx.graphics.GL20.GL_DEPTH_BUFFER_BIT;
  * @author Alexander Winter
  */
 public class Main {
-
-
 	private final static int DEFAULT_ATTRIBUTES = VertexAttributes.Usage.Position
 			| VertexAttributes.Usage.Normal
 			| VertexAttributes.Usage.Tangent
@@ -47,9 +53,15 @@ public class Main {
 
 			private Model model1, model2;
 
+			private Triangle triangle1, triangle2;
+
 			private ModelInstance instance1, instance2;
 			private PerspectiveCamera cam;
 			private ShapeRenderer debugRenderer;
+
+			private TriangleIntersectionResult intersection = NONE;
+
+			private final Segment intersectionSegment = new SegmentPlus();
 
 			@Override
 			public void create() {
@@ -108,6 +120,82 @@ public class Main {
 					mesh2Faces.add(new Face(instance2.model.meshes.get(0), i) {{
 						color = Color.BLUE;
 					}});
+
+
+				triangle1 = new Triangle(0f, 0f, 0f,
+						0f, 1f, 0f,
+						0f, 0f, 1f);
+
+				triangle2 = new Triangle(1f, 0f, 0f,
+						1f, 1f, 0f,
+						1f, 0f, 1f);
+
+				Face.__debugOnlyRenderables.clear();
+				Face.__debugOnlyRenderables.addFirst(r -> {
+					r.setColor(intersection == NONE ? Color.RED : Color.GREEN);
+					r.line(triangle1.p1, triangle1.p2);
+					r.line(triangle1.p2, triangle1.p3);
+					r.line(triangle1.p3, triangle1.p1);
+
+					r.line(triangle2.p1, triangle2.p2);
+					r.line(triangle2.p2, triangle2.p3);
+					r.line(triangle2.p3, triangle2.p1);
+
+					r.setColor(Color.BLUE);
+					r.line(intersectionSegment.a, intersectionSegment.b);
+				});
+				InputUtil.registerInput(new InputAdapter() {
+					@Override
+					public boolean keyDown(int keycode) {
+						float amount = (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) ? -1f : 1f) * Gdx.graphics.getDeltaTime();
+						switch(keycode) {
+							case Input.Keys.X:
+								triangle2.add(amount, 0f, 0f);
+								return true;
+							case Input.Keys.Y:
+								triangle2.add(0f, amount, 0f);
+								return true;
+							case Input.Keys.Z:
+								triangle2.add(0f, 0f, amount);
+								return true;
+							case Input.Keys.R:
+								triangle2.p1.add(amount, 0f, 0f);
+								return true;
+							case Input.Keys.P:
+								System.out.println("expected.a.set(" +
+										intersectionSegment.a.x + "f, " +
+										intersectionSegment.a.y + "f, " +
+										intersectionSegment.a.z + "f);");
+								System.out.println("expected.b.set(" +
+										intersectionSegment.b.x + "f, " +
+										intersectionSegment.b.y + "f, " +
+										intersectionSegment.b.z + "f);");
+								System.out.println("tri1.set(" +
+										triangle1.p1.x + "f, " +
+										triangle1.p1.y + "f, " +
+										triangle1.p1.z + "f, " +
+										triangle1.p2.x + "f, " +
+										triangle1.p2.y + "f, " +
+										triangle1.p2.z + "f, " +
+										triangle1.p3.x + "f, " +
+										triangle1.p3.y + "f, " +
+										triangle1.p3.z + "f);");
+								System.out.println("tri2.set(" +
+										triangle2.p1.x + "f, " +
+										triangle2.p1.y + "f, " +
+										triangle2.p1.z + "f, " +
+										triangle2.p2.x + "f, " +
+										triangle2.p2.y + "f, " +
+										triangle2.p2.z + "f, " +
+										triangle2.p3.x + "f, " +
+										triangle2.p3.y + "f, " +
+										triangle2.p3.z + "f);");
+								return true;
+						}
+
+						return false;
+					}
+				});
 			}
 
 			@Override
@@ -117,6 +205,8 @@ public class Main {
 
 			@Override
 			public void render() {
+				intersection = IntersectorPlus.intersectTriangleTriangle(triangle1, triangle2, 1e-5f, intersectionSegment);
+
 				Gdx.gl.glClearColor(0, 0, 0, 0);
 				Gdx.gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

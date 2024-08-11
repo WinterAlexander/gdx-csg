@@ -1,5 +1,6 @@
 package com.winteralexander.gdx.csg;
 
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector3;
@@ -164,13 +165,29 @@ public class IntersectorPlus {
 	}
 
 	/**
+	 *
+	 * @param segment
+	 * @param point
+	 * @param tolerance
+	 * @return
+	 */
+	public static boolean intersectSegmentPoint(Segment segment, Vector3 point, float tolerance) {
+		tmpSegmentDir1.set(segment.b).sub(segment.a);
+		tmpSegmentDir2.set(point).sub(segment.a);
+		float dot = tmpSegmentDir1.dot(tmpSegmentDir2);
+
+		return pow2(dot) -
+				tmpSegmentDir1.len2() * tmpSegmentDir2.len2() <= tolerance;
+	}
+
+	/**
 	 * @see #intersectTriangleTriangle(Triangle, Triangle, float, Segment)
 	 */
 	public static TriangleIntersectionResult intersectTriangleTriangle(Triangle first,
 	                                                                   Triangle second,
 	                                                                   float tol,
 	                                                                   Segment out) {
-		return intersectTriangleTriangle(first, second, tol, out);
+		return intersectTriangleTriangle(first, second, tol, false, out);
 	}
 
 	/**
@@ -218,6 +235,23 @@ public class IntersectorPlus {
 
 		intersectTriangleRay(first, tmpIntersectRay, tol, tmpSegment1);
 		intersectTriangleRay(second, tmpIntersectRay, tol, tmpSegment2);
+
+		boolean firstIsPoint = tmpSegment1.a.epsilonEquals(tmpSegment1.b, tol);
+		boolean secondIsPoint = tmpSegment2.a.epsilonEquals(tmpSegment2.b, tol);
+
+		if(firstIsPoint && secondIsPoint) {
+			return tmpSegment1.a.epsilonEquals(tmpSegment2.a, tol)
+					? TriangleIntersectionResult.POINT
+					: TriangleIntersectionResult.NONE;
+		}
+
+		if(firstIsPoint) {
+			if()
+		}
+
+		if(secondIsPoint) {
+
+		}
 
 		boolean firstIsEdge = (tmpSegment1.a.epsilonEquals(first.p1, tol)
 				|| tmpSegment1.a.epsilonEquals(first.p2, tol)
