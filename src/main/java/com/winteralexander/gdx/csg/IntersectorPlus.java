@@ -219,6 +219,20 @@ public class IntersectorPlus {
 		intersectTriangleRay(first, tmpIntersectRay, tol, tmpSegment1);
 		intersectTriangleRay(second, tmpIntersectRay, tol, tmpSegment2);
 
+		boolean firstIsEdge = (tmpSegment1.a.epsilonEquals(first.p1, tol)
+				|| tmpSegment1.a.epsilonEquals(first.p2, tol)
+				|| tmpSegment1.a.epsilonEquals(first.p3, tol))
+				&& (tmpSegment1.b.epsilonEquals(first.p1, tol)
+				|| tmpSegment1.b.epsilonEquals(first.p2, tol)
+				|| tmpSegment1.b.epsilonEquals(first.p3, tol));
+
+		boolean secondIsEdge = (tmpSegment2.a.epsilonEquals(first.p1, tol)
+				|| tmpSegment2.a.epsilonEquals(first.p2, tol)
+				|| tmpSegment2.a.epsilonEquals(first.p3, tol))
+				&& (tmpSegment2.b.epsilonEquals(first.p1, tol)
+				|| tmpSegment2.b.epsilonEquals(first.p2, tol)
+				|| tmpSegment2.b.epsilonEquals(first.p3, tol));
+
 		float dist1A = tmpIntersectRay.direction.dot(
 				tmpSegment1.a.x - tmpIntersectRay.origin.x,
 				tmpSegment1.a.y - tmpIntersectRay.origin.y,
@@ -255,6 +269,15 @@ public class IntersectorPlus {
 		out.b.set(tmpIntersectRay.direction)
 				.scl(min(endDist1, endDist2))
 				.add(tmpIntersectRay.origin);
+
+		if(out.a.epsilonEquals(out.b, 0f))
+			return TriangleIntersectionResult.POINT;
+
+		if(firstIsEdge && secondIsEdge)
+			return TriangleIntersectionResult.EDGE_EDGE;
+
+		if(firstIsEdge || secondIsEdge)
+			return TriangleIntersectionResult.EDGE_FACE;
 
 		return TriangleIntersectionResult.NONCOPLANAR_FACE_FACE;
 	}
