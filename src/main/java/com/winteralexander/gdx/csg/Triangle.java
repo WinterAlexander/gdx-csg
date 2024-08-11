@@ -2,6 +2,8 @@ package com.winteralexander.gdx.csg;
 
 import com.badlogic.gdx.math.Vector3;
 
+import static com.winteralexander.gdx.utils.Validation.ensureNotNull;
+
 /**
  * A triangle in 3D space
  * <p>
@@ -17,6 +19,14 @@ public class Triangle {
 	private final Vector3 normal = new Vector3();
 
 	public Triangle() {}
+
+	public Triangle(float[] array) {
+		set(array);
+	}
+
+	public Triangle(float[] array, int offset) {
+		set(array, offset);
+	}
 
 	public Triangle(float x1, float y1, float z1,
 	                float x2, float y2, float z2,
@@ -43,6 +53,16 @@ public class Triangle {
 		p2.set(x2, y2, z2);
 		p3.set(x3, y3, z3);
 		return this;
+	}
+
+	public Triangle set(float[] array) {
+		return set(array, 0);
+	}
+
+	public Triangle set(float[] array, int offset) {
+		return set(array[offset], array[offset + 1], array[offset + 2],
+				array[offset + 3], array[offset + 4], array[offset + 5],
+				array[offset + 6], array[offset + 7], array[offset + 8]);
 	}
 
 	public Triangle set(Vector3 p1, Vector3 p2, Vector3 p3) {
@@ -77,5 +97,27 @@ public class Triangle {
 
 	public Triangle sub(Vector3 substract) {
 		return sub(substract.x, substract.y, substract.z);
+	}
+
+	public void toArray(float[] out) {
+		toArray(out, 0);
+	}
+
+	public void toArray(float[] out, int offset) {
+		ensureNotNull(out, "out");
+		if(out.length < offset + 9)
+			throw new IllegalArgumentException("Not enough space in provided array");
+
+		out[offset] = p1.x;
+		out[offset + 1] = p1.y;
+		out[offset + 2] = p1.z;
+
+		out[offset + 3] = p2.x;
+		out[offset + 4] = p2.y;
+		out[offset + 5] = p2.z;
+
+		out[offset + 6] = p3.x;
+		out[offset + 7] = p3.y;
+		out[offset + 8] = p3.z;
 	}
 }

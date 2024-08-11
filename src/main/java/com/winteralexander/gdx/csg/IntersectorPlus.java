@@ -259,8 +259,8 @@ public class IntersectorPlus {
 		float startDist2 = min(dist2A, dist2B);
 		float endDist2 = max(dist2A, dist2B);
 
-		boolean intersection = endDist1 > startDist2 && startDist1 < endDist2
-				|| endDist2 < startDist1 + tol && startDist2 < endDist1;
+		boolean intersection = endDist1 > startDist2 - tol && startDist1 < endDist2 + tol
+				|| endDist2 > startDist1 - tol && startDist2 < endDist1 + tol;
 
 		if(!intersection)
 			return TriangleIntersectionResult.NONE;
