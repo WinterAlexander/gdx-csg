@@ -34,13 +34,13 @@ import static com.badlogic.gdx.graphics.GL20.GL_DEPTH_BUFFER_BIT;
 import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.NONE;
 
 /**
- * TODO Undocumented :(
+ * Debug viewer to visualize triangle intersections
  * <p>
  * Created on 2024-08-04.
  *
  * @author Alexander Winter
  */
-public class Main {
+public class TriangleViewer {
 	private final static int DEFAULT_ATTRIBUTES = VertexAttributes.Usage.Position
 			| VertexAttributes.Usage.Normal
 			| VertexAttributes.Usage.Tangent
