@@ -22,7 +22,7 @@ import com.badlogic.gdx.math.collision.Segment;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.winteralexander.gdx.csg.Face;
+import com.winteralexander.gdx.csg.MeshFace;
 import com.winteralexander.gdx.csg.IntersectorPlus;
 import com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult;
 import com.winteralexander.gdx.csg.SegmentPlus;
@@ -113,19 +113,6 @@ public class TriangleViewer {
 
 				InputUtil.registerInput(new CameraInputController(cam));
 
-				Array<Face> mesh1Faces = new Array<>();
-				Array<Face> mesh2Faces = new Array<>();
-
-				for(int i = 0; i < instance1.model.meshes.get(0).getNumIndices() / 3; i++)
-					mesh1Faces.add(new Face(instance1.model.meshes.get(0), i) {{
-						color = Color.RED;
-					}});
-
-				for(int i = 0; i < instance2.model.meshes.get(0).getNumIndices() / 3; i++)
-					mesh2Faces.add(new Face(instance2.model.meshes.get(0), i) {{
-						color = Color.BLUE;
-					}});
-
 
 				triangles.add(new Triangle(0f, 0f, 0f,
 						0f, 1f, 0f,
@@ -135,8 +122,8 @@ public class TriangleViewer {
 						1f, 0f, 0f,
 						1f, 1f, 0f));
 
-				Face.__debugOnlyRenderables.clear();
-				Face.__debugOnlyRenderables.addFirst(r -> {
+				MeshFace.__debugOnlyRenderables.clear();
+				MeshFace.__debugOnlyRenderables.addFirst(r -> {
 					r.setColor(intersection == NONE ? Color.RED : Color.GREEN);
 					for(Triangle triangle : triangles) {
 						r.line(triangle.p1, triangle.p2);
@@ -253,7 +240,7 @@ public class TriangleViewer {
 				debugRenderer.setProjectionMatrix(cam.combined);
 				debugRenderer.begin();
 
-				for(Consumer<ShapeRenderer> renderable : Face.__debugOnlyRenderables)
+				for(Consumer<ShapeRenderer> renderable : MeshFace.__debugOnlyRenderables)
 					renderable.accept(debugRenderer);
 
 				debugRenderer.end();
