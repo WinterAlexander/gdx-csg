@@ -67,10 +67,10 @@ public class CSGMesh {
 
 	public void splitTriangles(CSGMesh other) {
 		int initialSize = faces.size;
-		for(int i = 0; i < initialSize; i++) {
+		for(int i = 0; i < faces.size; i++) {
 			for(MeshFace otherFace : other.faces) {
 				TriangleIntersectionResult result = intersectTriangleTriangle(faces.get(i).getTriangle(),
-						otherFace.getTriangle(), 1e-5f, intersectSegment);
+						otherFace.getTriangle(), 0f, intersectSegment);
 				if(result == NONCOPLANAR_FACE_FACE) {
 					plane.set(otherFace.getPosition1(), otherFace.getNormal());
 					splitFace(i, plane);

@@ -1,5 +1,6 @@
 package com.winteralexander.gdx.csg.test;
 
+import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.math.collision.Segment;
@@ -286,5 +287,24 @@ public class IntersectorPlusTest {
 				0.9995464f, 0.571803f, 0.0f,
 				0.9995464f, 1.5718032f, 0.0f);
 		assertEquals(NONE, intersectTriangleTriangle(tri1, tri2, 1e-5f, segment));
+	}
+
+	@Test
+	public void testTriangleTriangleEdgeCase() throws InterruptedException {
+
+		Triangle tri1 = new Triangle(), tri2 = new Triangle();
+		tri1.set(new Vector3(-0.3f,0.3f,0.5f),
+				new Vector3(-0.20710671f,0.3f,0.5f),
+				new Vector3(-0.20710675f,0.33049607f,0.5f));
+		tri2.set(new Vector3(-0.70710677f,1.3f,5.9604645E-8f),
+				new Vector3(-0.70710677f,0.3f,5.9604645E-8f),
+				new Vector3(5.9604645E-8f,0.3f,0.70710677f));
+
+		SegmentPlus segment = new SegmentPlus();
+
+		new LwjglApplication(new TriangleViewer(tri1, tri2));
+		Thread.sleep(100_0000);
+
+		assertEquals(NONE, intersectTriangleTriangle(tri1, tri2, 1e-6f, segment));
 	}
 }

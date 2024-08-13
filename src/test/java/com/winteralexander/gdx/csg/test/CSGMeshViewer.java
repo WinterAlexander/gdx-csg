@@ -78,7 +78,9 @@ public class CSGMeshViewer implements ApplicationListener {
 		debugRenderer = new ShapeRenderer();
 		debugRenderer.setAutoShapeType(true);
 
-		InputUtil.registerInput(new CameraInputController(cam));
+		InputUtil.registerInput(new CameraInputController(cam) {{
+			scrollFactor *= 0.1f;
+		}});
 		__debugOnlyRenderables.addFirst(r -> {
 			int i = 0;
 			for(CSGMesh mesh : meshes) {
@@ -113,12 +115,14 @@ public class CSGMeshViewer implements ApplicationListener {
 					r.line(tmpVec3.x, tmpVec3.y, tmpVec3.z, tmpVec3.x + normal.x / 10f, tmpVec3.y + normal.y / 10f, tmpVec3.z + normal.z / 10f);
 				}
 
+				if(!Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT))
+					continue;
 				r.set(ShapeRenderer.ShapeType.Filled);
 				for(MeshVertex vertex : mesh.getVertices()) {
 					CSGMesh.InsideStatus status = mesh.getInsideStatus(vertex);
 					r.setColor(status == CSGMesh.InsideStatus.INSIDE ? Color.BLUE : status == CSGMesh.InsideStatus.BOUNDARY ? Color.YELLOW : Color.GREEN);
 					r.set(ShapeRenderer.ShapeType.Filled);
-					r.box(vertex.getPosition().x - 0.05f, vertex.getPosition().y - 0.05f, vertex.getPosition().z + 0.05f, 0.1f, 0.1f, 0.1f);
+					r.box(vertex.getPosition().x - 0.01f, vertex.getPosition().y - 0.01f, vertex.getPosition().z + 0.01f, 0.02f, 0.02f, 0.02f);
 				}
 			}
 			i++;

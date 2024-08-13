@@ -379,7 +379,7 @@ public class IntersectorPlus {
 			return true;
 		}
 
-		if(abs(normal.dot(ray.origin) + d) > tolerance)
+		if(abs(normal.dot(ray.origin) + d) >= tolerance)
 			return false; // parallel but not coplanar
 
 		tmpEdgeLine.origin.set(triangle.p1);

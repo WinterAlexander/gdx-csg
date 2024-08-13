@@ -64,10 +64,10 @@ public class CSGMeshTest {
 		CSGMesh otherCsg = CSGMesh.fromMesh(other);
 
 		csg.splitTriangles(otherCsg);
-		otherCsg.splitTriangles(csg);
+		//otherCsg.splitTriangles(csg);
 
 		csg.classifyFaces(otherCsg);
-		otherCsg.classifyFaces(csg);
+		//otherCsg.classifyFaces(csg);
 
 		//csg.removeFaces(true);
 		//otherCsg.removeFaces(false);

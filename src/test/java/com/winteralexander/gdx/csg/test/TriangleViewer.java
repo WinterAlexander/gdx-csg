@@ -191,7 +191,7 @@ public class TriangleViewer implements ApplicationListener {
 	@Override
 	public void render() {
 		intersection = IntersectorPlus.intersectTriangleTriangle(triangles.get(0),
-				triangles.get(1), 1e-5f, intersectionSegment);
+				triangles.get(1), 0f, intersectionSegment);
 
 		Gdx.gl.glClearColor(0, 0, 0, 0);
 		Gdx.gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
