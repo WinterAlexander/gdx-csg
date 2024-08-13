@@ -1,10 +1,6 @@
 package com.winteralexander.gdx.csg;
 
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.Queue;
-
-import java.util.function.Consumer;
 
 import static com.winteralexander.gdx.utils.Validation.ensureNotNull;
 
@@ -17,8 +13,6 @@ import static com.winteralexander.gdx.utils.Validation.ensureNotNull;
  * @author Alexander Winter
  */
 public class MeshFace {
-	public static final Queue<Consumer<ShapeRenderer>> __debugOnlyRenderables = new Queue<>();
-
 	private final MeshVertex v1, v2, v3;
 
 	private final Triangle tmpTriangle = new Triangle();

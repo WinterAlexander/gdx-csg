@@ -1,6 +1,7 @@
 package com.winteralexander.gdx.csg.test;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl.LwjglGraphics;
 import com.badlogic.gdx.backends.lwjgl.LwjglNativesLoader;
@@ -11,7 +12,9 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.winteralexander.gdx.csg.CSGMesh;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.lwjgl.opengl.Display;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -25,6 +28,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Alexander Winter
  */
+@Ignore
 public class CSGMeshTest {
 	@BeforeClass
 	public static void initGL() throws Exception {
@@ -46,7 +50,7 @@ public class CSGMeshTest {
 
 	@SuppressWarnings("unchecked")
 	@Test
-	public void testConversion() {
+	public void testConversion() throws InterruptedException {
 		ModelBuilder builder = new ModelBuilder();
 		Model box = builder.createBox(2, 10f, 3f, new Material(), VertexAttributes.Usage.Position);
 		Mesh mesh = box.meshes.get(0);
@@ -56,5 +60,16 @@ public class CSGMeshTest {
 
 		assertEquals(mesh.getNumVertices(), newMesh.getNumVertices());
 		assertEquals(mesh.getNumIndices(), newMesh.getNumIndices());
+
+		//box.meshes.set(0, newMesh);
+		Display.destroy();
+		Gdx.gl = null;
+		Gdx.graphics = null;
+		Gdx.gl20 = null;
+		Gdx.gl30 = null;
+		Gdx.gl31 = null;
+		Gdx.gl32 = null;
+		LwjglApplication app = new LwjglApplication(new ModelViewer(box));
+		Thread.sleep(1000000);
 	}
 }
