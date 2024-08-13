@@ -20,7 +20,10 @@ import static java.lang.Math.*;
  * @author Alexander Winter
  */
 public class IntersectorPlus {
-	private static final Ray tmpIntersectRay = new Ray(), tmpEdgeLine = new Ray();
+	private static final Ray tmpIntersectRay = new Ray();
+	private static final Ray tmpEdgeLine1 = new Ray(),
+			tmpEdgeLine2 = new Ray(),
+			tmpEdgeLine3 = new Ray();
 	private static final Vector3 tmpIntersection = new Vector3();
 	private static final Segment tmpSegment1 = new SegmentPlus(), tmpSegment2 = new SegmentPlus();
 	private static final Vector3 tmpSegmentDir1 = new Vector3(), tmpSegmentDir2 = new Vector3();
@@ -379,21 +382,56 @@ public class IntersectorPlus {
 			return true;
 		}
 
-		if(abs(normal.dot(ray.origin) + d) >= tolerance)
+		if(abs(normal.dot(ray.origin) + d) > tolerance)
 			return false; // parallel but not coplanar
 
-		tmpEdgeLine.origin.set(triangle.p1);
-		tmpEdgeLine.direction.set(triangle.p2).sub(triangle.p1);
+		tmpEdgeLine1.origin.set(triangle.p1);
+		tmpEdgeLine1.direction.set(triangle.p2).sub(triangle.p1);
+
+		tmpEdgeLine2.origin.set(triangle.p2);
+		tmpEdgeLine2.direction.set(triangle.p3).sub(triangle.p2);
+
+		tmpEdgeLine3.origin.set(triangle.p3);
+		tmpEdgeLine3.direction.set(triangle.p1).sub(triangle.p3);
 
 		int countIntersections = 0;
 
-		if(intersectRayRay(ray, tmpEdgeLine, tolerance, tmpIntersection) == POINT) {
-			float t = tmpEdgeLine.direction.dot(tmpIntersection.x - tmpEdgeLine.origin.x,
-					tmpIntersection.y - tmpEdgeLine.origin.y,
-					tmpIntersection.z - tmpEdgeLine.origin.z);
-			float tEnd = tmpEdgeLine.direction.dot(triangle.p2.x - tmpEdgeLine.origin.x,
-					triangle.p2.y - tmpEdgeLine.origin.y,
-					triangle.p2.z - tmpEdgeLine.origin.z);
+		LineIntersectionResult result1 = intersectRayRay(ray, tmpEdgeLine1, tolerance,
+				tmpIntersection);
+		LineIntersectionResult result2 = intersectRayRay(ray, tmpEdgeLine2, tolerance,
+				tmpIntersection);
+		LineIntersectionResult result3 = intersectRayRay(ray, tmpEdgeLine3, tolerance,
+				tmpIntersection);
+
+		if(result1 == COLLINEAR) {
+			if(result2 == COLLINEAR || result3 == COLLINEAR)
+				throw new IllegalStateException("Multiple triangle edges collinear with ray");
+			out.a.set(triangle.p1);
+			out.b.set(triangle.p2);
+			return true;
+		}
+
+		if(result2 == COLLINEAR) {
+			if(result3 == COLLINEAR)
+				throw new IllegalStateException("Multiple triangle edges collinear with ray");
+			out.a.set(triangle.p2);
+			out.b.set(triangle.p3);
+			return true;
+		}
+
+		if(result3 == COLLINEAR) {
+			out.a.set(triangle.p3);
+			out.b.set(triangle.p1);
+			return true;
+		}
+
+		if(result1 == POINT) {
+			float t = tmpEdgeLine1.direction.dot(tmpIntersection.x - tmpEdgeLine1.origin.x,
+					tmpIntersection.y - tmpEdgeLine1.origin.y,
+					tmpIntersection.z - tmpEdgeLine1.origin.z);
+			float tEnd = tmpEdgeLine1.direction.dot(triangle.p2.x - tmpEdgeLine1.origin.x,
+					triangle.p2.y - tmpEdgeLine1.origin.y,
+					triangle.p2.z - tmpEdgeLine1.origin.z);
 
 			if(t >= -tolerance && t <= tEnd + tolerance) {
 				out.a.set(tmpIntersection);
@@ -401,16 +439,13 @@ public class IntersectorPlus {
 			}
 		}
 
-		tmpEdgeLine.origin.set(triangle.p2);
-		tmpEdgeLine.direction.set(triangle.p3).sub(triangle.p2);
-
-		if(intersectRayRay(ray, tmpEdgeLine, tolerance, tmpIntersection) == POINT) {
-			float t = tmpEdgeLine.direction.dot(tmpIntersection.x - tmpEdgeLine.origin.x,
-					tmpIntersection.y - tmpEdgeLine.origin.y,
-					tmpIntersection.z - tmpEdgeLine.origin.z);
-			float tEnd = tmpEdgeLine.direction.dot(triangle.p3.x - tmpEdgeLine.origin.x,
-					triangle.p3.y - tmpEdgeLine.origin.y,
-					triangle.p3.z - tmpEdgeLine.origin.z);
+		if(result2 == POINT) {
+			float t = tmpEdgeLine2.direction.dot(tmpIntersection.x - tmpEdgeLine2.origin.x,
+					tmpIntersection.y - tmpEdgeLine2.origin.y,
+					tmpIntersection.z - tmpEdgeLine2.origin.z);
+			float tEnd = tmpEdgeLine2.direction.dot(triangle.p3.x - tmpEdgeLine2.origin.x,
+					triangle.p3.y - tmpEdgeLine2.origin.y,
+					triangle.p3.z - tmpEdgeLine2.origin.z);
 
 			if(t >= -tolerance && t <= tEnd + tolerance) {
 				(countIntersections == 0 ? out.a : out.b).set(tmpIntersection);
@@ -421,16 +456,13 @@ public class IntersectorPlus {
 			}
 		}
 
-		tmpEdgeLine.origin.set(triangle.p3);
-		tmpEdgeLine.direction.set(triangle.p1).sub(triangle.p3);
-
-		if(intersectRayRay(ray, tmpEdgeLine, tolerance, tmpIntersection) == POINT) {
-			float t = tmpEdgeLine.direction.dot(tmpIntersection.x - tmpEdgeLine.origin.x,
-					tmpIntersection.y - tmpEdgeLine.origin.y,
-					tmpIntersection.z - tmpEdgeLine.origin.z);
-			float tEnd = tmpEdgeLine.direction.dot(triangle.p1.x - tmpEdgeLine.origin.x,
-					triangle.p1.y - tmpEdgeLine.origin.y,
-					triangle.p1.z - tmpEdgeLine.origin.z);
+		if(result3 == POINT) {
+			float t = tmpEdgeLine3.direction.dot(tmpIntersection.x - tmpEdgeLine3.origin.x,
+					tmpIntersection.y - tmpEdgeLine3.origin.y,
+					tmpIntersection.z - tmpEdgeLine3.origin.z);
+			float tEnd = tmpEdgeLine3.direction.dot(triangle.p1.x - tmpEdgeLine3.origin.x,
+					triangle.p1.y - tmpEdgeLine3.origin.y,
+					triangle.p1.z - tmpEdgeLine3.origin.z);
 
 			if(t >= -tolerance && t <= tEnd + tolerance) {
 				(countIntersections == 0 ? out.a : out.b).set(tmpIntersection);
