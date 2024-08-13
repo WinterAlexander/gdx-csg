@@ -10,6 +10,8 @@ import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector3;
 import com.winteralexander.gdx.csg.CSGMesh;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -19,6 +21,7 @@ import org.lwjgl.opengl.Display;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
+import static com.badlogic.gdx.graphics.GL20.GL_TRIANGLES;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -52,16 +55,32 @@ public class CSGMeshTest {
 	@Test
 	public void testConversion() throws InterruptedException {
 		ModelBuilder builder = new ModelBuilder();
-		Model box = builder.createBox(2, 10f, 3f, new Material(), VertexAttributes.Usage.Position);
+		Model box = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model second = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh mesh = box.meshes.get(0);
+		Mesh other = second.meshes.get(0);
+		other.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 45f).translate(0f, 0.8f, 0f));
 		CSGMesh csg = CSGMesh.fromMesh(mesh);
+		CSGMesh otherCsg = CSGMesh.fromMesh(other);
+
+		csg.splitTriangles(otherCsg, CSGMesh.FaceSplittingOperation.KEEP_FRONT);
+		otherCsg.splitTriangles(csg, CSGMesh.FaceSplittingOperation.KEEP_BACK);
 
 		Mesh newMesh = csg.toMesh();
 
-		assertEquals(mesh.getNumVertices(), newMesh.getNumVertices());
-		assertEquals(mesh.getNumIndices(), newMesh.getNumIndices());
+		//assertEquals(mesh.getNumVertices(), newMesh.getNumVertices());
+		//assertEquals(mesh.getNumIndices(), newMesh.getNumIndices());
 
-		//box.meshes.set(0, newMesh);
+		box.meshes.set(0, newMesh);
+		box.meshParts.get(0).set("box", newMesh, 0, newMesh.getNumIndices(), GL_TRIANGLES);
+		box.meshParts.get(0).update();
+
+		Mesh secondNewMesh = otherCsg.toMesh();
+
+		second.meshes.set(0, secondNewMesh);
+		second.meshParts.get(0).set("box", secondNewMesh, 0, secondNewMesh.getNumIndices(), GL_TRIANGLES);
+		second.meshParts.get(0).update();
+
 		Display.destroy();
 		Gdx.gl = null;
 		Gdx.graphics = null;
@@ -69,7 +88,7 @@ public class CSGMeshTest {
 		Gdx.gl30 = null;
 		Gdx.gl31 = null;
 		Gdx.gl32 = null;
-		LwjglApplication app = new LwjglApplication(new ModelViewer(box));
+		LwjglApplication app = new LwjglApplication(new ModelViewer(box, second));
 		Thread.sleep(1000000);
 	}
 }

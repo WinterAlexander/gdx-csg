@@ -13,17 +13,16 @@ import static com.winteralexander.gdx.utils.Validation.ensureNotNull;
  * @author Alexander Winter
  */
 public class MeshFace {
-	private final MeshVertex v1, v2, v3;
-
+	private final MeshVertex[] vertices = new MeshVertex[3];
 	private final Triangle tmpTriangle = new Triangle();
 
 	public MeshFace(MeshVertex v1, MeshVertex v2, MeshVertex v3) {
 		ensureNotNull(v1, "v1");
 		ensureNotNull(v2, "v2");
 		ensureNotNull(v3, "v3");
-		this.v1 = v1;
-		this.v2 = v2;
-		this.v3 = v3;
+		this.vertices[0] = v1;
+		this.vertices[1] = v2;
+		this.vertices[2] = v3;
 	}
 
 	public Vector3 getNormal() {
@@ -31,31 +30,35 @@ public class MeshFace {
 	}
 
 	public Vector3 getPosition1() {
-		return v1.getPosition();
+		return vertices[0].getPosition();
 	}
 
 	public Vector3 getPosition2() {
-		return v2.getPosition();
+		return vertices[1].getPosition();
 	}
 
 	public Vector3 getPosition3() {
-		return v3.getPosition();
+		return vertices[2].getPosition();
 	}
 
 	public MeshVertex getV1() {
-		return v1;
+		return vertices[0];
 	}
 
 	public MeshVertex getV2() {
-		return v2;
+		return vertices[1];
 	}
 
 	public MeshVertex getV3() {
-		return v3;
+		return vertices[2];
 	}
 
 	public Triangle getTriangle() {
-		tmpTriangle.set(v1.getPosition(), v2.getPosition(), v3.getPosition());
+		tmpTriangle.set(getPosition1(), getPosition2(), getPosition3());
 		return tmpTriangle;
+	}
+
+	public MeshVertex[] getVertices() {
+		return vertices;
 	}
 }

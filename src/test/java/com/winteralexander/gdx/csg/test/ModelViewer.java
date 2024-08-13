@@ -7,9 +7,13 @@ import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
+import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
+import com.badlogic.gdx.graphics.g3d.utils.DepthShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Intersector;
@@ -54,11 +58,19 @@ public class ModelViewer implements ApplicationListener {
 	private ModelBatch modelBatch;
 	private Viewport viewport;
 
+	private ModelBatch shadowBatch;
+	private DirectionalShadowLight shadowLight;
+
+	private final Environment environment = new Environment();
+
 	private final Array<Model> models = new Array<>();
 
 	private Array<ModelInstance> instances = new Array<>();
 	private PerspectiveCamera cam;
 	private ShapeRenderer debugRenderer;
+
+	private final Vector3 tmpVec3 = new Vector3();
+	private final Triangle tmpTriangle = new Triangle();
 
 	public ModelViewer(Model... model) {
 		models.addAll(model);
@@ -67,6 +79,14 @@ public class ModelViewer implements ApplicationListener {
 	@Override
 	public void create() {
 		modelBatch = new ModelBatch(new DefaultShaderProvider());
+
+		shadowLight = new DirectionalShadowLight(1920, 1080, 16f, 9f, 0.01f, 100f);
+		shadowLight.set(0.8f, 0.8f, 0.8f, -0.2f, -0.8f, -1f);
+		environment.add(shadowLight);
+		environment.shadowMap = shadowLight;
+		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f));
+
+		shadowBatch = new ModelBatch(new DepthShaderProvider());
 
 		for(Model model : models)
 			instances.add(new ModelInstance(model));
@@ -106,7 +126,6 @@ public class ModelViewer implements ApplicationListener {
 		__debugOnlyRenderables.addFirst(r -> {
 			int i = 0;
 			for(ModelInstance instance : instances) {
-				r.setColor(i % 2 == 0 ? Color.RED : Color.BLUE);
 				for(Mesh mesh : instance.model.meshes) {
 					FloatBuffer vBuffer = mesh.getVerticesBuffer(false);
 					ShortBuffer idxBuffer = mesh.getIndicesBuffer(false);
@@ -126,9 +145,19 @@ public class ModelViewer implements ApplicationListener {
 						float x3 = vBuffer.get(v3 * mesh.getVertexSize() / 4);
 						float y3 = vBuffer.get(v3 * mesh.getVertexSize() / 4 + 1);
 						float z3 = vBuffer.get(v3 * mesh.getVertexSize() / 4 + 2);
+
+
+						tmpTriangle.set(x1, y1, z1, x2, y2, z2, x3, y3, z3);
+
+						r.setColor(i % 2 == 0 ? Color.RED : Color.BLUE);
 						r.line(x1, y1, z1, x2, y2, z2);
 						r.line(x2, y2, z2, x3, y3, z3);
 						r.line(x3, y3, z3, x1, y1, z1);
+
+						r.setColor(Color.WHITE);
+						tmpVec3.set(x1 + x2 + x3, y1 + y2 + y3, z1 + z2 + z3).scl(1f / 3f);
+						Vector3 normal = tmpTriangle.getNormal();
+						r.line(tmpVec3.x, tmpVec3.y, tmpVec3.z, tmpVec3.x + normal.x / 10f, tmpVec3.y + normal.y / 10f, tmpVec3.z + normal.z / 10f);
 					}
 				}
 				i++;
@@ -147,12 +176,20 @@ public class ModelViewer implements ApplicationListener {
 		Gdx.gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		cam.update();
+
+		shadowLight.begin(Vector3.Zero, cam.direction);
+		shadowBatch.begin(shadowLight.getCamera());
+		for(ModelInstance instance : instances)
+			shadowBatch.render(instance);
+		shadowBatch.end();
+		shadowLight.end();
+
 		viewport.apply();
 
 		if(!Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) {
 			modelBatch.begin(cam);
 			for(ModelInstance instance : instances)
-				modelBatch.render(instance);
+				modelBatch.render(instance, environment);
 			modelBatch.end();
 		} else {
 			debugRenderer.setProjectionMatrix(cam.combined);
