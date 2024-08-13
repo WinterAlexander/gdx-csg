@@ -5,16 +5,18 @@ import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectIntMap;
+import com.badlogic.gdx.utils.ObjectMap;
 import com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult;
 import com.winteralexander.gdx.utils.math.VectorUtil;
 
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
-import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.COPLANAR_FACE_FACE;
-import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.NONE;
+import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.*;
+import static com.winteralexander.gdx.csg.IntersectorPlus.intersectTriangleRay;
 import static com.winteralexander.gdx.csg.IntersectorPlus.intersectTriangleTriangle;
 import static com.winteralexander.gdx.utils.Validation.ensureNotNull;
 
@@ -33,6 +35,7 @@ public class CSGMesh {
 	private final VertexAttributes attributes;
 
 	private final ObjectIntMap<MeshVertex> vertexIndices = new ObjectIntMap<>();
+	private final ObjectMap<MeshVertex, InsideStatus> vertexStatus = new ObjectMap<>();
 
 	private final SegmentPlus intersectSegment = new SegmentPlus();
 	private final Plane plane = new Plane();
@@ -48,6 +51,9 @@ public class CSGMesh {
 	private final Array<MeshFace> toAdd = new Array<>();
 	private final Array<MeshVertex> tmpNewVertices = new Array<>();
 
+	private final Ray tmpRay = new Ray();
+	private final SegmentPlus tmpSegment = new SegmentPlus();
+
 	public CSGMesh(Array<MeshVertex> vertices,
 	               Array<MeshFace> faces,
 	               VertexAttributes attributes) {
@@ -59,39 +65,36 @@ public class CSGMesh {
 		this.attributes = attributes;
 	}
 
-	public void splitTriangles(CSGMesh other, FaceSplittingOperation operation) {
-		for(MeshFace face : faces) {
+	public void splitTriangles(CSGMesh other) {
+		int initialSize = faces.size;
+		for(int i = 0; i < initialSize; i++) {
 			for(MeshFace otherFace : other.faces) {
-				TriangleIntersectionResult result = intersectTriangleTriangle(face.getTriangle(),
+				TriangleIntersectionResult result = intersectTriangleTriangle(faces.get(i).getTriangle(),
 						otherFace.getTriangle(), 1e-5f, intersectSegment);
-				if(result != NONE && result != COPLANAR_FACE_FACE) {
+				if(result == NONCOPLANAR_FACE_FACE) {
 					plane.set(otherFace.getPosition1(), otherFace.getNormal());
-					splitFace(face, plane, operation);
+					splitFace(i, plane);
 				}
 			}
 		}
-		faces.removeAll(toRemove, true);
-		faces.addAll(toAdd);
-		toRemove.clear();
-		toAdd.clear();
 	}
 
-	public void splitFace(MeshFace face, Plane plane, FaceSplittingOperation operation) {
+	private void splitFace(int faceIndex, Plane plane) {
+		MeshFace face = faces.get(faceIndex);
 		face.getTriangle().toArray(tmpArray);
 		Intersector.splitTriangle(tmpArray, plane, splitTriangle);
-		toRemove.add(face);
 
-		if(operation == FaceSplittingOperation.KEEP_BACK
-		|| operation == FaceSplittingOperation.KEEP_BOTH)
-			for(int i = 0; i < splitTriangle.numBack; i++) {
-				processSplitTriangle(face, splitTriangle.back, i * 9);
-			}
+		tmpNewVertices.clear();
+		for(int i = 0; i < splitTriangle.numBack; i++) {
+			processSplitTriangle(face, splitTriangle.back, i * 9);
+		}
 
-		if(operation == FaceSplittingOperation.KEEP_FRONT
-		|| operation == FaceSplittingOperation.KEEP_BOTH)
-			for(int i = 0; i < splitTriangle.numFront; i++) {
-				processSplitTriangle(face, splitTriangle.front, i * 9);
-			}
+		for(int i = 0; i < splitTriangle.numFront; i++) {
+			processSplitTriangle(face, splitTriangle.front, i * 9);
+		}
+		faces.set(faceIndex, toAdd.get(0));
+		faces.addAll(toAdd, 1, toAdd.size - 1);
+		toAdd.clear();
 	}
 
 	private void processSplitTriangle(MeshFace face, float[] array, int offset) {
@@ -144,6 +147,69 @@ public class CSGMesh {
 
 		MeshFace newFace = new MeshFace(vertex1, vertex2, vertex3);
 		toAdd.add(newFace);
+	}
+
+	public void classifyFaces(CSGMesh other) {
+		vertexStatus.clear();
+		for(MeshVertex vertex : vertices)
+			vertexStatus.put(vertex, other.getStatus(vertex.getPosition()));
+	}
+
+	public InsideStatus getStatus(Vector3 position) {
+		int countIntersect = 0;
+		tmpRay.set(position.x, position.y, position.z, 0f, 1f, 0f);
+
+		for(MeshFace face : faces) {
+			if(!intersectTriangleRay(face.getTriangle(), tmpRay, 1e-5f, tmpSegment))
+				continue;
+
+			if(!tmpSegment.a.epsilonEquals(tmpSegment.b, 1e-5f))
+				continue;
+
+			float t = tmpRay.direction.dot(tmpSegment.a.x - tmpRay.origin.x,
+					tmpSegment.a.y - tmpRay.origin.y,
+					tmpSegment.a.z - tmpRay.origin.z);
+
+			if(Math.abs(t) < 1e-5f)
+				return InsideStatus.BOUNDARY;
+
+			if(t < 0f)
+				continue;
+
+			countIntersect++;
+		}
+		return countIntersect % 2 == 0 ? InsideStatus.OUTSIDE : InsideStatus.INSIDE;
+	}
+
+	public void removeFaces(boolean inside) {
+		for(MeshFace face : faces) {
+			InsideStatus status1 = vertexStatus.get(face.getV1());
+			InsideStatus status2 = vertexStatus.get(face.getV2());
+			InsideStatus status3 = vertexStatus.get(face.getV3());
+
+			if(status1 == null || status2 == null || status3 == null)
+				throw new IllegalStateException("Some vertices are not classified");
+
+			boolean isFaceInside = status1 == InsideStatus.INSIDE
+					|| status2 == InsideStatus.INSIDE
+					|| status3 == InsideStatus.INSIDE;
+
+			boolean isFaceOutside = status1 == InsideStatus.OUTSIDE
+					|| status2 == InsideStatus.OUTSIDE
+					|| status3 == InsideStatus.OUTSIDE;
+
+			if(isFaceInside && isFaceOutside)
+				throw new IllegalStateException("Failure to split face");
+
+			if(isFaceInside == inside)
+				toRemove.add(face);
+		}
+		faces.removeAll(toRemove, true);
+		toRemove.clear();
+	}
+
+	public InsideStatus getInsideStatus(MeshVertex vertex) {
+		return vertexStatus.get(vertex);
 	}
 
 	public Array<MeshVertex> getVertices() {
@@ -238,7 +304,7 @@ public class CSGMesh {
 		return new CSGMesh(vertices, faces, mesh.getVertexAttributes());
 	}
 
-	public enum FaceSplittingOperation {
-		KEEP_BACK, KEEP_FRONT, KEEP_BOTH
+	public enum InsideStatus {
+		INSIDE, BOUNDARY, OUTSIDE
 	}
 }
