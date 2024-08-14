@@ -255,7 +255,7 @@ public class IntersectorPlusTest {
 	}
 
 	@Test
-	public void testTriangleTriangle() {
+	public void testTriangleTriangle() throws InterruptedException {
 		Triangle tri1 = new Triangle(), tri2 = new Triangle();
 
 		SegmentPlus segment = new SegmentPlus(), expected = new SegmentPlus();
@@ -292,7 +292,8 @@ public class IntersectorPlusTest {
 		tri2.set(-0.14996159f, 0.83515376f, 0.14882556f,
 				0.85003835f, -0.16484623f, 0.14882556f,
 				0.85003835f, 0.83515376f, 0.14882556f);
-		assertEquals(NONCOPLANAR_FACE_FACE, intersectTriangleTriangle(tri1, tri2, 0f, segment));
+
+		assertEquals(NONCOPLANAR_FACE_FACE, intersectTriangleTriangle(tri1, tri2, 1e-5f, segment));
 	}
 
 	@Test
@@ -308,9 +309,9 @@ public class IntersectorPlusTest {
 
 		SegmentPlus segment = new SegmentPlus();
 
-		new LwjglApplication(new TriangleViewer(tri1, tri2));
-		Thread.sleep(100_0000);
+		//new LwjglApplication(new TriangleViewer(tri1, tri2));
+		//Thread.sleep(1000);
 
-		assertEquals(NONE, intersectTriangleTriangle(tri1, tri2, 1e-6f, segment));
+		assertEquals(NONE, intersectTriangleTriangle(tri1, tri2, 1e-5f, segment));
 	}
 }

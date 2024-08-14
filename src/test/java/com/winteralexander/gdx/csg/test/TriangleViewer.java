@@ -91,7 +91,11 @@ public class TriangleViewer implements ApplicationListener {
 
 		__debugOnlyRenderables.clear();
 		__debugOnlyRenderables.addFirst(r -> {
-			r.setColor(intersection == NONE ? Color.RED : Color.GREEN);
+			r.setColor(intersection == NONE
+					? Color.RED
+					: intersection == null
+						? Color.PURPLE
+						: Color.GREEN);
 			for(Triangle triangle : triangles) {
 				r.line(triangle.p1, triangle.p2);
 				r.line(triangle.p2, triangle.p3);
@@ -190,8 +194,13 @@ public class TriangleViewer implements ApplicationListener {
 
 	@Override
 	public void render() {
-		intersection = IntersectorPlus.intersectTriangleTriangle(triangles.get(0),
-				triangles.get(1), 0f, intersectionSegment);
+
+		try {
+			intersection = IntersectorPlus.intersectTriangleTriangle(triangles.get(0),
+					triangles.get(1), 1e-5f, intersectionSegment);
+		} catch(Exception ex) {
+			intersection = null;
+		}
 
 		Gdx.gl.glClearColor(0, 0, 0, 0);
 		Gdx.gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
