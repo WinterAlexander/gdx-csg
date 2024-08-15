@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.FloatArray;
 import com.badlogic.gdx.utils.ObjectIntMap;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult;
@@ -46,6 +47,8 @@ public class CSGMesh {
 	private final Vector3 tmpV1 = new Vector3(),
 			tmpV2 = new Vector3(),
 			tmpV3 = new Vector3();
+
+	private final FloatArray tmpFaceIntersections = new FloatArray();
 
 	private final Array<MeshFace> toRemove = new Array<>();
 	private final Array<MeshFace> toAdd = new Array<>();
@@ -158,7 +161,9 @@ public class CSGMesh {
 	public InsideStatus getStatus(Vector3 position) {
 		int countIntersect = 0;
 		tmpRay.set(position.x, position.y, position.z, 0f, 1f, 0f);
+		tmpFaceIntersections.clear();
 
+		faceLoop:
 		for(MeshFace face : faces) {
 			if(!intersectTriangleRay(face.getTriangle(), tmpRay, 1e-5f, tmpSegment))
 				continue;
@@ -176,8 +181,14 @@ public class CSGMesh {
 			if(t < 0f)
 				continue;
 
+			for(int i = 0; i < tmpFaceIntersections.size; i++)
+				if(Math.abs(t - tmpFaceIntersections.get(i)) <= 1e-5f)
+					continue faceLoop;
+
+			tmpFaceIntersections.add(t);
 			countIntersect++;
 		}
+		tmpFaceIntersections.clear();
 		return countIntersect % 2 == 0 ? InsideStatus.OUTSIDE : InsideStatus.INSIDE;
 	}
 

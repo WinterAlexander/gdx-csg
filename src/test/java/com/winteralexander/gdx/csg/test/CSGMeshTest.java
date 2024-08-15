@@ -12,7 +12,9 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.Ray;
 import com.winteralexander.gdx.csg.CSGMesh;
+import com.winteralexander.gdx.csg.Triangle;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -95,7 +97,7 @@ public class CSGMeshTest {
 		Gdx.gl31 = null;
 		Gdx.gl32 = null;
 		//LwjglApplication app = new LwjglApplication(new ModelViewer(box/*, second*/));
-		LwjglApplication app = new LwjglApplication(new CSGMeshViewer(csg));
+		LwjglApplication app = new LwjglApplication(new CSGMeshViewer(csg, otherCsg));
 		Thread.sleep(1000000);
 	}
 }

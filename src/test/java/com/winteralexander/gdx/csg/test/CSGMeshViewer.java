@@ -120,7 +120,11 @@ public class CSGMeshViewer implements ApplicationListener {
 				r.set(ShapeRenderer.ShapeType.Filled);
 				for(MeshVertex vertex : mesh.getVertices()) {
 					CSGMesh.InsideStatus status = mesh.getInsideStatus(vertex);
-					r.setColor(status == CSGMesh.InsideStatus.INSIDE ? Color.BLUE : status == CSGMesh.InsideStatus.BOUNDARY ? Color.YELLOW : Color.GREEN);
+					r.setColor(status == CSGMesh.InsideStatus.INSIDE
+							? Color.BLUE
+							: status == CSGMesh.InsideStatus.BOUNDARY
+								? Color.YELLOW
+								: Color.GREEN);
 					r.set(ShapeRenderer.ShapeType.Filled);
 					r.box(vertex.getPosition().x - 0.01f, vertex.getPosition().y - 0.01f, vertex.getPosition().z + 0.01f, 0.02f, 0.02f, 0.02f);
 				}

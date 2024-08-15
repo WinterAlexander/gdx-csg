@@ -1,7 +1,5 @@
 package com.winteralexander.gdx.csg;
 
-import com.badlogic.gdx.math.Intersector;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
@@ -70,7 +68,9 @@ public class IntersectorPlus {
 		double t;
 
 		// means the rays are collinear
-		if(denom1 == 0 && denom2 == 0 && denom3 == 0) {
+		if(Math.abs(denom1) <= tolerance
+				&& Math.abs(denom2) <= tolerance
+				&& Math.abs(denom3) <= tolerance) {
 			float len2 = (pow2((float)sx) + pow2((float)sy) + pow2((float)sz)) * direction1.len2();
 			return Math.abs(pow2(direction1.dot((float)sx, (float)sy, (float)sz)) - len2) <= tolerance
 					? LineIntersectionResult.COLLINEAR
@@ -362,29 +362,48 @@ public class IntersectorPlus {
 	 *
 	 * @param triangle the triangle to check for intersection
 	 * @param ray the ray to check for intersection
-	 * @param tolerance tolerance to use for computations
+	 * @param tol tolerance to use for computations
 	 * @param out segment of the intersection, both ends the same if the intersection is a point
 	 * @return true if the triangle and the ray intersect, otherwise false
 	 */
 	public static boolean intersectTriangleRay(Triangle triangle,
 	                                           Ray ray,
-	                                           float tolerance,
+	                                           float tol,
 	                                           Segment out) {
 		Vector3 normal = triangle.getNormal();
 		float d = -normal.dot(triangle.p1);
 		float denom = ray.direction.dot(triangle.getNormal());
-		if(abs(denom) > tolerance) {
+		if(abs(denom) > tol) {
 			// not coplanar, single point intersection
 			float t = -(ray.origin.dot(normal) + d) / denom;
 			if(t < 0)
 				return false;
 
-			out.a.set(ray.origin).mulAdd(ray.direction, t);
-			out.b.set(ray.origin).mulAdd(ray.direction, t);
-			return true;
+			tmpSegmentDir1.set(triangle.p2).sub(triangle.p1);
+			tmpSegmentDir2.set(triangle.p3).sub(triangle.p1);
+
+			float len21 = tmpSegmentDir1.len2();
+			float len22 = tmpSegmentDir2.len2();
+
+			float x = ray.origin.x + ray.direction.x * t;
+			float y = ray.origin.y + ray.direction.y * t;
+			float z = ray.origin.z + ray.direction.z * t;
+
+			float pU = tmpSegmentDir1.dot(x, y, z) / len21;
+			float pV = tmpSegmentDir2.dot(x, y, z) / len22;
+
+			if(pU >= -tol
+					&& pU <= 1f + tol
+					&& pV >= -tol
+					&& pV <= 1f - pU + tol) {
+				out.a.set(x, y, z);
+				out.b.set(x, y, z);
+				return true;
+			}
+			return false;
 		}
 
-		if(abs(normal.dot(ray.origin) + d) > tolerance)
+		if(abs(normal.dot(ray.origin) + d) > tol)
 			return false; // parallel but not coplanar
 
 		tmpEdgeLine1.origin.set(triangle.p1);
@@ -398,11 +417,11 @@ public class IntersectorPlus {
 
 		int countIntersections = 0;
 
-		LineIntersectionResult result1 = intersectRayRay(ray, tmpEdgeLine1, tolerance,
+		LineIntersectionResult result1 = intersectRayRay(ray, tmpEdgeLine1, tol,
 				tmpIntersection1);
-		LineIntersectionResult result2 = intersectRayRay(ray, tmpEdgeLine2, tolerance,
+		LineIntersectionResult result2 = intersectRayRay(ray, tmpEdgeLine2, tol,
 				tmpIntersection2);
-		LineIntersectionResult result3 = intersectRayRay(ray, tmpEdgeLine3, tolerance,
+		LineIntersectionResult result3 = intersectRayRay(ray, tmpEdgeLine3, tol,
 				tmpIntersection3);
 
 		if(result1 == COLLINEAR) {
@@ -435,7 +454,7 @@ public class IntersectorPlus {
 					triangle.p2.y - tmpEdgeLine1.origin.y,
 					triangle.p2.z - tmpEdgeLine1.origin.z);
 
-			if(t >= -tolerance && t <= tEnd + tolerance) {
+			if(t >= -tol && t <= tEnd + tol) {
 				out.a.set(tmpIntersection1);
 				countIntersections++;
 			}
@@ -449,7 +468,7 @@ public class IntersectorPlus {
 					triangle.p3.y - tmpEdgeLine2.origin.y,
 					triangle.p3.z - tmpEdgeLine2.origin.z);
 
-			if(t >= -tolerance && t <= tEnd + tolerance) {
+			if(t >= -tol && t <= tEnd + tol) {
 				(countIntersections == 0 ? out.a : out.b).set(tmpIntersection2);
 				countIntersections++;
 
@@ -466,7 +485,7 @@ public class IntersectorPlus {
 					triangle.p1.y - tmpEdgeLine3.origin.y,
 					triangle.p1.z - tmpEdgeLine3.origin.z);
 
-			if(t >= -tolerance && t <= tEnd + tolerance) {
+			if(t >= -tol && t <= tEnd + tol) {
 				(countIntersections == 0 ? out.a : out.b).set(tmpIntersection3);
 				countIntersections++;
 
@@ -494,7 +513,6 @@ public class IntersectorPlus {
 	public static boolean intersectCoplanarTriangles(Triangle first,
 	                                                 Triangle second,
 	                                                 float tol) {
-
 		tmpSegmentDir1.set(first.p2).sub(first.p1);
 		tmpSegmentDir2.set(first.p3).sub(first.p1);
 

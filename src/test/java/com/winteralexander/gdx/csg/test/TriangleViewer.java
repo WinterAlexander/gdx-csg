@@ -5,25 +5,21 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
-import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g3d.Material;
-import com.badlogic.gdx.graphics.g3d.Model;
-import com.badlogic.gdx.graphics.g3d.ModelBatch;
-import com.badlogic.gdx.graphics.g3d.ModelInstance;
-import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
-import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Intersector;
-import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.math.collision.Segment;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Queue;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.winteralexander.gdx.csg.MeshFace;
 import com.winteralexander.gdx.csg.IntersectorPlus;
 import com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult;
 import com.winteralexander.gdx.csg.SegmentPlus;
@@ -53,8 +49,11 @@ public class TriangleViewer implements ApplicationListener {
 	private Viewport viewport;
 
 	private final Array<Triangle> triangles = new Array<>();
+	private final Array<Ray> rays = new Array<>();
 
 	private final Plane tmpPlane = new Plane();
+	private final Vector3 tmpStart = new Vector3();
+	private final Vector3 tmpEnd = new Vector3();
 
 	private PerspectiveCamera cam;
 	private ShapeRenderer debugRenderer;
@@ -65,6 +64,11 @@ public class TriangleViewer implements ApplicationListener {
 
 	public TriangleViewer(Triangle... triangles) {
 		this.triangles.addAll(triangles);
+	}
+
+	public TriangleViewer(Triangle[] triangles, Ray[] rays) {
+		this.triangles.addAll(triangles);
+		this.rays.addAll(rays);
 	}
 
 	@Override
@@ -100,6 +104,13 @@ public class TriangleViewer implements ApplicationListener {
 				r.line(triangle.p1, triangle.p2);
 				r.line(triangle.p2, triangle.p3);
 				r.line(triangle.p3, triangle.p1);
+			}
+
+			r.setColor(Color.YELLOW);
+			for(Ray ray : rays) {
+				tmpStart.set(ray.origin).mulAdd(ray.direction, 10f);
+				tmpEnd.set(ray.origin).mulAdd(ray.direction, -10f);
+				r.line(tmpStart, tmpEnd);
 			}
 
 			r.setColor(Color.BLUE);

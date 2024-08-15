@@ -1,6 +1,5 @@
 package com.winteralexander.gdx.csg.test;
 
-import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.math.collision.Segment;
@@ -14,7 +13,8 @@ import java.util.Random;
 
 import static com.winteralexander.gdx.csg.IntersectorPlus.*;
 import static com.winteralexander.gdx.csg.IntersectorPlus.LineIntersectionResult.*;
-import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.NONCOPLANAR_FACE_FACE;
+import static com.winteralexander.gdx.csg.IntersectorPlus.LineIntersectionResult.POINT;
+import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.*;
 import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.NONE;
 import static org.junit.Assert.*;
 
@@ -309,9 +309,24 @@ public class IntersectorPlusTest {
 
 		SegmentPlus segment = new SegmentPlus();
 
-		//new LwjglApplication(new TriangleViewer(tri1, tri2));
-		//Thread.sleep(1000);
+		//new LwjglApplication(new TriangleViewer(new Triangle[]{ tri1, tri2 },
+		//		new Ray[]{ new Ray(new Vector3(-0.20710672f, 0.0f, 0.5f),
+		//				new Vector3(0.0f, -0.99999994f, 0.0f)) }));
+		//Thread.sleep(100_000_000);
 
-		assertEquals(NONE, intersectTriangleTriangle(tri1, tri2, 1e-5f, segment));
+		assertEquals(EDGE_FACE, intersectTriangleTriangle(tri1, tri2, 1e-5f, segment));
+	}
+
+	@Test
+	public void rayTriangleSinglePointNonCoplanar() throws InterruptedException {
+		Triangle tri1 = new Triangle(new Vector3(-0.70710677f, 1.3f, 5.9604645E-8f),
+				new Vector3(5.9604645E-8f, 1.3f, 0.70710677f),
+				new Vector3(0.70710677f, 1.3f, -5.9604645E-8f));
+
+		Ray ray = new Ray(new Vector3(-0.5f,0.5f,-0.5f),
+				new Vector3(0.0f, 1.0f, 0.0f));
+
+		SegmentPlus segment = new SegmentPlus();
+		assertFalse(IntersectorPlus.intersectTriangleRay(tri1, ray, 1e-5f, segment));
 	}
 }
