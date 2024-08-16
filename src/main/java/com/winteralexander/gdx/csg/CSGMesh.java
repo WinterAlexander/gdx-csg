@@ -57,6 +57,8 @@ public class CSGMesh {
 	private final Ray tmpRay = new Ray();
 	private final SegmentPlus tmpSegment = new SegmentPlus();
 
+	public float tolerance = 1e-6f;
+
 	public CSGMesh(Array<MeshVertex> vertices,
 	               Array<MeshFace> faces,
 	               VertexAttributes attributes) {
@@ -69,11 +71,10 @@ public class CSGMesh {
 	}
 
 	public void splitTriangles(CSGMesh other) {
-		int initialSize = faces.size;
 		for(int i = 0; i < faces.size; i++) {
 			for(MeshFace otherFace : other.faces) {
 				TriangleIntersectionResult result = intersectTriangleTriangle(faces.get(i).getTriangle(),
-						otherFace.getTriangle(), 1e-5f, intersectSegment);
+						otherFace.getTriangle(), tolerance, intersectSegment);
 				if(result == NONCOPLANAR_FACE_FACE) {
 					plane.set(otherFace.getPosition1(), otherFace.getNormal());
 					splitFace(i, plane);
@@ -108,20 +109,20 @@ public class CSGMesh {
 		MeshVertex vertex1 = null, vertex2 = null, vertex3 = null;
 
 		for(MeshVertex faceVertex : face.getVertices()) {
-			if(faceVertex.getPosition().epsilonEquals(tmpV1, 1e-5f))
+			if(faceVertex.getPosition().epsilonEquals(tmpV1, tolerance))
 				vertex1 = faceVertex;
-			if(faceVertex.getPosition().epsilonEquals(tmpV2, 1e-5f))
+			if(faceVertex.getPosition().epsilonEquals(tmpV2, tolerance))
 				vertex2 = faceVertex;
-			if(faceVertex.getPosition().epsilonEquals(tmpV3, 1e-5f))
+			if(faceVertex.getPosition().epsilonEquals(tmpV3, tolerance))
 				vertex3 = faceVertex;
 		}
 
 		for(MeshVertex addedVertex : tmpNewVertices) {
-			if(addedVertex.getPosition().epsilonEquals(tmpV1, 1e-5f))
+			if(addedVertex.getPosition().epsilonEquals(tmpV1, tolerance))
 				vertex1 = addedVertex;
-			if(addedVertex.getPosition().epsilonEquals(tmpV2, 1e-5f))
+			if(addedVertex.getPosition().epsilonEquals(tmpV2, tolerance))
 				vertex2 = addedVertex;
-			if(addedVertex.getPosition().epsilonEquals(tmpV3, 1e-5f))
+			if(addedVertex.getPosition().epsilonEquals(tmpV3, tolerance))
 				vertex3 = addedVertex;
 		}
 
@@ -165,32 +166,32 @@ public class CSGMesh {
 
 		faceLoop:
 		for(MeshFace face : faces) {
-			if(!intersectTriangleRay(face.getTriangle(), tmpRay, 1e-5f, tmpSegment))
+			if(!intersectTriangleRay(face.getTriangle(), tmpRay, tolerance, tmpSegment))
 				continue;
 
 			float t = tmpRay.direction.dot(tmpSegment.a.x - tmpRay.origin.x,
 					tmpSegment.a.y - tmpRay.origin.y,
 					tmpSegment.a.z - tmpRay.origin.z);
 
-			if(Math.abs(tmpRay.direction.dot(face.getNormal())) <= 1e-5f) {
+			if(Math.abs(tmpRay.direction.dot(face.getNormal())) <= tolerance) {
 				float t2 = tmpRay.direction.dot(tmpSegment.b.x - tmpRay.origin.x,
 						tmpSegment.b.y - tmpRay.origin.y,
 						tmpSegment.b.z - tmpRay.origin.z);
 
-				if(Math.min(t, t2) < 1e-5f && Math.max(t, t2) > -1e-5f)
+				if(Math.min(t, t2) < tolerance && Math.max(t, t2) > -tolerance)
 					return InsideStatus.BOUNDARY;
 
 				continue;
 			}
 
-			if(Math.abs(t) < 1e-5f)
+			if(Math.abs(t) < tolerance)
 				return InsideStatus.BOUNDARY;
 
 			if(t < 0f)
 				continue;
 
 			for(int i = 0; i < tmpFaceIntersections.size; i++)
-				if(Math.abs(t - tmpFaceIntersections.get(i)) <= 1e-5f)
+				if(Math.abs(t - tmpFaceIntersections.get(i)) <= tolerance)
 					continue faceLoop;
 
 			tmpFaceIntersections.add(t);
@@ -211,7 +212,10 @@ public class CSGMesh {
 
 			boolean isFaceInside = status1 == InsideStatus.INSIDE
 					|| status2 == InsideStatus.INSIDE
-					|| status3 == InsideStatus.INSIDE;
+					|| status3 == InsideStatus.INSIDE
+					|| status1 == InsideStatus.BOUNDARY
+					&& status2 == InsideStatus.BOUNDARY
+					&& status3 == InsideStatus.BOUNDARY;
 
 			boolean isFaceOutside = status1 == InsideStatus.OUTSIDE
 					|| status2 == InsideStatus.OUTSIDE
@@ -225,6 +229,14 @@ public class CSGMesh {
 		}
 		faces.removeAll(toRemove, true);
 		toRemove.clear();
+	}
+
+	public void invertTriangles() {
+		for(MeshFace face : faces) {
+			MeshVertex v3 = face.getVertices()[2];
+			face.getVertices()[2] = face.getVertices()[1];
+			face.getVertices()[1] = v3;
+		}
 	}
 
 	public InsideStatus getInsideStatus(MeshVertex vertex) {
@@ -321,6 +333,26 @@ public class CSGMesh {
 		}
 
 		return new CSGMesh(vertices, faces, mesh.getVertexAttributes());
+	}
+
+	public CSGMesh cpy() {
+		Array<MeshVertex> verts = new Array<>();
+		Array<MeshFace> faces = new Array<>();
+
+		vertexIndices.clear();
+		int i = 0;
+		for(MeshVertex v : vertices) {
+			verts.add(new MeshVertex(v));
+			vertexIndices.put(v, i);
+			i++;
+		}
+
+		for(MeshFace f : this.faces)
+			faces.add(new MeshFace(verts.get(vertexIndices.get(f.getV1(), -1)),
+					verts.get(vertexIndices.get(f.getV2(), -1)),
+					verts.get(vertexIndices.get(f.getV3(), -1))));
+
+		return new CSGMesh(verts, faces, attributes);
 	}
 
 	public enum InsideStatus {

@@ -12,9 +12,7 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.math.collision.Ray;
 import com.winteralexander.gdx.csg.CSGMesh;
-import com.winteralexander.gdx.csg.Triangle;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -58,21 +56,30 @@ public class CSGMeshTest {
 	public void testConversion() throws InterruptedException {
 		ModelBuilder builder = new ModelBuilder();
 		Model box = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Model second = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		//Model second = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		//Model second = builder.createSphere(1f, 1f, 1f, 10, 10, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model second = builder.createCylinder(0.8f, 1f, 0.8f, 7, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh mesh = box.meshes.get(0);
 		Mesh other = second.meshes.get(0);
-		other.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 45f).translate(0f, 0.8f, 0f));
+		other.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
+				//.scale(1.1f, 1f, 0.8f)
+				.translate(0f, 0.8f, 0f));
 		CSGMesh csg = CSGMesh.fromMesh(mesh);
 		CSGMesh otherCsg = CSGMesh.fromMesh(other);
+
+		CSGMesh copy1 = csg.cpy();
+		CSGMesh copy2 = otherCsg.cpy();
 
 		csg.splitTriangles(otherCsg);
 		otherCsg.splitTriangles(csg);
 
-		csg.classifyFaces(otherCsg);
-		otherCsg.classifyFaces(csg);
+		csg.classifyFaces(copy2);
+		otherCsg.classifyFaces(copy1);
 
 		//csg.removeFaces(true);
 		//otherCsg.removeFaces(false);
+
+		//otherCsg.invertTriangles();
 
 		Mesh newMesh = csg.toMesh();
 
@@ -96,7 +103,7 @@ public class CSGMeshTest {
 		Gdx.gl30 = null;
 		Gdx.gl31 = null;
 		Gdx.gl32 = null;
-		//LwjglApplication app = new LwjglApplication(new ModelViewer(box/*, second*/));
+		//LwjglApplication app = new LwjglApplication(new ModelViewer(box, second));
 		new LwjglApplication(new CSGMeshViewer(csg, otherCsg));
 		Thread.sleep(1000000);
 	}

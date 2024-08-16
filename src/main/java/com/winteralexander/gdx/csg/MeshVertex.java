@@ -37,6 +37,13 @@ public class MeshVertex {
 		this.texCoordinates = texCoordinates;
 	}
 
+	public MeshVertex(MeshVertex other) {
+		this(other.position.cpy(),
+				other.normal.cpy(),
+				other.color.cpy(),
+				other.texCoordinates.cpy());
+	}
+
 	public Vector3 getPosition() {
 		return position;
 	}
