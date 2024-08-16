@@ -168,12 +168,20 @@ public class CSGMesh {
 			if(!intersectTriangleRay(face.getTriangle(), tmpRay, 1e-5f, tmpSegment))
 				continue;
 
-			if(!tmpSegment.a.epsilonEquals(tmpSegment.b, 1e-5f))
-				continue;
-
 			float t = tmpRay.direction.dot(tmpSegment.a.x - tmpRay.origin.x,
 					tmpSegment.a.y - tmpRay.origin.y,
 					tmpSegment.a.z - tmpRay.origin.z);
+
+			if(Math.abs(tmpRay.direction.dot(face.getNormal())) <= 1e-5f) {
+				float t2 = tmpRay.direction.dot(tmpSegment.b.x - tmpRay.origin.x,
+						tmpSegment.b.y - tmpRay.origin.y,
+						tmpSegment.b.z - tmpRay.origin.z);
+
+				if(Math.min(t, t2) < 1e-5f && Math.max(t, t2) > -1e-5f)
+					return InsideStatus.BOUNDARY;
+
+				continue;
+			}
 
 			if(Math.abs(t) < 1e-5f)
 				return InsideStatus.BOUNDARY;

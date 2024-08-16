@@ -66,10 +66,10 @@ public class CSGMeshTest {
 		CSGMesh otherCsg = CSGMesh.fromMesh(other);
 
 		csg.splitTriangles(otherCsg);
-		//otherCsg.splitTriangles(csg);
+		otherCsg.splitTriangles(csg);
 
 		csg.classifyFaces(otherCsg);
-		//otherCsg.classifyFaces(csg);
+		otherCsg.classifyFaces(csg);
 
 		//csg.removeFaces(true);
 		//otherCsg.removeFaces(false);
@@ -97,7 +97,7 @@ public class CSGMeshTest {
 		Gdx.gl31 = null;
 		Gdx.gl32 = null;
 		//LwjglApplication app = new LwjglApplication(new ModelViewer(box/*, second*/));
-		LwjglApplication app = new LwjglApplication(new CSGMeshViewer(csg, otherCsg));
+		new LwjglApplication(new CSGMeshViewer(csg, otherCsg));
 		Thread.sleep(1000000);
 	}
 }

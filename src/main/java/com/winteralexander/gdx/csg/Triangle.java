@@ -120,4 +120,9 @@ public class Triangle {
 		out[offset + 7] = p3.y;
 		out[offset + 8] = p3.z;
 	}
+
+	@Override
+	public String toString() {
+		return p1 + ", " + p2 + ", " + p3;
+	}
 }

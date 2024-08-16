@@ -1,5 +1,6 @@
 package com.winteralexander.gdx.csg.test;
 
+import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.math.collision.Segment;
@@ -323,10 +324,30 @@ public class IntersectorPlusTest {
 				new Vector3(5.9604645E-8f, 1.3f, 0.70710677f),
 				new Vector3(0.70710677f, 1.3f, -5.9604645E-8f));
 
-		Ray ray = new Ray(new Vector3(-0.5f,0.5f,-0.5f),
+		Ray ray = new Ray(new Vector3(-0.5f, 0.5f,-0.5f),
 				new Vector3(0.0f, 1.0f, 0.0f));
 
 		SegmentPlus segment = new SegmentPlus();
+		assertFalse(IntersectorPlus.intersectTriangleRay(tri1, ray, 1e-5f, segment));
+
+		tri1.p1.set(0.20710674f, 0.3f, -0.5f);
+		tri1.p2.set(0.035533965f, 0.3f, 0.5f);
+		tri1.p3.set(4.214685E-8f, 0.3f, 0.5f);
+
+		ray.set(-0.5f, -0.5f, -0.5f, 0f, 1f, 0f);
+
+		//new LwjglApplication(new TriangleViewer(new Triangle[]{ tri1 },
+		//		new Ray[]{ ray }));
+		//Thread.sleep(100_000_000);
+
+		assertFalse(IntersectorPlus.intersectTriangleRay(tri1, ray, 1e-5f, segment));
+
+		tri1.p1.set(-0.20710674f, 0.3f, -0.5f);
+		tri1.p2.set(0.035533965f, 0.3f, 0.5f);
+		tri1.p3.set(4.214685e-8f, 0.3f, 0.5f);
+
+		ray.set(0.5f, 0.5f, -0.5f, 0f, 1f, 0f);
+
 		assertFalse(IntersectorPlus.intersectTriangleRay(tri1, ray, 1e-5f, segment));
 	}
 }

@@ -380,22 +380,24 @@ public class IntersectorPlus {
 				return false;
 
 			tmpSegmentDir1.set(triangle.p2).sub(triangle.p1);
-			tmpSegmentDir2.set(triangle.p3).sub(triangle.p1);
+			tmpSegmentDir2.set(tmpSegmentDir1).crs(normal);
 
-			float len21 = tmpSegmentDir1.len2();
-			float len22 = tmpSegmentDir2.len2();
+			float len2 = tmpSegmentDir1.len2();
+			float height2 = tmpSegmentDir2.dot(triangle.p3.x - triangle.p1.x,
+					triangle.p3.y - triangle.p1.y,
+					triangle.p3.z - triangle.p1.z);
 
 			float x = ray.origin.x + ray.direction.x * t;
 			float y = ray.origin.y + ray.direction.y * t;
 			float z = ray.origin.z + ray.direction.z * t;
 
-			float pU = tmpSegmentDir1.dot(x, y, z) / len21;
-			float pV = tmpSegmentDir2.dot(x, y, z) / len22;
+			float pU = tmpSegmentDir1.dot(x - triangle.p1.x, y - triangle.p1.y, z - triangle.p1.z) / len2;
+			float pV = tmpSegmentDir2.dot(x - triangle.p1.x, y - triangle.p1.y, z - triangle.p1.z) / height2;
 
 			if(pU >= -tol
 					&& pU <= 1f + tol
 					&& pV >= -tol
-					&& pV <= 1f - pU + tol) {
+					&& pV <= pU + tol) {
 				out.a.set(x, y, z);
 				out.b.set(x, y, z);
 				return true;
@@ -540,18 +542,21 @@ public class IntersectorPlus {
 		// otherwise the first triangle can't fit into the second one
 
 		tmpTriangle.set(second).sub(first.p1);
+		tmpSegmentDir2.set(tmpSegmentDir1).crs(first.getNormal());
 
-		float len21 = tmpSegmentDir1.len2();
-		float len22 = tmpSegmentDir2.len2();
+		float len2 = tmpSegmentDir1.len2();
+		float height2 = tmpSegmentDir2.dot(first.p3.x - first.p1.x,
+				first.p3.y - first.p1.y,
+				first.p3.z - first.p1.z);
 
-		float p1U = tmpSegmentDir1.dot(tmpTriangle.p1) / len21;
-		float p1V = tmpSegmentDir2.dot(tmpTriangle.p1) / len22;
+		float p1U = tmpSegmentDir1.dot(tmpTriangle.p1) / len2;
+		float p1V = tmpSegmentDir2.dot(tmpTriangle.p1) / height2;
 
-		float p2U = tmpSegmentDir1.dot(tmpTriangle.p2) / len21;
-		float p2V = tmpSegmentDir2.dot(tmpTriangle.p2) / len22;
+		float p2U = tmpSegmentDir1.dot(tmpTriangle.p2) / len2;
+		float p2V = tmpSegmentDir2.dot(tmpTriangle.p2) / height2;
 
-		float p3U = tmpSegmentDir1.dot(tmpTriangle.p3) / len21;
-		float p3V = tmpSegmentDir2.dot(tmpTriangle.p3) / len22;
+		float p3U = tmpSegmentDir1.dot(tmpTriangle.p3) / len2;
+		float p3V = tmpSegmentDir2.dot(tmpTriangle.p3) / height2;
 
 		if(p1U >= -tol
 				&& p1U <= 1f + tol

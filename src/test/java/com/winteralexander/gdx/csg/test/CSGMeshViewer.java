@@ -115,7 +115,7 @@ public class CSGMeshViewer implements ApplicationListener {
 					r.line(tmpVec3.x, tmpVec3.y, tmpVec3.z, tmpVec3.x + normal.x / 10f, tmpVec3.y + normal.y / 10f, tmpVec3.z + normal.z / 10f);
 				}
 
-				if(!Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT))
+				if(!Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT) || i > 0)
 					continue;
 				r.set(ShapeRenderer.ShapeType.Filled);
 				for(MeshVertex vertex : mesh.getVertices()) {
@@ -128,8 +128,8 @@ public class CSGMeshViewer implements ApplicationListener {
 					r.set(ShapeRenderer.ShapeType.Filled);
 					r.box(vertex.getPosition().x - 0.01f, vertex.getPosition().y - 0.01f, vertex.getPosition().z + 0.01f, 0.02f, 0.02f, 0.02f);
 				}
+				i++;
 			}
-			i++;
 		});
 	}
 
