@@ -376,7 +376,7 @@ public class IntersectorPlus {
 		if(abs(denom) > tol) {
 			// not coplanar, single point intersection
 			float t = -(ray.origin.dot(normal) + d) / denom;
-			if(t < 0)
+			if(t < -tol)
 				return false;
 
 			tmpSegmentDir1.set(triangle.p2).sub(triangle.p1);

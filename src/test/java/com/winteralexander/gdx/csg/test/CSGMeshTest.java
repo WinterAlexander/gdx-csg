@@ -57,8 +57,8 @@ public class CSGMeshTest {
 		ModelBuilder builder = new ModelBuilder();
 		Model box = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		//Model second = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		//Model second = builder.createSphere(1f, 1f, 1f, 10, 10, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Model second = builder.createCylinder(0.8f, 1f, 0.8f, 7, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model second = builder.createSphere(1f, 1f, 1f, 10, 10, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		//Model second = builder.createCylinder(0.8f, 1f, 0.8f, 7, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh mesh = box.meshes.get(0);
 		Mesh other = second.meshes.get(0);
 		other.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
@@ -76,10 +76,10 @@ public class CSGMeshTest {
 		csg.classifyFaces(copy2);
 		otherCsg.classifyFaces(copy1);
 
-		//csg.removeFaces(true);
-		//otherCsg.removeFaces(false);
+		csg.removeFaces(true);
+		otherCsg.removeFaces(false);
 
-		//otherCsg.invertTriangles();
+		otherCsg.invertTriangles();
 
 		Mesh newMesh = csg.toMesh();
 
@@ -103,8 +103,8 @@ public class CSGMeshTest {
 		Gdx.gl30 = null;
 		Gdx.gl31 = null;
 		Gdx.gl32 = null;
-		//LwjglApplication app = new LwjglApplication(new ModelViewer(box, second));
-		new LwjglApplication(new CSGMeshViewer(csg, otherCsg));
+		new LwjglApplication(new ModelViewer(box, second));
+		//new LwjglApplication(new CSGMeshViewer(csg, otherCsg));
 		Thread.sleep(1000000);
 	}
 }
