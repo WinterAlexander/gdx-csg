@@ -186,7 +186,7 @@ public class IntersectorPlusTest {
 	}
 
 	@Test
-	public void testTriangleRay() {
+	public void testTriangleRay() throws InterruptedException {
 		Triangle triangle = new Triangle(0f, 0f, 0f,
 				0f, 1f, 0f,
 				0f, 1f, 1f);
@@ -214,6 +214,20 @@ public class IntersectorPlusTest {
 		ray.direction.set(0f, 1f, 0f);
 
 		assertFalse(IntersectorPlus.intersectTriangleRay(triangle, ray, 1e-5f, segment));
+
+		triangle.p1.set(-0.2828202f, 0.5f, -0.2828202f);
+		triangle.p2.set(-0.28282905f, 0.5f, -0.28279895f);
+		triangle.p3.set(0.28278846f, 0.5f, 0.282897f);
+
+		ray.origin.set(0.0f, 0.5f, -0.4f);
+		ray.direction.set(0.92391634f, 0.0f, -0.38259482f);
+
+
+		new LwjglApplication(new TriangleViewer(new Triangle[]{ triangle },
+				new Ray[]{ ray }));
+		Thread.sleep(100_000_000);
+
+		assertTrue(IntersectorPlus.intersectTriangleRay(triangle, ray, 1e-5f, segment));
 	}
 
 	@Test
