@@ -3,7 +3,9 @@ package com.winteralexander.gdx.csg.test;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
+import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
@@ -16,15 +18,15 @@ import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.Ray;
+import com.badlogic.gdx.math.collision.Segment;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Queue;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.winteralexander.gdx.csg.CSGMesh;
-import com.winteralexander.gdx.csg.MeshFace;
-import com.winteralexander.gdx.csg.MeshVertex;
-import com.winteralexander.gdx.csg.Triangle;
+import com.winteralexander.gdx.csg.*;
 import com.winteralexander.gdx.utils.input.InputUtil;
+import com.winteralexander.gdx.utils.math.MathUtil;
 
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
@@ -51,17 +53,21 @@ public class CSGMeshViewer implements ApplicationListener {
 	private ModelBatch modelBatch;
 	private Viewport viewport;
 
-
 	private final Array<CSGMesh> meshes = new Array<>();
+	private final Array<Ray> rays = new Array<Ray>();
 
 	private PerspectiveCamera cam;
 	private ShapeRenderer debugRenderer;
 
 	private final Vector3 tmpVec3 = new Vector3();
-	private final Triangle tmpTriangle = new Triangle();
 
 	public CSGMeshViewer(CSGMesh... meshes) {
 		this.meshes.addAll(meshes);
+	}
+
+	public CSGMeshViewer(CSGMesh[] meshes, Ray[] rays) {
+		this.meshes.addAll(meshes);
+		this.rays.addAll(rays);
 	}
 
 	@Override
@@ -71,16 +77,39 @@ public class CSGMeshViewer implements ApplicationListener {
 		viewport = new FitViewport(16f, 9f);
 
 		cam = new PerspectiveCamera(67f, 16f, 9f);
-		cam.position.set(10f, 0f, 0f);
+		cam.position.set(3f, 0f, 0f);
 		cam.lookAt(0f, 0f, 0f);
 		cam.near = 0.01f;
 
 		debugRenderer = new ShapeRenderer();
 		debugRenderer.setAutoShapeType(true);
 
-		InputUtil.registerInput(new CameraInputController(cam) {{
-			scrollFactor *= 0.1f;
-		}});
+		InputUtil.registerInput(new CameraInputController(cam) {
+			@Override
+			public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+				Ray ray = new Ray();
+				tmpVec3.set(screenX, screenY, 1f);
+				cam.unproject(tmpVec3);
+				ray.origin.set(cam.position);
+				ray.direction.set(tmpVec3).sub(cam.position).nor();
+				Segment segment = new SegmentPlus();
+
+				for(CSGMesh mesh : meshes) {
+					for(MeshFace face : mesh.getFaces()) {
+						if(IntersectorPlus.intersectTriangleRay(face.getTriangle(), ray, 1e-6f, segment)) {
+							System.out.println(face.getTriangle().toString());
+						}
+					}
+				}
+
+				return super.touchDown(screenX, screenY, pointer, button);
+			}
+
+			{
+				scrollFactor *= 0.1f;
+			}
+		});
+
 		__debugOnlyRenderables.addFirst(r -> {
 			int i = -1;
 			for(CSGMesh mesh : meshes) {
@@ -129,8 +158,20 @@ public class CSGMeshViewer implements ApplicationListener {
 								? Color.YELLOW
 								: Color.GREEN);
 					r.set(ShapeRenderer.ShapeType.Filled);
-					r.box(vertex.getPosition().x - 0.01f, vertex.getPosition().y - 0.01f, vertex.getPosition().z + 0.01f, 0.02f, 0.02f, 0.02f);
+					float vSize = 0.05f * MathUtil.sigmoid(cam.position.dst2(vertex.getPosition()));
+					r.box(vertex.getPosition().x - vSize / 2f,
+							vertex.getPosition().y - vSize / 2f,
+							vertex.getPosition().z + vSize / 2f,
+							vSize, vSize, vSize);
 				}
+			}
+
+
+			r.set(ShapeRenderer.ShapeType.Line);
+			r.setColor(Color.MAGENTA);
+			for(Ray ray : rays) {
+				tmpVec3.set(ray.origin).add(ray.direction);
+				r.line(ray.origin, tmpVec3);
 			}
 		});
 	}
@@ -232,5 +273,26 @@ public class CSGMeshViewer implements ApplicationListener {
 				s, s, s,
 				1f, 0f, 0f);
 		return builder.end();
+	}
+
+	public static void start(CSGMesh... meshes) {
+		start(meshes, new Ray[0]);
+	}
+
+	public static void start(CSGMesh[] meshes, Ray[] rays) {
+		try {
+			new LwjglApplication(new CSGMeshViewer(meshes, rays),
+					new LwjglApplicationConfiguration() {{
+						width = 1600;
+						height = 900;
+						forceExit = false;
+					}}) {
+				public Thread getMainThread() {
+					return mainLoopThread;
+				}
+			}.getMainThread().join();
+		} catch(InterruptedException ex) {
+			throw new RuntimeException(ex);
+		}
 	}
 }

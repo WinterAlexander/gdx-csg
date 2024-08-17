@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.Ray;
 import com.winteralexander.gdx.csg.CSGMesh;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -57,8 +58,8 @@ public class CSGMeshTest {
 		ModelBuilder builder = new ModelBuilder();
 		Model box = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		//Model second = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		//Model second = builder.createSphere(1f, 1f, 1f, 10, 10, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Model second = builder.createCylinder(0.8f, 1f, 0.8f, 8, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model second = builder.createSphere(1f, 1f, 1f, 10, 10, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		//Model second = builder.createCylinder(0.8f, 1f, 0.8f, 15, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh mesh = box.meshes.get(0);
 		Mesh other = second.meshes.get(0);
 		other.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
@@ -70,11 +71,11 @@ public class CSGMeshTest {
 		CSGMesh copy1 = csg.cpy();
 		CSGMesh copy2 = otherCsg.cpy();
 
-		csg.splitTriangles(otherCsg);
-		//otherCsg.splitTriangles(csg);
+		csg.splitTriangles(copy2);
+		otherCsg.splitTriangles(copy1);
 
 		csg.classifyFaces(copy2);
-		//otherCsg.classifyFaces(copy1);
+		otherCsg.classifyFaces(copy1);
 
 		//csg.removeFaces(true);
 		//otherCsg.removeFaces(false);
@@ -103,8 +104,9 @@ public class CSGMeshTest {
 		Gdx.gl30 = null;
 		Gdx.gl31 = null;
 		Gdx.gl32 = null;
-		//new LwjglApplication(new ModelViewer(box, second));
-		new LwjglApplication(new CSGMeshViewer(csg/*, otherCsg*/));
-		Thread.sleep(1000000);
+
+		CSGMeshViewer.start(new CSGMesh[] { csg, otherCsg }, new Ray[] {
+				new Ray().set(-0.31519663f, 0.5f, -0.23935616f, 0f, 1f, 0f)
+		});
 	}
 }

@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
+import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Pixmap;
@@ -249,5 +250,22 @@ public class TriangleViewer implements ApplicationListener {
 				0f, 0f, 1f), new Triangle(0f, 1f, 0f,
 				1f, 0f, 0f,
 				1f, 1f, 0f)));
+	}
+
+	public static void start(Triangle[] triangles, Ray[] rays) {
+		try {
+			new LwjglApplication(new TriangleViewer(triangles, rays),
+					new LwjglApplicationConfiguration() {{
+						width = 1600;
+						height = 900;
+						forceExit = false;
+					}}) {
+				public Thread getMainThread() {
+					return mainLoopThread;
+				}
+			}.getMainThread().join();
+		} catch(InterruptedException ex) {
+			throw new RuntimeException(ex);
+		}
 	}
 }

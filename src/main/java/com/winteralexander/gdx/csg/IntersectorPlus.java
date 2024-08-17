@@ -394,15 +394,29 @@ public class IntersectorPlus {
 			float pU = tmpSegmentDir1.dot(x - triangle.p1.x, y - triangle.p1.y, z - triangle.p1.z) / len2;
 			float pV = tmpSegmentDir2.dot(x - triangle.p1.x, y - triangle.p1.y, z - triangle.p1.z) / height2;
 
-			if(pU >= -tol
-					&& pU <= 1f + tol
-					&& pV >= -tol
-					&& pV <= pU + tol) {
-				out.a.set(x, y, z);
-				out.b.set(x, y, z);
-				return true;
+			float p3U = tmpSegmentDir1.dot(triangle.p3.x - triangle.p1.x,
+					triangle.p3.y - triangle.p1.y,
+					triangle.p3.z - triangle.p1.z) / len2;
+
+			boolean underFirstSlope = pV - pU / p3U <= tol;
+
+			if(pU < -tol || pV < -tol || !underFirstSlope)
+				return false;
+
+			if(Math.abs(p3U - 1f) > tol) {
+				if(p3U < 1f) {
+					boolean underSecondSlope = pV - (1 - pU) / (1 - p3U) <= tol;
+					if(!underSecondSlope)
+						return false;
+				} else {
+					boolean overSecondSlope = pV - (1 - pU) / (1 - p3U) >= tol;
+					if(!overSecondSlope)
+						return false;
+				}
 			}
-			return false;
+
+			out.b.set(out.a.set(x, y, z));
+			return true;
 		}
 
 		if(abs(normal.dot(ray.origin) + d) > tol)
