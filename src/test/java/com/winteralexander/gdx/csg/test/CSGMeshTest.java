@@ -11,7 +11,6 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.math.collision.Ray;
 import com.winteralexander.gdx.csg.CSGMesh;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -108,17 +107,123 @@ public class CSGMeshTest {
 
 	@SuppressWarnings("unchecked")
 	@Test
-	public void testConversion() {
+	public void testCubeSphere() {
 		ModelBuilder builder = new ModelBuilder();
 		Model box = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		//Model second = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Model second = builder.createSphere(1f, 1f, 1f, 50, 50, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		//Model second = builder.createCylinder(0.8f, 1f, 0.8f, 15, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh mesh = box.meshes.get(0);
 		Mesh other = second.meshes.get(0);
 		other.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
 				//.scale(1.1f, 1f, 0.8f)
 				.translate(0.3f, 0.3f, 0.3f));
+		CSGMesh csg = CSGMesh.fromMesh(mesh);
+		CSGMesh otherCsg = CSGMesh.fromMesh(other);
+
+		CSGMesh copy1 = csg.cpy();
+		CSGMesh copy2 = otherCsg.cpy();
+
+		csg.splitTriangles(copy2);
+		otherCsg.splitTriangles(copy1);
+
+		csg.classifyFaces(copy2);
+		otherCsg.classifyFaces(copy1);
+
+		csg.removeFaces(true);
+		otherCsg.removeFaces(false);
+
+		otherCsg.invertTriangles();
+
+		Mesh newMesh = csg.toMesh();
+
+		box.meshes.set(0, newMesh);
+		box.meshParts.get(0).set("box", newMesh, 0, newMesh.getNumIndices(), GL_TRIANGLES);
+		box.meshParts.get(0).update();
+
+		Mesh secondNewMesh = otherCsg.toMesh();
+
+		second.meshes.set(0, secondNewMesh);
+		second.meshParts.get(0).set("box", secondNewMesh, 0, secondNewMesh.getNumIndices(), GL_TRIANGLES);
+		second.meshParts.get(0).update();
+
+		Display.destroy();
+		Gdx.gl = null;
+		Gdx.graphics = null;
+		Gdx.gl20 = null;
+		Gdx.gl30 = null;
+		Gdx.gl31 = null;
+		Gdx.gl32 = null;
+
+		ModelViewer.start(box, second);
+		//CSGMeshViewer.start(new CSGMesh[] { csg, otherCsg }, new Ray[0]);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testCubeCylinder() {
+		ModelBuilder builder = new ModelBuilder();
+		Model box = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model second = builder.createCylinder(0.8f, 1f, 0.8f, 25, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Mesh mesh = box.meshes.get(0);
+		Mesh other = second.meshes.get(0);
+		other.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
+				//.scale(1.1f, 1f, 0.8f)
+				.translate(0f, 0.8f, 0f));
+		CSGMesh csg = CSGMesh.fromMesh(mesh);
+		CSGMesh otherCsg = CSGMesh.fromMesh(other);
+
+		CSGMesh copy1 = csg.cpy();
+		CSGMesh copy2 = otherCsg.cpy();
+
+		csg.splitTriangles(copy2);
+		otherCsg.splitTriangles(copy1);
+
+		csg.classifyFaces(copy2);
+		otherCsg.classifyFaces(copy1);
+
+		csg.removeFaces(true);
+		otherCsg.removeFaces(false);
+
+		otherCsg.invertTriangles();
+
+		Mesh newMesh = csg.toMesh();
+
+		//assertEquals(mesh.getNumVertices(), newMesh.getNumVertices());
+		//assertEquals(mesh.getNumIndices(), newMesh.getNumIndices());
+
+		box.meshes.set(0, newMesh);
+		box.meshParts.get(0).set("box", newMesh, 0, newMesh.getNumIndices(), GL_TRIANGLES);
+		box.meshParts.get(0).update();
+
+		Mesh secondNewMesh = otherCsg.toMesh();
+
+		second.meshes.set(0, secondNewMesh);
+		second.meshParts.get(0).set("box", secondNewMesh, 0, secondNewMesh.getNumIndices(), GL_TRIANGLES);
+		second.meshParts.get(0).update();
+
+		Display.destroy();
+		Gdx.gl = null;
+		Gdx.graphics = null;
+		Gdx.gl20 = null;
+		Gdx.gl30 = null;
+		Gdx.gl31 = null;
+		Gdx.gl32 = null;
+
+		ModelViewer.start(box, second);
+		//CSGMeshViewer.start(new CSGMesh[] { csg, otherCsg }, new Ray[0]);
+	}
+
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testCubePrism() {
+		ModelBuilder builder = new ModelBuilder();
+		Model box = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model second = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Mesh mesh = box.meshes.get(0);
+		Mesh other = second.meshes.get(0);
+		other.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
+				.scale(1.1f, 1f, 0.8f)
+				.translate(0f, 0.95f, 0f));
 		CSGMesh csg = CSGMesh.fromMesh(mesh);
 		CSGMesh otherCsg = CSGMesh.fromMesh(other);
 
