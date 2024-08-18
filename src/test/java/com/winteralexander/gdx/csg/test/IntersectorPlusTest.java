@@ -240,6 +240,13 @@ public class IntersectorPlusTest {
 		ray.set(0.6545632f, 0.5f, 0.9755105f, 0.0f, 1.0f, 0.0f);
 		//TriangleViewer.start(new Triangle[]{ triangle }, new Ray[]{ ray });
 		assertFalse(IntersectorPlus.intersectTriangleRay(triangle, ray, 1e-5f, segment));
+
+		triangle.set(0.22423086f, -0.07930406f, -0.079304114f,
+				0.20224862f, -0.14695412f, -0.99999994f,
+				0.25f, -7.1054274E-15f, -1.1920929E-7f);
+		ray.set(0.23374009f, -0.20375702f, -0.12407229f, 0.0f, 1.0f, 0.0f);
+		//TriangleViewer.start(new Triangle[]{ triangle }, new Ray[]{ ray });
+		assertTrue(IntersectorPlus.intersectTriangleRay(triangle, ray, 1e-5f, segment));
 	}
 
 	@Test
@@ -325,7 +332,7 @@ public class IntersectorPlusTest {
 		tri1.set(0.013628483f, 0.44765303f, 0.396547f, 0.013628453f, 0.49999997f, 0.5f, 0.013628453f, 0.5523469f, 0.5f);
 		tri2.set(-0.5f, 0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f);
 
-		TriangleViewer.start(new Triangle[]{ tri1, tri2 }, new Ray[]{});
+		//TriangleViewer.start(new Triangle[]{ tri1, tri2 }, new Ray[]{});
 
 		assertEquals(NONCOPLANAR_FACE_FACE, intersectTriangleTriangle(tri1, tri2, 1e-5f, segment));
 	}

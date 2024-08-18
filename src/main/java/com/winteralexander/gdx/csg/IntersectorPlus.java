@@ -398,16 +398,38 @@ public class IntersectorPlus {
 					triangle.p3.y - triangle.p1.y,
 					triangle.p3.z - triangle.p1.z) / len2;
 
-			if(pU < -tol
-			|| pV < -tol
-			|| pV - pU / p3U > tol)
+			// check pV > 0 (point is above the floor), applies to all cases
+			if(pV < -tol)
 				return false;
 
-			if(Math.abs(p3U - 1f) > tol) {
-				if((p3U < 1f ? 1f : -1f) * (pV - (1 - pU) / (1 - p3U)) > tol)
+			if(p3U < tol) {
+				if(p3U > -tol) {
+					// .
+					// |\
+					// ._\
+					// this is for the case where p3U is on top of p1 so close to 0, in this case
+					// check pU > 0 and pV < 1 - pU (under the diagonal)
+					if(pU < -tol || pV - (1f - pU) > tol)
+						return false;
+				} else {
+					// ._
+					//  \ - _
+					//   \____- .
+					// this is for the case where p3U is to the left of p1, in this case check
+					// for both diagonals
+					if(pV - pU / p3U < tol || pV - (1 - pU) / (1 - p3U) > tol)
+						return false;
+				}
+			} else {
+				if(pU < -tol || pV - pU / p3U > tol)
 					return false;
-			} else if(pU - 1f > tol)
-				return false;
+
+				if(Math.abs(p3U - 1f) > tol) {
+					if((p3U < 1f ? 1f : -1f) * (pV - (1 - pU) / (1 - p3U)) > tol)
+						return false;
+				} else if(pU - 1f > tol)
+					return false;
+			}
 
 			out.b.set(out.a.set(x, y, z));
 			return true;

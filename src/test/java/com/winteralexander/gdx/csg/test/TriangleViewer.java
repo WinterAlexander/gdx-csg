@@ -254,14 +254,15 @@ public class TriangleViewer implements ApplicationListener {
 	}
 
 	public static void start(Triangle[] triangles, Ray[] rays) {
-
-		Display.destroy();
-		Gdx.gl = null;
-		Gdx.graphics = null;
-		Gdx.gl20 = null;
-		Gdx.gl30 = null;
-		Gdx.gl31 = null;
-		Gdx.gl32 = null;
+		if(Gdx.gl != null) {
+			Display.destroy();
+			Gdx.gl = null;
+			Gdx.graphics = null;
+			Gdx.gl20 = null;
+			Gdx.gl30 = null;
+			Gdx.gl31 = null;
+			Gdx.gl32 = null;
+		}
 
 		try {
 			new LwjglApplication(new TriangleViewer(triangles, rays),

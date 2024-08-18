@@ -11,8 +11,10 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.Ray;
 import com.winteralexander.gdx.csg.CSGMesh;
 import com.winteralexander.gdx.csg.CSGUtil;
+import com.winteralexander.gdx.csg.MeshFace;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -243,26 +245,43 @@ public class CSGMeshTest {
 
 		CSGMesh cylinder3 = CSGMesh.fromMesh(cylMesh);
 
-		CSGMesh copy1 = cylinder1.cpy();
-		CSGMesh copy2 = cylinder2.cpy();
+		CSGMesh firstUnion = CSGUtil.union(cylinder1, cylinder2);
 
-		copy1.splitTriangles(cylinder2);
-		copy2.splitTriangles(cylinder1);
+		CSGMesh copy1 = firstUnion.cpy();
+		CSGMesh copy2 = cylinder3.cpy();
 
-		copy1.classifyFaces(cylinder2);
-		copy2.classifyFaces(cylinder1);
+		copy1.splitTriangles(cylinder3);
+		copy2.splitTriangles(firstUnion);
 
+		copy1.classifyFaces(cylinder3);
+		copy2.classifyFaces(firstUnion);
 
-		CSGMeshViewer.start(copy1, copy2);
+		Ray ray = new Ray();
+
+		for(MeshFace meshFace : firstUnion.getFaces()) {
+			if((meshFace.getPosition1().epsilonEquals(0.25f, 0.0f, 0.0f, 1e-5f)
+			|| meshFace.getPosition2().epsilonEquals(0.25f, 0.0f, 0.0f, 1e-5f)
+			|| meshFace.getPosition3().epsilonEquals(0.25f, 0.0f, 0.0f, 1e-5f))
+			&& (meshFace.getPosition1().epsilonEquals(0.2022486f, -0.1469541f, -0.99999994f, 1e-5f)
+			|| meshFace.getPosition2().epsilonEquals(0.2022486f, -0.1469541f, -0.99999994f, 1e-5f)
+			|| meshFace.getPosition3().epsilonEquals(0.2022486f, -0.1469541f, -0.99999994f, 1e-5f))) {
+				System.out.println("Triangle: " + meshFace.getTriangle());
+			}
+		}
+
+		ray.set(0.23374009f, -0.20375702f, -0.12407229f, 0f, 1f, 0f);
+
+		CSGMeshViewer.start(new CSGMesh[]{ copy2, copy1 },
+				new Ray[]{
+						ray
+				});
 
 		copy1.removeFaces(true);
 		copy2.removeFaces(true);
 
 		copy1.mergeWith(copy2);
 
-		CSGMesh firstUnion = copy1;
-
-		CSGMesh cylinders = CSGUtil.union(firstUnion, cylinder3);
+		CSGMesh cylinders = copy1;
 
 		CSGMeshViewer.start(cylinders);
 	}
@@ -271,7 +290,7 @@ public class CSGMeshTest {
 	public void testClassicExample() {
 		ModelBuilder builder = new ModelBuilder();
 		Model box = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Model sphere = builder.createSphere(1.25f, 1.25f, 1.25f, 10, 10, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model sphere = builder.createSphere(1.25f, 1.25f, 1.25f, 15, 15, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Model cylinder = builder.createCylinder(0.5f, 2f, 0.5f, 10, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 
 		CSGMesh boxCSG = CSGMesh.fromMesh(box.meshes.get(0));
@@ -288,13 +307,13 @@ public class CSGMeshTest {
 
 		CSGMesh cylinder3 = CSGMesh.fromMesh(cylMesh);
 
-		CSGMesh cylinders = CSGUtil.union(CSGUtil.union(cylinder1, cylinder2), cylinder3);
+		//CSGMesh cylinders = CSGUtil.union(CSGUtil.union(cylinder1, cylinder2), cylinder3);
 
 		CSGMesh roundedBox = CSGUtil.intersection(boxCSG, sphereCSG);
 
-		CSGMesh last = CSGUtil.subtraction(roundedBox, cylinders);
+		//CSGMesh last = CSGUtil.subtraction(roundedBox, cylinders);
 
-		box.meshes.set(0, last.toMesh());
+		box.meshes.set(0, roundedBox.toMesh());
 		box.meshParts.get(0).set("box", box.meshes.get(0), 0, box.meshes.get(0).getNumIndices(), GL_TRIANGLES);
 		box.meshParts.get(0).update();
 

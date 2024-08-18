@@ -16,6 +16,9 @@ public class CSGUtil {
 
 	/**
 	 * Performs subtraction on a given {@link Model} and modifies this model internally.
+	 * Subtraction subtracts the second mesh from the first one, deleting the part of the first mesh
+	 * that is in the second and adding to it the inverted part of the second mesh that is in the
+	 * first.
 	 * Does not support {@link Model} with multiple mesh parts per meshes.
 	 * @param minuend model to perform subtraction on
 	 * @param subtrahend mesh to be subtracted from the model
@@ -26,6 +29,9 @@ public class CSGUtil {
 
 	/**
 	 * Performs subtraction on a given {@link Model} and modifies this model internally.
+	 * Subtraction subtracts the second mesh from the first one, deleting the part of the first mesh
+	 * that is in the second and adding to it the inverted part of the second mesh that is in the
+	 * first.
 	 * Does not support {@link Model} with multiple mesh parts per meshes.
 	 * @param minuend model to perform subtraction on
 	 * @param subtrahend mesh to be subtracted from the model
@@ -44,10 +50,26 @@ public class CSGUtil {
 		}
 	}
 
+	/**
+	 * Performs union on a given {@link Model} and modifies this model internally. Union combines
+   	 * both meshes and removes the intersection of the 2 meshes (the insides).
+	 * Does not support {@link Model} with multiple mesh parts per meshes
+	 *
+	 * @param first model to perform union on
+	 * @param second mesh to be added to the model
+	 */
 	public static void union(Model first, Mesh second) {
 		union(first, CSGMesh.fromMesh(second));
 	}
 
+	/**
+	 * Performs union on a given {@link Model} and modifies this model internally. Union combines
+	 * both meshes and removes the intersection of the 2 meshes (the insides).
+	 * Does not support {@link Model} with multiple mesh parts per meshes
+	 *
+	 * @param first model to perform union on
+	 * @param second mesh to be added to the model
+	 */
 	public static void union(Model first, CSGMesh second) {
 		for(int i = 0; i < first.meshes.size; i++) {
 			Mesh oldMesh = first.meshes.get(i);
@@ -62,10 +84,28 @@ public class CSGUtil {
 		}
 	}
 
+	/**
+	 * Performs intersection on a given {@link Model} and modifies this model internally.
+	 * Intersection includes the parts of the meshes that is within each other and deletes
+	 * everything else.
+	 * Does not support {@link Model} with multiple mesh parts per meshes
+	 *
+	 * @param first model to perform intersection on
+	 * @param second mesh to be intersected with the model
+	 */
 	public static void intersection(Model first, Mesh second) {
 		intersection(first, CSGMesh.fromMesh(second));
 	}
 
+	/**
+	 * Performs intersection on a given {@link Model} and modifies this model internally.
+	 * Intersection includes the parts of the meshes that is within each other and deletes
+	 * everything else.
+	 * Does not support {@link Model} with multiple mesh parts per meshes
+	 *
+	 * @param first model to perform intersection on
+	 * @param second mesh to be intersected with the model
+	 */
 	public static void intersection(Model first, CSGMesh second) {
 		for(int i = 0; i < first.meshes.size; i++) {
 			Mesh oldMesh = first.meshes.get(i);
@@ -117,6 +157,7 @@ public class CSGUtil {
 
 		copy2.invertTriangles();
 		copy1.mergeWith(copy2);
+		copy1.clearInsideStatus();
 
 		return copy1;
 	}
@@ -135,6 +176,7 @@ public class CSGUtil {
 		copy2.removeFaces(true);
 
 		copy1.mergeWith(copy2);
+		copy1.clearInsideStatus();
 
 		return copy1;
 	}
@@ -153,6 +195,7 @@ public class CSGUtil {
 		copy2.removeFaces(false);
 
 		copy1.mergeWith(copy2);
+		copy1.clearInsideStatus();
 
 		return copy1;
 	}

@@ -57,6 +57,8 @@ public class CSGMeshViewer implements ApplicationListener {
 	private final Array<CSGMesh> meshes = new Array<>();
 	private final Array<Ray> rays = new Array<Ray>();
 
+	private final Array<MeshFace> highlighted = new Array<>();
+
 	private PerspectiveCamera cam;
 	private ShapeRenderer debugRenderer;
 
@@ -88,6 +90,16 @@ public class CSGMeshViewer implements ApplicationListener {
 		InputUtil.registerInput(new CameraInputController(cam) {
 			@Override
 			public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+				for(MeshFace face : highlighted)
+					System.out.println("Highlighted: " + face.getTriangle().toString());
+
+				return super.touchDown(screenX, screenY, pointer, button);
+			}
+
+			@Override
+			public boolean mouseMoved(int screenX, int screenY) {
+
+				highlighted.clear();
 				Ray ray = new Ray();
 				tmpVec3.set(screenX, screenY, 1f);
 				cam.unproject(tmpVec3);
@@ -99,13 +111,12 @@ public class CSGMeshViewer implements ApplicationListener {
 				for(CSGMesh mesh : meshes) {
 					for(MeshFace face : mesh.getFaces()) {
 						if(IntersectorPlus.intersectTriangleRay(face.getTriangle(), ray, 1e-6f, segment)) {
-							System.out.println("Mesh" + i + ": " + face.getTriangle().toString());
+							highlighted.add(face);
 						}
 					}
 					i++;
 				}
-
-				return super.touchDown(screenX, screenY, pointer, button);
+				return super.mouseMoved(screenX, screenY);
 			}
 
 			{
@@ -141,6 +152,13 @@ public class CSGMeshViewer implements ApplicationListener {
 								: isFaceInside
 									? Color.BLUE
 									: Color.GREEN);
+
+
+
+					if(status1 == null || status2 == null || status3 == null) {
+						r.setColor(Color.GRAY);
+					}
+
 					r.line(face.getPosition1(), face.getPosition2());
 					r.line(face.getPosition2(), face.getPosition3());
 					r.line(face.getPosition3(), face.getPosition1());
@@ -177,6 +195,13 @@ public class CSGMeshViewer implements ApplicationListener {
 						continue;
 
 					r.setColor(Color.RED);
+					r.line(face.getPosition1(), face.getPosition2());
+					r.line(face.getPosition2(), face.getPosition3());
+					r.line(face.getPosition3(), face.getPosition1());
+				}
+
+				for(MeshFace face : highlighted) {
+					r.setColor(Color.WHITE);
 					r.line(face.getPosition1(), face.getPosition2());
 					r.line(face.getPosition2(), face.getPosition3());
 					r.line(face.getPosition3(), face.getPosition1());
@@ -253,13 +278,16 @@ public class CSGMeshViewer implements ApplicationListener {
 
 	public static void start(CSGMesh[] meshes, Ray[] rays) {
 
-		Display.destroy();
-		Gdx.gl = null;
-		Gdx.graphics = null;
-		Gdx.gl20 = null;
-		Gdx.gl30 = null;
-		Gdx.gl31 = null;
-		Gdx.gl32 = null;
+		if(Gdx.gl != null) {
+
+			Display.destroy();
+			Gdx.gl = null;
+			Gdx.graphics = null;
+			Gdx.gl20 = null;
+			Gdx.gl30 = null;
+			Gdx.gl31 = null;
+			Gdx.gl32 = null;
+		}
 
 		try {
 			new LwjglApplication(new CSGMeshViewer(meshes, rays),

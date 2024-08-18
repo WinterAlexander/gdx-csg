@@ -7,7 +7,6 @@ import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.FloatArray;
 import com.badlogic.gdx.utils.ObjectIntMap;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult;
@@ -48,7 +47,7 @@ public class CSGMesh {
 			tmpV2 = new Vector3(),
 			tmpV3 = new Vector3();
 
-	private final FloatArray tmpFaceIntersections = new FloatArray();
+	private final Array<FaceIntersection> tmpFaceIntersections = new Array();
 
 	private final Array<MeshFace> toRemove = new Array<>();
 	private final Array<MeshFace> toAdd = new Array<>();
@@ -195,6 +194,7 @@ public class CSGMesh {
 			if(!intersectTriangleRay(face.getTriangle(), tmpRay, tolerance, tmpSegment))
 				continue;
 
+			boolean upFacing = face.getNormal().dot(0f, 1f, 0f) > 0f;
 			float t = tmpRay.direction.dot(tmpSegment.a.x - tmpRay.origin.x,
 					tmpSegment.a.y - tmpRay.origin.y,
 					tmpSegment.a.z - tmpRay.origin.z);
@@ -216,11 +216,13 @@ public class CSGMesh {
 			if(t < 0f)
 				continue;
 
-			for(int i = 0; i < tmpFaceIntersections.size; i++)
-				if(Math.abs(t - tmpFaceIntersections.get(i)) <= tolerance)
+			for(FaceIntersection intersection : tmpFaceIntersections) {
+				if(Math.abs(t - intersection.t) <= tolerance
+						&& intersection.upFacing == upFacing)
 					continue faceLoop;
+			}
 
-			tmpFaceIntersections.add(t);
+			tmpFaceIntersections.add(new FaceIntersection(upFacing, t));
 			countIntersect++;
 		}
 		tmpFaceIntersections.clear();
@@ -384,7 +386,21 @@ public class CSGMesh {
 		return new CSGMesh(vertices, faces, mesh.getVertexAttributes());
 	}
 
+	public void clearInsideStatus() {
+		vertexStatus.clear();
+	}
+
 	public enum InsideStatus {
 		INSIDE, BOUNDARY, OUTSIDE
+	}
+
+	private static class FaceIntersection {
+		public final boolean upFacing;
+		public final float t;
+
+		public FaceIntersection(boolean upFacing, float t) {
+			this.upFacing = upFacing;
+			this.t = t;
+		}
 	}
 }
