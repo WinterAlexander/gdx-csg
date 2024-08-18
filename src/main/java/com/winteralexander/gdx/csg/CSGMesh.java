@@ -57,7 +57,7 @@ public class CSGMesh {
 	private final Ray tmpRay = new Ray();
 	private final SegmentPlus tmpSegment = new SegmentPlus();
 
-	public float tolerance = 1e-6f;
+	public float tolerance = 1e-5f;
 
 	public CSGMesh(Array<MeshVertex> vertices,
 	               Array<MeshFace> faces,

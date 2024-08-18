@@ -225,6 +225,21 @@ public class IntersectorPlusTest {
 
 		// super thin triangle case
 		//assertTrue(IntersectorPlus.intersectTriangleRay(triangle, ray, 1e-5f, segment));
+
+		triangle.set(0.4089327f, -0.4089327f, 0.5f,
+				0.5f, -0.5f, 0.5f,
+				2.9802322E-8f, 0.5f, 0.5f);
+
+		ray.set(0.0f, 0.39349112f, 0.5f, 0.4540586f, -0.8909718f, 0.0f);
+
+		//TriangleViewer.start(new Triangle[]{ triangle }, new Ray[]{ ray });
+
+		assertTrue(IntersectorPlus.intersectTriangleRay(triangle, ray, 1e-6f, segment));
+
+		triangle.set(-0.5f, 0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f);
+		ray.set(0.6545632f, 0.5f, 0.9755105f, 0.0f, 1.0f, 0.0f);
+		//TriangleViewer.start(new Triangle[]{ triangle }, new Ray[]{ ray });
+		assertFalse(IntersectorPlus.intersectTriangleRay(triangle, ray, 1e-5f, segment));
 	}
 
 	@Test

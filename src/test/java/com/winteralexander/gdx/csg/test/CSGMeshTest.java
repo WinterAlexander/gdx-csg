@@ -117,13 +117,13 @@ public class CSGMeshTest {
 		ModelBuilder builder = new ModelBuilder();
 		Model box = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		//Model second = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Model second = builder.createSphere(1f, 1f, 1f, 10, 10, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model second = builder.createSphere(1f, 1f, 1f, 15, 15, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		//Model second = builder.createCylinder(0.8f, 1f, 0.8f, 15, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh mesh = box.meshes.get(0);
 		Mesh other = second.meshes.get(0);
 		other.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
 				//.scale(1.1f, 1f, 0.8f)
-				.translate(0f, 0.8f, 0f));
+				.translate(0.5f, 0.5f, 0.5f));
 		CSGMesh csg = CSGMesh.fromMesh(mesh);
 		CSGMesh otherCsg = CSGMesh.fromMesh(other);
 
@@ -136,8 +136,8 @@ public class CSGMeshTest {
 		csg.classifyFaces(copy2);
 		otherCsg.classifyFaces(copy1);
 
-		csg.removeFaces(true);
-		otherCsg.removeFaces(false);
+		//csg.removeFaces(true);
+		//otherCsg.removeFaces(false);
 
 		otherCsg.invertTriangles();
 
@@ -164,10 +164,7 @@ public class CSGMeshTest {
 		Gdx.gl31 = null;
 		Gdx.gl32 = null;
 
-
-		ModelViewer.start(box, second);
-		CSGMeshViewer.start(new CSGMesh[] { csg, otherCsg }, new Ray[] {
-				new Ray().set(0.32230777f, 0.5f, 0.23418921f, 0f, 1f, 0f)
-		});
+		//ModelViewer.start(box, second);
+		CSGMeshViewer.start(new CSGMesh[] { csg, otherCsg }, new Ray[0]);
 	}
 }

@@ -400,9 +400,13 @@ public class IntersectorPlus {
 
 			if(pU < -tol
 			|| pV < -tol
-			|| pV - pU / p3U > tol
-			|| Math.abs(p3U - 1f) > tol
-				&& (p3U < 1f ? 1f : -1f) * (pV - (1 - pU) / (1 - p3U)) > tol)
+			|| pV - pU / p3U > tol)
+				return false;
+
+			if(Math.abs(p3U - 1f) > tol) {
+				if((p3U < 1f ? 1f : -1f) * (pV - (1 - pU) / (1 - p3U)) > tol)
+					return false;
+			} else if(pU - 1f > tol)
 				return false;
 
 			out.b.set(out.a.set(x, y, z));
@@ -503,8 +507,8 @@ public class IntersectorPlus {
 		if(countIntersections == 0)
 			return false;
 
-		throw new IllegalStateException("Only intersected with 1 side of a triangle, " +
-				"which shouldn't happen");
+		out.b.set(out.a);
+		return true;
 	}
 
 	/**
