@@ -3,32 +3,24 @@ package com.winteralexander.gdx.csg.test;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
+import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
-import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.DepthShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.math.collision.Segment;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Queue;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.winteralexander.gdx.csg.IntersectorPlus;
-import com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult;
-import com.winteralexander.gdx.csg.MeshFace;
-import com.winteralexander.gdx.csg.SegmentPlus;
 import com.winteralexander.gdx.csg.Triangle;
 import com.winteralexander.gdx.utils.input.InputUtil;
 
@@ -38,7 +30,6 @@ import java.util.function.Consumer;
 
 import static com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT;
 import static com.badlogic.gdx.graphics.GL20.GL_DEPTH_BUFFER_BIT;
-import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.NONE;
 
 /**
  * Debug viewer to visualize models
@@ -129,23 +120,38 @@ public class ModelViewer implements ApplicationListener {
 				for(Mesh mesh : instance.model.meshes) {
 					FloatBuffer vBuffer = mesh.getVerticesBuffer(false);
 					ShortBuffer idxBuffer = mesh.getIndicesBuffer(false);
+
+					int vSize = mesh.getVertexSize() / 4;
+					int norOffset = mesh.getVertexAttribute(VertexAttributes.Usage.Normal).offset / 4;
+
 					for(int tri = 0; tri < mesh.getNumIndices() / 3; tri++) {
 						short v1 = idxBuffer.get(tri * 3);
 						short v2 = idxBuffer.get(tri * 3 + 1);
 						short v3 = idxBuffer.get(tri * 3 + 2);
 
-						float x1 = vBuffer.get(v1 * mesh.getVertexSize() / 4);
-						float y1 = vBuffer.get(v1 * mesh.getVertexSize() / 4 + 1);
-						float z1 = vBuffer.get(v1 * mesh.getVertexSize() / 4 + 2);
+						float x1 = vBuffer.get(v1 * vSize);
+						float y1 = vBuffer.get(v1 * vSize + 1);
+						float z1 = vBuffer.get(v1 * vSize + 2);
 
-						float x2 = vBuffer.get(v2 * mesh.getVertexSize() / 4);
-						float y2 = vBuffer.get(v2 * mesh.getVertexSize() / 4 + 1);
-						float z2 = vBuffer.get(v2 * mesh.getVertexSize() / 4 + 2);
+						float n1x = vBuffer.get(v1 * vSize + norOffset);
+						float n1y = vBuffer.get(v1 * vSize + norOffset + 1);
+						float n1z = vBuffer.get(v1 * vSize + norOffset + 2);
 
-						float x3 = vBuffer.get(v3 * mesh.getVertexSize() / 4);
-						float y3 = vBuffer.get(v3 * mesh.getVertexSize() / 4 + 1);
-						float z3 = vBuffer.get(v3 * mesh.getVertexSize() / 4 + 2);
+						float x2 = vBuffer.get(v2 * vSize);
+						float y2 = vBuffer.get(v2 * vSize + 1);
+						float z2 = vBuffer.get(v2 * vSize + 2);
 
+						float n2x = vBuffer.get(v2 * vSize + norOffset);
+						float n2y = vBuffer.get(v2 * vSize + norOffset + 1);
+						float n2z = vBuffer.get(v2 * vSize + norOffset + 2);
+
+						float x3 = vBuffer.get(v3 * vSize);
+						float y3 = vBuffer.get(v3 * vSize + 1);
+						float z3 = vBuffer.get(v3 * vSize + 2);
+
+						float n3x = vBuffer.get(v3 * vSize + norOffset);
+						float n3y = vBuffer.get(v3 * vSize + norOffset + 1);
+						float n3z = vBuffer.get(v3 * vSize + norOffset + 2);
 
 						tmpTriangle.set(x1, y1, z1, x2, y2, z2, x3, y3, z3);
 
@@ -158,6 +164,12 @@ public class ModelViewer implements ApplicationListener {
 						tmpVec3.set(x1 + x2 + x3, y1 + y2 + y3, z1 + z2 + z3).scl(1f / 3f);
 						Vector3 normal = tmpTriangle.getNormal();
 						r.line(tmpVec3.x, tmpVec3.y, tmpVec3.z, tmpVec3.x + normal.x / 10f, tmpVec3.y + normal.y / 10f, tmpVec3.z + normal.z / 10f);
+
+						r.setColor(Color.YELLOW);
+						
+						r.line(x1, y1, z1, x1 + n1x / 10f, y1 + n1y / 10f, z1 + n1z / 10f);
+						r.line(x2, y2, z2, x2 + n2x / 10f, y2 + n2y / 10f, z2 + n2z / 10f);
+						r.line(x3, y3, z3, x3 + n3x / 10f, y3 + n3y / 10f, z3 + n3z / 10f);
 					}
 				}
 				i++;
@@ -296,5 +308,22 @@ public class ModelViewer implements ApplicationListener {
 				s, s, s,
 				1f, 0f, 0f);
 		return builder.end();
+	}
+
+	public static void start(Model... models) {
+		try {
+			new LwjglApplication(new ModelViewer(models),
+					new LwjglApplicationConfiguration() {{
+						width = 1600;
+						height = 900;
+						forceExit = false;
+					}}) {
+				public Thread getMainThread() {
+					return mainLoopThread;
+				}
+			}.getMainThread().join();
+		} catch(InterruptedException ex) {
+			throw new RuntimeException(ex);
+		}
 	}
 }

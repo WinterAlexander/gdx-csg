@@ -366,5 +366,14 @@ public class IntersectorPlusTest {
 		//TriangleViewer.start(new Triangle[]{ tri }, new Ray[]{ ray });
 
 		assertTrue(IntersectorPlus.intersectTriangleRay(tri, ray, 1e-5f, segment));
+
+		tri.set(0.090854734f, 0.3955028f, 0.2795128f,
+				0.23777005f, 0.3955028f, 0.17276399f,
+				0.32723603f, 0.50609183f, 0.23777007f);
+
+		ray.set(0.32230777f, 0.5f, 0.23418921f, 0f, 1f, 0f);
+		//TriangleViewer.start(new Triangle[]{ tri }, new Ray[]{ ray });
+
+		assertTrue(IntersectorPlus.intersectTriangleRay(tri, ray, 1e-5f, segment));
 	}
 }

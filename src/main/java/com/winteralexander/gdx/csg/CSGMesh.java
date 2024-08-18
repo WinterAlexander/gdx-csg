@@ -131,6 +131,7 @@ public class CSGMesh {
 			vertex1.getPosition().set(tmpV1);
 			vertex1.getNormal().set(face.getNormal());
 			tmpNewVertices.add(vertex1);
+			vertices.add(vertex1);
 		}
 
 		if(vertex2 == null) {
@@ -138,6 +139,7 @@ public class CSGMesh {
 			vertex2.getPosition().set(tmpV2);
 			vertex2.getNormal().set(face.getNormal());
 			tmpNewVertices.add(vertex2);
+			vertices.add(vertex2);
 		}
 
 		if(vertex3 == null) {
@@ -145,9 +147,8 @@ public class CSGMesh {
 			vertex3.getPosition().set(tmpV3);
 			vertex3.getNormal().set(face.getNormal());
 			tmpNewVertices.add(vertex3);
+			vertices.add(vertex3);
 		}
-
-		vertices.addAll(tmpNewVertices);
 
 		MeshFace newFace = new MeshFace(vertex1, vertex2, vertex3);
 		toAdd.add(newFace);
@@ -237,6 +238,9 @@ public class CSGMesh {
 			face.getVertices()[2] = face.getVertices()[1];
 			face.getVertices()[1] = v3;
 		}
+
+		for(MeshVertex vertex : vertices)
+			vertex.getNormal().scl(-1f);
 	}
 
 	public InsideStatus getInsideStatus(MeshVertex vertex) {

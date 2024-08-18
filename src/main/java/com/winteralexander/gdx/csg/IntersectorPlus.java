@@ -398,22 +398,12 @@ public class IntersectorPlus {
 					triangle.p3.y - triangle.p1.y,
 					triangle.p3.z - triangle.p1.z) / len2;
 
-			boolean underFirstSlope = pV - pU / p3U <= tol;
-
-			if(pU < -tol || pV < -tol || !underFirstSlope)
+			if(pU < -tol
+			|| pV < -tol
+			|| pV - pU / p3U > tol
+			|| Math.abs(p3U - 1f) > tol
+				&& (p3U < 1f ? 1f : -1f) * (pV - (1 - pU) / (1 - p3U)) > tol)
 				return false;
-
-			if(Math.abs(p3U - 1f) > tol) {
-				if(p3U < 1f) {
-					boolean underSecondSlope = pV - (1 - pU) / (1 - p3U) <= tol;
-					if(!underSecondSlope)
-						return false;
-				} else {
-					boolean overSecondSlope = pV - (1 - pU) / (1 - p3U) >= tol;
-					if(!overSecondSlope)
-						return false;
-				}
-			}
 
 			out.b.set(out.a.set(x, y, z));
 			return true;
