@@ -23,6 +23,7 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.winteralexander.gdx.csg.Triangle;
 import com.winteralexander.gdx.utils.input.InputUtil;
+import org.lwjgl.opengl.Display;
 
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
@@ -71,7 +72,7 @@ public class ModelViewer implements ApplicationListener {
 	public void create() {
 		modelBatch = new ModelBatch(new DefaultShaderProvider());
 
-		shadowLight = new DirectionalShadowLight(1920, 1080, 16f, 9f, 0.01f, 100f);
+		shadowLight = new DirectionalShadowLight(1920 * 2, 1080 * 2, 16f / 4f, 9f / 4f, 0.01f, 100f);
 		shadowLight.set(0.8f, 0.8f, 0.8f, -0.2f, -0.8f, -1f);
 		environment.add(shadowLight);
 		environment.shadowMap = shadowLight;
@@ -311,6 +312,14 @@ public class ModelViewer implements ApplicationListener {
 	}
 
 	public static void start(Model... models) {
+		Display.destroy();
+		Gdx.gl = null;
+		Gdx.graphics = null;
+		Gdx.gl20 = null;
+		Gdx.gl30 = null;
+		Gdx.gl31 = null;
+		Gdx.gl32 = null;
+
 		try {
 			new LwjglApplication(new ModelViewer(models),
 					new LwjglApplicationConfiguration() {{

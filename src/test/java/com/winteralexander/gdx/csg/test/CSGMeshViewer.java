@@ -27,6 +27,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.winteralexander.gdx.csg.*;
 import com.winteralexander.gdx.utils.input.InputUtil;
 import com.winteralexander.gdx.utils.math.MathUtil;
+import org.lwjgl.opengl.Display;
 
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
@@ -251,6 +252,15 @@ public class CSGMeshViewer implements ApplicationListener {
 	}
 
 	public static void start(CSGMesh[] meshes, Ray[] rays) {
+
+		Display.destroy();
+		Gdx.gl = null;
+		Gdx.graphics = null;
+		Gdx.gl20 = null;
+		Gdx.gl30 = null;
+		Gdx.gl31 = null;
+		Gdx.gl32 = null;
+
 		try {
 			new LwjglApplication(new CSGMeshViewer(meshes, rays),
 					new LwjglApplicationConfiguration() {{

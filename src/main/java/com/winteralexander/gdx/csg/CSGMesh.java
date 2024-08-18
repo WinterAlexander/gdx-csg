@@ -16,7 +16,7 @@ import com.winteralexander.gdx.utils.math.VectorUtil;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
-import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.*;
+import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.NONCOPLANAR_FACE_FACE;
 import static com.winteralexander.gdx.csg.IntersectorPlus.intersectTriangleRay;
 import static com.winteralexander.gdx.csg.IntersectorPlus.intersectTriangleTriangle;
 import static com.winteralexander.gdx.utils.Validation.ensureNotNull;
@@ -68,6 +68,17 @@ public class CSGMesh {
 		this.vertices = vertices;
 		this.faces = faces;
 		this.attributes = attributes;
+	}
+
+	/**
+	 * Merges this CSG mesh with the provided CSGMesh. Does not perform any deep copying of the
+	 * vertices or faces, if that is needed, copy the provided {@link CSGMesh} beforehand.
+	 *
+	 * @param other mesh to merge
+	 */
+	public void mergeWith(CSGMesh other) {
+		this.vertices.addAll(other.vertices);
+		this.faces.addAll(other.faces);
 	}
 
 	public void splitTriangles(CSGMesh other) {
@@ -164,10 +175,17 @@ public class CSGMesh {
 	public void classifyFaces(CSGMesh other) {
 		vertexStatus.clear();
 		for(MeshVertex vertex : vertices)
-			vertexStatus.put(vertex, other.getStatus(vertex.getPosition()));
+			vertexStatus.put(vertex, other.computeInsideStatus(vertex.getPosition()));
 	}
 
-	public InsideStatus getStatus(Vector3 position) {
+	/**
+	 * Computes the {@link InsideStatus} of a given position using ray intersections with the faces
+	 * of this mesh
+	 *
+	 * @param position position to check
+	 * @return inside, outside or on the boundary
+	 */
+	public InsideStatus computeInsideStatus(Vector3 position) {
 		int countIntersect = 0;
 		tmpRay.set(position.x, position.y, position.z, 0f, 1f, 0f);
 		tmpFaceIntersections.clear();
@@ -311,6 +329,26 @@ public class CSGMesh {
 		return mesh;
 	}
 
+	public CSGMesh cpy() {
+		Array<MeshVertex> verts = new Array<>();
+		Array<MeshFace> faces = new Array<>();
+
+		vertexIndices.clear();
+		int i = 0;
+		for(MeshVertex v : vertices) {
+			verts.add(new MeshVertex(v));
+			vertexIndices.put(v, i);
+			i++;
+		}
+
+		for(MeshFace f : this.faces)
+			faces.add(new MeshFace(verts.get(vertexIndices.get(f.getV1(), -1)),
+					verts.get(vertexIndices.get(f.getV2(), -1)),
+					verts.get(vertexIndices.get(f.getV3(), -1))));
+
+		return new CSGMesh(verts, faces, attributes);
+	}
+
 	public static CSGMesh fromMesh(Mesh mesh) {
 		Array<MeshVertex> vertices = new Array<>(mesh.getNumVertices());
 		Array<MeshFace> faces = new Array<>(mesh.getNumIndices());
@@ -344,26 +382,6 @@ public class CSGMesh {
 		}
 
 		return new CSGMesh(vertices, faces, mesh.getVertexAttributes());
-	}
-
-	public CSGMesh cpy() {
-		Array<MeshVertex> verts = new Array<>();
-		Array<MeshFace> faces = new Array<>();
-
-		vertexIndices.clear();
-		int i = 0;
-		for(MeshVertex v : vertices) {
-			verts.add(new MeshVertex(v));
-			vertexIndices.put(v, i);
-			i++;
-		}
-
-		for(MeshFace f : this.faces)
-			faces.add(new MeshFace(verts.get(vertexIndices.get(f.getV1(), -1)),
-					verts.get(vertexIndices.get(f.getV2(), -1)),
-					verts.get(vertexIndices.get(f.getV3(), -1))));
-
-		return new CSGMesh(verts, faces, attributes);
 	}
 
 	public enum InsideStatus {

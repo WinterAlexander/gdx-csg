@@ -26,6 +26,7 @@ import com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult;
 import com.winteralexander.gdx.csg.SegmentPlus;
 import com.winteralexander.gdx.csg.Triangle;
 import com.winteralexander.gdx.utils.input.InputUtil;
+import org.lwjgl.opengl.Display;
 
 import java.util.function.Consumer;
 
@@ -253,6 +254,15 @@ public class TriangleViewer implements ApplicationListener {
 	}
 
 	public static void start(Triangle[] triangles, Ray[] rays) {
+
+		Display.destroy();
+		Gdx.gl = null;
+		Gdx.graphics = null;
+		Gdx.gl20 = null;
+		Gdx.gl30 = null;
+		Gdx.gl31 = null;
+		Gdx.gl32 = null;
+
 		try {
 			new LwjglApplication(new TriangleViewer(triangles, rays),
 					new LwjglApplicationConfiguration() {{

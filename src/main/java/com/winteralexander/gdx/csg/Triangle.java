@@ -95,8 +95,8 @@ public class Triangle {
 		return this;
 	}
 
-	public Triangle sub(Vector3 substract) {
-		return sub(substract.x, substract.y, substract.z);
+	public Triangle sub(Vector3 subtract) {
+		return sub(subtract.x, subtract.y, subtract.z);
 	}
 
 	public boolean epsilonEquals(Triangle other, float epsilon) {
