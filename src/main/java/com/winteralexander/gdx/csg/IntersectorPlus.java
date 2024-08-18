@@ -434,6 +434,21 @@ public class IntersectorPlus {
 		LineIntersectionResult result3 = intersectRayRay(ray, tmpEdgeLine3, tol,
 				tmpIntersection3);
 
+		if(result1 != NONE
+				&& result2 != NONE
+				&& tmpIntersection2.epsilonEquals(tmpIntersection1, tol))
+			result2 = NONE;
+
+		if(result1 != NONE
+				&& result3 != NONE
+				&& tmpIntersection3.epsilonEquals(tmpIntersection1, tol))
+			result3 = NONE;
+
+		if(result2 != NONE
+				&& result3 != NONE
+				&& tmpIntersection3.epsilonEquals(tmpIntersection2, tol))
+			result3 = NONE;
+
 		if(result1 == COLLINEAR) {
 			if(result2 == COLLINEAR || result3 == COLLINEAR)
 				throw new IllegalStateException("Multiple triangle edges collinear with ray");

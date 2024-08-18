@@ -321,6 +321,13 @@ public class IntersectorPlusTest {
 				0.85003835f, 0.83515376f, 0.14882556f);
 
 		assertEquals(NONCOPLANAR_FACE_FACE, intersectTriangleTriangle(tri1, tri2, 1e-5f, segment));
+
+		tri1.set(0.013628483f, 0.44765303f, 0.396547f, 0.013628453f, 0.49999997f, 0.5f, 0.013628453f, 0.5523469f, 0.5f);
+		tri2.set(-0.5f, 0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f);
+
+		TriangleViewer.start(new Triangle[]{ tri1, tri2 }, new Ray[]{});
+
+		assertEquals(NONCOPLANAR_FACE_FACE, intersectTriangleTriangle(tri1, tri2, 1e-5f, segment));
 	}
 
 	@Test

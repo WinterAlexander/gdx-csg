@@ -94,12 +94,14 @@ public class CSGMeshViewer implements ApplicationListener {
 				ray.direction.set(tmpVec3).sub(cam.position).nor();
 				Segment segment = new SegmentPlus();
 
+				int i = 0;
 				for(CSGMesh mesh : meshes) {
 					for(MeshFace face : mesh.getFaces()) {
 						if(IntersectorPlus.intersectTriangleRay(face.getTriangle(), ray, 1e-6f, segment)) {
-							System.out.println(face.getTriangle().toString());
+							System.out.println("Mesh" + i + ": " + face.getTriangle().toString());
 						}
 					}
+					i++;
 				}
 
 				return super.touchDown(screenX, screenY, pointer, button);
@@ -122,7 +124,10 @@ public class CSGMeshViewer implements ApplicationListener {
 
 					boolean isFaceInside = status1 == CSGMesh.InsideStatus.INSIDE
 							|| status2 == CSGMesh.InsideStatus.INSIDE
-							|| status3 == CSGMesh.InsideStatus.INSIDE;
+							|| status3 == CSGMesh.InsideStatus.INSIDE
+							|| status1 == CSGMesh.InsideStatus.BOUNDARY
+							&& status2 == CSGMesh.InsideStatus.BOUNDARY
+							&& status3 == CSGMesh.InsideStatus.BOUNDARY;
 
 					boolean isFaceOutside = status1 == CSGMesh.InsideStatus.OUTSIDE
 							|| status2 == CSGMesh.InsideStatus.OUTSIDE
@@ -140,9 +145,40 @@ public class CSGMeshViewer implements ApplicationListener {
 					r.line(face.getPosition3(), face.getPosition1());
 
 					r.setColor(Color.WHITE);
-					tmpVec3.set(face.getPosition1()).add(face.getPosition2()).add(face.getPosition3()).scl(1f / 3f);
+					tmpVec3.set(face.getPosition1())
+							.add(face.getPosition2())
+							.add(face.getPosition3())
+							.scl(1f / 3f);
 					Vector3 normal = face.getNormal();
-					r.line(tmpVec3.x, tmpVec3.y, tmpVec3.z, tmpVec3.x + normal.x / 10f, tmpVec3.y + normal.y / 10f, tmpVec3.z + normal.z / 10f);
+					r.line(tmpVec3.x, tmpVec3.y, tmpVec3.z,
+							tmpVec3.x + normal.x / 10f,
+							tmpVec3.y + normal.y / 10f,
+							tmpVec3.z + normal.z / 10f);
+				}
+
+				for(MeshFace face : mesh.getFaces()) {
+					CSGMesh.InsideStatus status1 = mesh.getInsideStatus(face.getV1());
+					CSGMesh.InsideStatus status2 = mesh.getInsideStatus(face.getV2());
+					CSGMesh.InsideStatus status3 = mesh.getInsideStatus(face.getV3());
+
+					boolean isFaceInside = status1 == CSGMesh.InsideStatus.INSIDE
+							|| status2 == CSGMesh.InsideStatus.INSIDE
+							|| status3 == CSGMesh.InsideStatus.INSIDE
+							|| status1 == CSGMesh.InsideStatus.BOUNDARY
+							&& status2 == CSGMesh.InsideStatus.BOUNDARY
+							&& status3 == CSGMesh.InsideStatus.BOUNDARY;
+
+					boolean isFaceOutside = status1 == CSGMesh.InsideStatus.OUTSIDE
+							|| status2 == CSGMesh.InsideStatus.OUTSIDE
+							|| status3 == CSGMesh.InsideStatus.OUTSIDE;
+
+					if(!(isFaceInside && isFaceOutside))
+						continue;
+
+					r.setColor(Color.RED);
+					r.line(face.getPosition1(), face.getPosition2());
+					r.line(face.getPosition2(), face.getPosition3());
+					r.line(face.getPosition3(), face.getPosition1());
 				}
 
 				if(i == 0 && !Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT))
@@ -152,6 +188,7 @@ public class CSGMeshViewer implements ApplicationListener {
 				r.set(ShapeRenderer.ShapeType.Filled);
 				for(MeshVertex vertex : mesh.getVertices()) {
 					CSGMesh.InsideStatus status = mesh.getInsideStatus(vertex);
+
 					r.setColor(status == CSGMesh.InsideStatus.INSIDE
 							? Color.BLUE
 							: status == CSGMesh.InsideStatus.BOUNDARY
@@ -201,79 +238,13 @@ public class CSGMeshViewer implements ApplicationListener {
 	}
 
 	@Override
-	public void pause() {
-
-	}
+	public void pause() {}
 
 	@Override
-	public void resume() {
-
-	}
+	public void resume() {}
 
 	@Override
-	public void dispose() {
-
-	}
-
-	private static Model generateSixFacedCube(ModelBuilder builder) {
-		float s = 0.5f;
-		builder.begin();
-		builder.part("front",
-				GL20.GL_TRIANGLES,
-				DEFAULT_ATTRIBUTES,
-				new Material()).rect(
-				s, -s, -s,
-				-s, -s, -s,
-				-s, s, -s,
-				s, s, -s,
-				0f, 0f, -1f);
-		builder.part("back",
-				GL20.GL_TRIANGLES,
-				DEFAULT_ATTRIBUTES,
-				new Material()).rect(
-				-s, -s, s,
-				s, -s, s,
-				s, s, s,
-				-s, s, s,
-				0f, 0f, 1f);
-		builder.part("bottom",
-				GL20.GL_TRIANGLES,
-				DEFAULT_ATTRIBUTES,
-				new Material()).rect(
-				-s, -s, s,
-				-s, -s, -s,
-				s, -s, -s,
-				s, -s, s,
-				0f, -1f, 0f);
-		builder.part("top",
-				GL20.GL_TRIANGLES,
-				DEFAULT_ATTRIBUTES,
-				new Material()).rect(
-				-s, s, -s,
-				-s, s, s,
-				s, s, s,
-				s, s, -s,
-				0f, 1f, 0f);
-		builder.part("left",
-				GL20.GL_TRIANGLES,
-				DEFAULT_ATTRIBUTES,
-				new Material()).rect(
-				-s, -s, -s,
-				-s, -s, s,
-				-s, s, s,
-				-s, s, -s,
-				-1f, 0f, 0f);
-		builder.part("right",
-				GL20.GL_TRIANGLES,
-				DEFAULT_ATTRIBUTES,
-				new Material()).rect(
-				s, -s, s,
-				s, -s, -s,
-				s, s, -s,
-				s, s, s,
-				1f, 0f, 0f);
-		return builder.end();
-	}
+	public void dispose() {}
 
 	public static void start(CSGMesh... meshes) {
 		start(meshes, new Ray[0]);

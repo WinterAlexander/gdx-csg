@@ -71,6 +71,7 @@ public class CSGMesh {
 	}
 
 	public void splitTriangles(CSGMesh other) {
+		tmpNewVertices.clear();
 		for(int i = 0; i < faces.size; i++) {
 			for(MeshFace otherFace : other.faces) {
 				TriangleIntersectionResult result = intersectTriangleTriangle(faces.get(i).getTriangle(),
@@ -81,6 +82,7 @@ public class CSGMesh {
 				}
 			}
 		}
+		tmpNewVertices.clear();
 	}
 
 	private void splitFace(int faceIndex, Plane plane) {
@@ -88,7 +90,6 @@ public class CSGMesh {
 		face.getTriangle().toArray(tmpArray);
 		Intersector.splitTriangle(tmpArray, plane, splitTriangle);
 
-		tmpNewVertices.clear();
 		for(int i = 0; i < splitTriangle.numBack; i++) {
 			processSplitTriangle(face, splitTriangle.back, i * 9);
 		}
@@ -105,6 +106,12 @@ public class CSGMesh {
 		VectorUtil.setFromArray(tmpV1, array, offset);
 		VectorUtil.setFromArray(tmpV2, array, offset + 3);
 		VectorUtil.setFromArray(tmpV3, array, offset + 6);
+
+		if(tmpV1.epsilonEquals(tmpV2, tolerance)
+		|| tmpV1.epsilonEquals(tmpV3, tolerance)
+		|| tmpV2.epsilonEquals(tmpV3, tolerance))
+			return;
+			//throw new IllegalStateException("Triangle has duplicate points");
 
 		MeshVertex vertex1 = null, vertex2 = null, vertex3 = null;
 

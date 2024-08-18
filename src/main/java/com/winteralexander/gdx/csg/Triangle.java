@@ -99,6 +99,12 @@ public class Triangle {
 		return sub(substract.x, substract.y, substract.z);
 	}
 
+	public boolean epsilonEquals(Triangle other, float epsilon) {
+		return p1.epsilonEquals(other.p1, epsilon)
+				&& p2.epsilonEquals(other.p2, epsilon)
+				&& p3.epsilonEquals(other.p3, epsilon);
+	}
+
 	public void toArray(float[] out) {
 		toArray(out, 0);
 	}

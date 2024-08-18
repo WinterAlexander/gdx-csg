@@ -22,6 +22,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
 import static com.badlogic.gdx.graphics.GL20.GL_TRIANGLES;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
 
 /**
@@ -101,12 +102,6 @@ public class CSGMeshTest {
 					continue;
 
 				assertNotSame(csg.getVertices().get(i), csg.getVertices().get(j));
-				/*assertFalse(csg.getVertices()
-						.get(i)
-						.getPosition()
-						.epsilonEquals(csg.getVertices()
-								.get(j)
-								.getPosition(), 1e-6f));*/
 			}
 		}
 	}
@@ -117,13 +112,13 @@ public class CSGMeshTest {
 		ModelBuilder builder = new ModelBuilder();
 		Model box = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		//Model second = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Model second = builder.createSphere(1f, 1f, 1f, 15, 15, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model second = builder.createSphere(1f, 1f, 1f, 50, 50, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		//Model second = builder.createCylinder(0.8f, 1f, 0.8f, 15, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh mesh = box.meshes.get(0);
 		Mesh other = second.meshes.get(0);
 		other.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
 				//.scale(1.1f, 1f, 0.8f)
-				.translate(0.5f, 0.5f, 0.5f));
+				.translate(0.3f, 0.3f, 0.3f));
 		CSGMesh csg = CSGMesh.fromMesh(mesh);
 		CSGMesh otherCsg = CSGMesh.fromMesh(other);
 
@@ -136,8 +131,8 @@ public class CSGMeshTest {
 		csg.classifyFaces(copy2);
 		otherCsg.classifyFaces(copy1);
 
-		//csg.removeFaces(true);
-		//otherCsg.removeFaces(false);
+		csg.removeFaces(true);
+		otherCsg.removeFaces(false);
 
 		otherCsg.invertTriangles();
 
@@ -164,7 +159,7 @@ public class CSGMeshTest {
 		Gdx.gl31 = null;
 		Gdx.gl32 = null;
 
-		//ModelViewer.start(box, second);
-		CSGMeshViewer.start(new CSGMesh[] { csg, otherCsg }, new Ray[0]);
+		ModelViewer.start(box, second);
+		//CSGMeshViewer.start(new CSGMesh[] { csg, otherCsg }, new Ray[0]);
 	}
 }
