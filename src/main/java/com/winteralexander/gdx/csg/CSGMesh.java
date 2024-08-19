@@ -14,7 +14,9 @@ import com.winteralexander.gdx.utils.math.VectorUtil;
 
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
+import java.util.HashSet;
 
+import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.COPLANAR_FACE_FACE;
 import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.NONCOPLANAR_FACE_FACE;
 import static com.winteralexander.gdx.csg.IntersectorPlus.intersectTriangleRay;
 import static com.winteralexander.gdx.csg.IntersectorPlus.intersectTriangleTriangle;
@@ -36,6 +38,8 @@ public class CSGMesh {
 
 	private final ObjectIntMap<MeshVertex> vertexIndices = new ObjectIntMap<>();
 	private final ObjectMap<MeshVertex, InsideStatus> vertexStatus = new ObjectMap<>();
+	// list of faces which intersect in a coplanar way
+	private final HashSet<MeshFace> boundaryFaces = new HashSet<>();
 
 	private final SegmentPlus intersectSegment = new SegmentPlus();
 	private final Plane plane = new Plane();
@@ -46,8 +50,6 @@ public class CSGMesh {
 	private final Vector3 tmpV1 = new Vector3(),
 			tmpV2 = new Vector3(),
 			tmpV3 = new Vector3();
-
-	private final Array<FaceIntersection> tmpFaceIntersections = new Array();
 
 	private final Array<MeshFace> toRemove = new Array<>();
 	private final Array<MeshFace> toAdd = new Array<>();
@@ -82,13 +84,25 @@ public class CSGMesh {
 
 	public void splitTriangles(CSGMesh other) {
 		tmpNewVertices.clear();
+		boundaryFaces.clear();
 		for(int i = 0; i < faces.size; i++) {
 			for(MeshFace otherFace : other.faces) {
-				TriangleIntersectionResult result = intersectTriangleTriangle(faces.get(i).getTriangle(),
+				MeshFace face = faces.get(i);
+				TriangleIntersectionResult result = intersectTriangleTriangle(face.getTriangle(),
 						otherFace.getTriangle(), tolerance, intersectSegment);
 				if(result == NONCOPLANAR_FACE_FACE) {
 					plane.set(otherFace.getPosition1(), otherFace.getNormal());
 					splitFace(i, plane);
+
+					if(boundaryFaces.contains(face)) {
+						boundaryFaces.remove(face);
+						i--;
+						break; // go back to determine again if the face that was just split is a
+						// boundary face
+					}
+
+				} else if(result == COPLANAR_FACE_FACE) {
+					boundaryFaces.add(face);
 				}
 			}
 		}
@@ -185,21 +199,21 @@ public class CSGMesh {
 	 * @return inside, outside or on the boundary
 	 */
 	public InsideStatus computeInsideStatus(Vector3 position) {
-		int countIntersect = 0;
 		tmpRay.set(position.x, position.y, position.z, 0f, 1f, 0f);
-		tmpFaceIntersections.clear();
+		float minT = Float.POSITIVE_INFINITY;
+		boolean upFacing = false;
 
 		faceLoop:
 		for(MeshFace face : faces) {
 			if(!intersectTriangleRay(face.getTriangle(), tmpRay, tolerance, tmpSegment))
 				continue;
 
-			boolean upFacing = face.getNormal().dot(0f, 1f, 0f) > 0f;
 			float t = tmpRay.direction.dot(tmpSegment.a.x - tmpRay.origin.x,
 					tmpSegment.a.y - tmpRay.origin.y,
 					tmpSegment.a.z - tmpRay.origin.z);
+			float d = tmpRay.direction.dot(face.getNormal());
 
-			if(Math.abs(tmpRay.direction.dot(face.getNormal())) <= tolerance) {
+			if(Math.abs(d) <= tolerance) {
 				float t2 = tmpRay.direction.dot(tmpSegment.b.x - tmpRay.origin.x,
 						tmpSegment.b.y - tmpRay.origin.y,
 						tmpSegment.b.z - tmpRay.origin.z);
@@ -216,20 +230,18 @@ public class CSGMesh {
 			if(t < 0f)
 				continue;
 
-			for(FaceIntersection intersection : tmpFaceIntersections) {
-				if(Math.abs(t - intersection.t) <= tolerance
-						&& intersection.upFacing == upFacing)
-					continue faceLoop;
+			if (Math.abs(t - minT) < tolerance) {
+				upFacing = upFacing && d > 0f;
+			} else if(t < minT) {
+				minT = t;
+				upFacing = d > 0f;
 			}
 
-			tmpFaceIntersections.add(new FaceIntersection(upFacing, t));
-			countIntersect++;
 		}
-		tmpFaceIntersections.clear();
-		return countIntersect % 2 == 0 ? InsideStatus.OUTSIDE : InsideStatus.INSIDE;
+		return upFacing ? InsideStatus.INSIDE : InsideStatus.OUTSIDE;
 	}
 
-	public void removeFaces(boolean inside) {
+	public void removeFaces(boolean inside, boolean boundary) {
 		for(MeshFace face : faces) {
 			InsideStatus status1 = vertexStatus.get(face.getV1());
 			InsideStatus status2 = vertexStatus.get(face.getV2());
@@ -238,12 +250,15 @@ public class CSGMesh {
 			if(status1 == null || status2 == null || status3 == null)
 				throw new IllegalStateException("Some vertices are not classified");
 
+			boolean isBoundaryFace = boundaryFaces.contains(face);
+
 			boolean isFaceInside = status1 == InsideStatus.INSIDE
 					|| status2 == InsideStatus.INSIDE
 					|| status3 == InsideStatus.INSIDE
 					|| status1 == InsideStatus.BOUNDARY
 					&& status2 == InsideStatus.BOUNDARY
-					&& status3 == InsideStatus.BOUNDARY;
+					&& status3 == InsideStatus.BOUNDARY
+					&& !isBoundaryFace;
 
 			boolean isFaceOutside = status1 == InsideStatus.OUTSIDE
 					|| status2 == InsideStatus.OUTSIDE
@@ -252,11 +267,30 @@ public class CSGMesh {
 			if(isFaceInside && isFaceOutside)
 				throw new IllegalStateException("Failure to split face");
 
-			if(isFaceInside == inside)
+			if(isBoundaryFace && boundary)
+				toRemove.add(face);
+			else if(isFaceInside && inside)
+				toRemove.add(face);
+			else if(isFaceOutside && !inside)
 				toRemove.add(face);
 		}
 		faces.removeAll(toRemove, true);
 		toRemove.clear();
+
+		vertexStatus.clear(); // reuse collection to find no longer used vertices
+		for(MeshFace face : faces) {
+			vertexStatus.put(face.getV1(), InsideStatus.INSIDE);
+			vertexStatus.put(face.getV2(), InsideStatus.INSIDE);
+			vertexStatus.put(face.getV3(), InsideStatus.INSIDE);
+		}
+
+		for(int i = 0; i < vertices.size; i++) {
+			if(!vertexStatus.containsKey(vertices.get(i))) {
+				vertices.removeIndex(i);
+				i--;
+			}
+		}
+		vertexStatus.clear();
 	}
 
 	public void invertTriangles() {

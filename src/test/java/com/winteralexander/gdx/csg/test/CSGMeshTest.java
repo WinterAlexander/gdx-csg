@@ -85,8 +85,8 @@ public class CSGMeshTest {
 		assertNoDupVertex(csg);
 		assertNoDupVertex(otherCsg);
 
-		csg.removeFaces(true);
-		otherCsg.removeFaces(false);
+		csg.removeFaces(true, true);
+		otherCsg.removeFaces(false, true);
 
 		assertNoDupVertex(csg);
 		assertNoDupVertex(otherCsg);
@@ -108,7 +108,20 @@ public class CSGMeshTest {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
+	@Test
+	public void testCubeCubeSubtraction() {
+		ModelBuilder builder = new ModelBuilder();
+		Model box = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model cube = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Mesh cubeMesh = cube.meshes.get(0);
+		cubeMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
+				.translate(0f, 0.3f, 0f));
+
+		CSGUtil.subtraction(box, cubeMesh);
+
+		ModelViewer.start(box);
+	}
+
 	@Test
 	public void testCubeSphereSubtraction() {
 		ModelBuilder builder = new ModelBuilder();
@@ -119,14 +132,6 @@ public class CSGMeshTest {
 				.translate(0.3f, 0.3f, 0.3f));
 
 		CSGUtil.subtraction(box, sphereMesh);
-
-		Display.destroy();
-		Gdx.gl = null;
-		Gdx.graphics = null;
-		Gdx.gl20 = null;
-		Gdx.gl30 = null;
-		Gdx.gl31 = null;
-		Gdx.gl32 = null;
 
 		ModelViewer.start(box);
 	}
@@ -178,8 +183,8 @@ public class CSGMeshTest {
 		csg.classifyFaces(copy2);
 		otherCsg.classifyFaces(copy1);
 
-		csg.removeFaces(true);
-		otherCsg.removeFaces(false);
+		csg.removeFaces(true, true);
+		otherCsg.removeFaces(false, true);
 
 		otherCsg.invertTriangles();
 
@@ -231,6 +236,42 @@ public class CSGMeshTest {
 	}
 
 	@Test
+	public void testSameUnion() {
+
+		ModelBuilder builder = new ModelBuilder();
+		Model box = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model second = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Mesh other = second.meshes.get(0);
+		other.transform(new Matrix4().translate(0f, 0.1f, 0f));
+		CSGMesh mesh1 = CSGMesh.fromMesh(box.meshes.get(0));
+		CSGMesh mesh2 = CSGMesh.fromMesh(other);
+
+		CSGMesh copy1 = mesh1.cpy();
+		CSGMesh copy2 = mesh2.cpy();
+
+		copy1.splitTriangles(mesh2);
+		copy2.splitTriangles(mesh1);
+
+		copy1.classifyFaces(mesh2);
+		copy2.classifyFaces(mesh1);
+
+		CSGMeshViewer.start(copy1, copy2);
+
+		copy1.removeFaces(true, false);
+		copy2.removeFaces(true, true);
+
+		copy1.mergeWith(copy2);
+		copy1.clearInsideStatus();
+
+		CSGMeshViewer.start(copy1);
+
+		CSGUtil.union(box, box.meshes.get(0));
+
+
+		ModelViewer.start(box);
+	}
+
+	@Test
 	public void testCylinderUnions() {
 		ModelBuilder builder = new ModelBuilder();
 		Model cylinder = builder.createCylinder(0.5f, 2f, 0.5f, 10, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
@@ -247,6 +288,8 @@ public class CSGMeshTest {
 
 		CSGMesh firstUnion = CSGUtil.union(cylinder1, cylinder2);
 
+		//CSGMeshViewer.start(firstUnion);
+
 		CSGMesh copy1 = firstUnion.cpy();
 		CSGMesh copy2 = cylinder3.cpy();
 
@@ -256,34 +299,22 @@ public class CSGMeshTest {
 		copy1.classifyFaces(cylinder3);
 		copy2.classifyFaces(firstUnion);
 
-		Ray ray = new Ray();
+		CSGMeshViewer.start(copy1, copy2);
 
-		for(MeshFace meshFace : firstUnion.getFaces()) {
-			if((meshFace.getPosition1().epsilonEquals(0.25f, 0.0f, 0.0f, 1e-5f)
-			|| meshFace.getPosition2().epsilonEquals(0.25f, 0.0f, 0.0f, 1e-5f)
-			|| meshFace.getPosition3().epsilonEquals(0.25f, 0.0f, 0.0f, 1e-5f))
-			&& (meshFace.getPosition1().epsilonEquals(0.2022486f, -0.1469541f, -0.99999994f, 1e-5f)
-			|| meshFace.getPosition2().epsilonEquals(0.2022486f, -0.1469541f, -0.99999994f, 1e-5f)
-			|| meshFace.getPosition3().epsilonEquals(0.2022486f, -0.1469541f, -0.99999994f, 1e-5f))) {
-				System.out.println("Triangle: " + meshFace.getTriangle());
-			}
-		}
-
-		ray.set(0.23374009f, -0.20375702f, -0.12407229f, 0f, 1f, 0f);
-
-		CSGMeshViewer.start(new CSGMesh[]{ copy2, copy1 },
-				new Ray[]{
-						ray
-				});
-
-		copy1.removeFaces(true);
-		copy2.removeFaces(true);
+		copy1.removeFaces(true, false);
+		copy2.removeFaces(true, false);
 
 		copy1.mergeWith(copy2);
+		copy1.clearInsideStatus();
 
-		CSGMesh cylinders = copy1;
+		CSGMesh cylinders = copy1;//CSGUtil.union(firstUnion, cylinder3);
 
-		CSGMeshViewer.start(cylinders);
+		cylinder.meshes.set(0, cylinders.toMesh());
+		cylinder.meshParts.get(0).set("box", cylinder.meshes.get(0), 0, cylinder.meshes.get(0).getNumIndices(), GL_TRIANGLES);
+		cylinder.meshParts.get(0).update();
+
+		ModelViewer.start(cylinder);
+		//CSGMeshViewer.start(cylinders);
 	}
 
 	@Test
@@ -311,9 +342,35 @@ public class CSGMeshTest {
 
 		CSGMesh roundedBox = CSGUtil.intersection(boxCSG, sphereCSG);
 
-		//CSGMesh last = CSGUtil.subtraction(roundedBox, cylinders);
+		CSGMesh last = CSGUtil.subtraction(roundedBox, cylinder1);
+		last = CSGUtil.subtraction(last, cylinder2);
+		last = CSGUtil.subtraction(last, cylinder3);
+/*
+		CSGMesh copy1 = roundedBox.cpy();
+		CSGMesh copy2 = cylinders.cpy();
 
-		box.meshes.set(0, roundedBox.toMesh());
+		copy1.splitTriangles(cylinders);
+		copy2.splitTriangles(roundedBox);
+
+		copy1.classifyFaces(cylinders);
+		copy2.classifyFaces(roundedBox);
+
+		Ray ray = new Ray();
+		ray.set(0.19290544f, -0.5f, -0.1757075f, 0f, 1f, 0f);
+
+		// issue with this is missing triangle
+		CSGMeshViewer.start(new CSGMesh[]{ /*copy1,* cylinders }, new Ray[] { ray });
+
+		copy1.removeFaces(true, false);
+		copy2.removeFaces(false, true);
+
+		copy2.invertTriangles();
+		copy1.mergeWith(copy2);
+		copy1.clearInsideStatus();
+
+		CSGMesh last = copy1;*/
+
+		box.meshes.set(0, last.toMesh());
 		box.meshParts.get(0).set("box", box.meshes.get(0), 0, box.meshes.get(0).getNumIndices(), GL_TRIANGLES);
 		box.meshParts.get(0).update();
 

@@ -134,14 +134,44 @@ public class CSGUtil {
 		return subtraction(CSGMesh.fromMesh(minuend), CSGMesh.fromMesh(subtrahend)).toMesh();
 	}
 
+	/**
+	 * Creates a CSG union of the 2 provided libGDX {@link Mesh} and returns a new mesh that is the
+	 * result of the union, removing any inner intersection to the meshes. The use of this function
+	 * is not recommended if the caller intends to perform multiple CSG operations on the meshes.
+	 * Instead {@link #union(CSGMesh, CSGMesh)} should be used to avoid converting from {@link Mesh}
+	 * to {@link CSGMesh} multiple times
+	 *
+	 * @param first first mesh in the union
+	 * @param second second mesh in the union
+	 * @return new mesh created to be the union of the 2 provided meshes
+	 */
 	public static Mesh union(Mesh first, Mesh second) {
 		return union(CSGMesh.fromMesh(first), CSGMesh.fromMesh(second)).toMesh();
 	}
 
+	/**
+	 * Creates a CSG intersection of the 2 provided libGDX {@link Mesh} and returns a new mesh that
+	 * is the result of the intersection. The use of this function is not recommended if the caller
+	 * intends to perform multiple CSG operations on the meshes. Instead
+	 * {@link #intersection(CSGMesh, CSGMesh)} should be used to avoid converting from {@link Mesh}
+	 * to {@link CSGMesh} multiple times
+	 *
+	 * @param first first mesh in the intersection
+	 * @param second second mesh in the intersection
+	 * @return new mesh created to be the intersection of the 2 provided meshes
+	 */
 	public static Mesh intersection(Mesh first, Mesh second) {
 		return intersection(CSGMesh.fromMesh(first), CSGMesh.fromMesh(second)).toMesh();
 	}
 
+	/**
+	 * Performs CSG subtraction the 2 provided {@link CSGMesh} and returns a new {@link CSGMesh}
+	 * for the result
+	 *
+	 * @param minuend starting mesh
+	 * @param subtrahend mesh to subtract from minuend
+	 * @return new mesh which is the result of the subtraction
+	 */
 	public static CSGMesh subtraction(CSGMesh minuend, CSGMesh subtrahend) {
 		CSGMesh copy1 = minuend.cpy();
 		CSGMesh copy2 = subtrahend.cpy();
@@ -152,8 +182,8 @@ public class CSGUtil {
 		copy1.classifyFaces(subtrahend);
 		copy2.classifyFaces(minuend);
 
-		copy1.removeFaces(true);
-		copy2.removeFaces(false);
+		copy1.removeFaces(true, true);
+		copy2.removeFaces(false, true);
 
 		copy2.invertTriangles();
 		copy1.mergeWith(copy2);
@@ -162,6 +192,14 @@ public class CSGUtil {
 		return copy1;
 	}
 
+	/**
+	 * Creates a union of the 2 provided {@link CSGMesh}, removing any inner intersection and
+	 * returns the result
+	 *
+	 * @param first first member of the mesh union
+	 * @param second second member of the mesh union
+	 * @return result of the union
+	 */
 	public static CSGMesh union(CSGMesh first, CSGMesh second) {
 		CSGMesh copy1 = first.cpy();
 		CSGMesh copy2 = second.cpy();
@@ -172,8 +210,8 @@ public class CSGUtil {
 		copy1.classifyFaces(second);
 		copy2.classifyFaces(first);
 
-		copy1.removeFaces(true);
-		copy2.removeFaces(true);
+		copy1.removeFaces(true, false);
+		copy2.removeFaces(true, true);
 
 		copy1.mergeWith(copy2);
 		copy1.clearInsideStatus();
@@ -181,6 +219,13 @@ public class CSGUtil {
 		return copy1;
 	}
 
+	/**
+	 * Creates an intersection of the 2 provided {@link CSGMesh} and returns the result
+	 *
+	 * @param first first member of the intersection
+	 * @param second second member of the intersection
+	 * @return result of the intersection
+	 */
 	public static CSGMesh intersection(CSGMesh first, CSGMesh second) {
 		CSGMesh copy1 = first.cpy();
 		CSGMesh copy2 = second.cpy();
@@ -191,8 +236,8 @@ public class CSGUtil {
 		copy1.classifyFaces(second);
 		copy2.classifyFaces(first);
 
-		copy1.removeFaces(false);
-		copy2.removeFaces(false);
+		copy1.removeFaces(false, false);
+		copy2.removeFaces(false, true);
 
 		copy1.mergeWith(copy2);
 		copy1.clearInsideStatus();
