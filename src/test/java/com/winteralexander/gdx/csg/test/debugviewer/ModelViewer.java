@@ -31,6 +31,7 @@ import java.util.function.Consumer;
 
 import static com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT;
 import static com.badlogic.gdx.graphics.GL20.GL_DEPTH_BUFFER_BIT;
+import static com.badlogic.gdx.graphics.VertexAttributes.Usage.*;
 
 /**
  * Debug viewer to visualize models
@@ -45,7 +46,7 @@ public class ModelViewer implements ApplicationListener {
 	private final static int DEFAULT_ATTRIBUTES = VertexAttributes.Usage.Position
 			| VertexAttributes.Usage.Normal
 			| VertexAttributes.Usage.Tangent
-			| VertexAttributes.Usage.TextureCoordinates;
+			| TextureCoordinates;
 
 	private ModelBatch modelBatch;
 	private Viewport viewport;
@@ -93,15 +94,22 @@ public class ModelViewer implements ApplicationListener {
 
 		Texture tex1 = new Texture(red);
 		Texture tex2 = new Texture(blue);
+		Texture loadedTex = new Texture("badlogic.png");
 
 		int j = 0;
 		for(ModelInstance instance : instances) {
-			if(instance.model.meshes.get(0).getVertexAttribute(VertexAttributes.Usage.ColorPacked) != null
-			|| instance.model.meshes.get(0).getVertexAttribute(VertexAttributes.Usage.ColorUnpacked) != null)
+			if(instance.model.meshes.get(0).getVertexAttribute(ColorPacked) != null
+			|| instance.model.meshes.get(0).getVertexAttribute(ColorUnpacked) != null)
 				continue;
 
+			boolean hasTex =
+					instance.model.meshes.get(0).getVertexAttribute(TextureCoordinates) != null;
+
 			for(int i = 0; i < instance.materials.size; i++) {
-				instance.materials.get(i).set(TextureAttribute.createDiffuse(j % 2 == 0 ? tex1 : tex2));
+				if(hasTex)
+					instance.materials.get(i).set(TextureAttribute.createDiffuse(loadedTex));
+				else
+					instance.materials.get(i).set(TextureAttribute.createDiffuse(j % 2 == 0 ? tex1 : tex2));
 			}
 			j++;
 		}

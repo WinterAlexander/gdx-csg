@@ -439,4 +439,25 @@ public class CSGMeshWithGDXMeshTest {
 
 		ModelViewer.start(box);
 	}
+
+	@Test
+	public void testWithTexture() {
+		ModelBuilder builder = new ModelBuilder();
+		Model box = builder.createBox(1f, 1f, 1f, new Material(),
+				VertexAttributes.Usage.Position
+						| VertexAttributes.Usage.Normal
+						| VertexAttributes.Usage.TextureCoordinates);
+
+		Model sphere = builder.createSphere(1f, 1f, 1f, 50, 50, new Material(),
+				VertexAttributes.Usage.Position
+						| VertexAttributes.Usage.Normal
+						| VertexAttributes.Usage.TextureCoordinates);
+		Mesh sphereMesh = sphere.meshes.get(0);
+		sphereMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
+				.translate(0.3f, 0.3f, 0.3f));
+
+		CSGUtil.subtraction(box, sphereMesh);
+
+		ModelViewer.start(box);
+	}
 }
