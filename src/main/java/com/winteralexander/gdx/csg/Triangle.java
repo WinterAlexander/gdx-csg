@@ -20,6 +20,8 @@ public class Triangle {
 
 	private final Vector3 tmpBarycentric = new Vector3();
 
+	private final Vector3 dir1 = new Vector3(), dir2 = new Vector3();
+
 	public Triangle() {}
 
 	public Triangle(float[] array) {
@@ -108,25 +110,30 @@ public class Triangle {
 	}
 
 	public Vector3 getBarycentricCoordinates(Vector3 point) {
-		float x = point.x;
-		float y = point.y;
-		float z = point.z;
+		dir1.set(p2).sub(p1);
+		dir2.set(dir1).crs(normal);
 
-		float xA = p1.x;
-		float xB = p2.x;
-		float xC = p3.x;
+		float len2 = dir1.len2();
+		float height2 = dir2.dot(p3.x - p1.x,
+				p3.y - p1.y,
+				p3.z - p1.z);
 
-		float yA = p1.y;
-		float yB = p2.y;
-		float yC = p3.y;
+		float x = dir1.dot(point.x - p1.x, point.y - p1.y, point.z - p1.z) / len2;
+		float y = dir2.dot(point.x - p1.x, point.y - p1.y, point.z - p1.z) / height2;
 
-		float zA = p1.z;
-		float zB = p2.z;
-		float zC = p3.z;
+		float xA = 0f;
+		float yA = 0f;
 
-		//TODO wrong, need to project in 2D first
-		tmpBarycentric.x = (-(x - xB) * (yC - yB) + (y - yB) * (xC - xB)) / (-(xA - xB) * (yC - yB) + (yA - yB) * (xC - xB));
-		tmpBarycentric.y = (-(x - xC) * (yA - yC) + (y - yC) * (xA - xC)) / (-(xB - xC) * (yA - yC) + (yB - yC) * (xA - xC));
+		float xB = 1f;
+		float yB = 0f;
+
+		float xC = dir1.dot(p3.x - p1.x, p3.y - p1.y, p3.z - p1.z) / len2;
+		float yC = 1f;
+
+		tmpBarycentric.x = (-(x - xB) * (yC - yB) + (y - yB) * (xC - xB))
+				/ (-(xA - xB) * (yC - yB) + (yA - yB) * (xC - xB));
+		tmpBarycentric.y = (-(x - xC) * (yA - yC) + (y - yC) * (xA - xC))
+				/ (-(xB - xC) * (yA - yC) + (yB - yC) * (xA - xC));
 		tmpBarycentric.z = 1f - tmpBarycentric.x - tmpBarycentric.y;
 
 		return tmpBarycentric;
