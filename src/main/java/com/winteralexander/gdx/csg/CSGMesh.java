@@ -162,6 +162,7 @@ public class CSGMesh {
 			vertex1 = new MeshVertex(face.getV1().getOtherAttributes().length);
 			vertex1.getPosition().set(tmpV1);
 			vertex1.getNormal().set(face.getNormal());
+			vertex1.getTangent().set(face.getV1().getTangent());
 			System.arraycopy(face.getV1().getOtherAttributes(), 0,
 					vertex1.getOtherAttributes(), 0,
 					face.getV1().getOtherAttributes().length);
@@ -173,6 +174,7 @@ public class CSGMesh {
 			vertex2 = new MeshVertex(face.getV1().getOtherAttributes().length);
 			vertex2.getPosition().set(tmpV2);
 			vertex2.getNormal().set(face.getNormal());
+			vertex2.getTangent().set(face.getV1().getTangent());
 			System.arraycopy(face.getV1().getOtherAttributes(), 0,
 					vertex2.getOtherAttributes(), 0,
 					face.getV1().getOtherAttributes().length);
@@ -184,6 +186,7 @@ public class CSGMesh {
 			vertex3 = new MeshVertex(face.getV1().getOtherAttributes().length);
 			vertex3.getPosition().set(tmpV3);
 			vertex3.getNormal().set(face.getNormal());
+			vertex3.getTangent().set(face.getV1().getTangent());
 			System.arraycopy(face.getV1().getOtherAttributes(), 0,
 					vertex3.getOtherAttributes(), 0,
 					face.getV1().getOtherAttributes().length);
@@ -353,8 +356,13 @@ public class CSGMesh {
 		ShortBuffer idxBuffer = mesh.getIndicesBuffer(true);
 
 		int vertexSize = mesh.getVertexSize() / 4;
+
 		int posOffset = mesh.getVertexAttribute(VertexAttributes.Usage.Position).offset / 4;
-		int norOffset = mesh.getVertexAttribute(VertexAttributes.Usage.Normal).offset / 4;
+		VertexAttribute norAttr = mesh.getVertexAttribute(VertexAttributes.Usage.Normal);
+		VertexAttribute tanAttr = mesh.getVertexAttribute(VertexAttributes.Usage.Tangent);
+		int norOffset = norAttr == null ? -1 : norAttr.offset / 4;
+		int tanOffset = tanAttr == null ? -1 : tanAttr.offset / 4;
+
 
 		buffer.limit(vertices.size * vertexSize);
 		idxBuffer.limit(faces.size * 3);
@@ -366,15 +374,25 @@ public class CSGMesh {
 			buffer.put(vertex.getPosition().x);
 			buffer.put(vertex.getPosition().y);
 			buffer.put(vertex.getPosition().z);
-			buffer.position(i * vertexSize + norOffset);
-			buffer.put(vertex.getNormal().x);
-			buffer.put(vertex.getNormal().y);
-			buffer.put(vertex.getNormal().z);
+			if(norOffset != -1) {
+				buffer.position(i * vertexSize + norOffset);
+				buffer.put(vertex.getNormal().x);
+				buffer.put(vertex.getNormal().y);
+				buffer.put(vertex.getNormal().z);
+			}
+
+			if(tanOffset != -1) {
+				buffer.position(i * vertexSize + tanOffset);
+				buffer.put(vertex.getTangent().x);
+				buffer.put(vertex.getTangent().y);
+				buffer.put(vertex.getTangent().z);
+			}
 
 			int j = 0;
 			for(VertexAttribute attr : attributes) {
 				if(attr.usage == VertexAttributes.Usage.Position
-				|| attr.usage == VertexAttributes.Usage.Normal)
+				|| attr.usage == VertexAttributes.Usage.Normal
+				|| attr.usage == VertexAttributes.Usage.Tangent)
 					continue;
 
 				buffer.position(i * vertexSize + attr.offset / 4);
@@ -416,22 +434,32 @@ public class CSGMesh {
 
 		int vertexSize = mesh.getVertexSize() / 4;
 		int posOffset = mesh.getVertexAttribute(VertexAttributes.Usage.Position).offset / 4;
-		int norOffset = mesh.getVertexAttribute(VertexAttributes.Usage.Normal).offset / 4;
-		int otherAttrCount = vertexSize - 6;
+
+		VertexAttribute norAttr = mesh.getVertexAttribute(VertexAttributes.Usage.Normal);
+		VertexAttribute tanAttr = mesh.getVertexAttribute(VertexAttributes.Usage.Tangent);
+		int norOffset = norAttr == null ? -1 : norAttr.offset / 4;
+		int tanOffset = tanAttr == null ? -1 : tanAttr.offset / 4;
+		int otherAttrCount = vertexSize - (3 + (norAttr == null ? 0 : 3) + (tanAttr == null ? 0 : 3));
 
 		for(int i = 0; i < mesh.getNumVertices(); i++) {
 			MeshVertex vertex = new MeshVertex(otherAttrCount);
 			vertex.getPosition().set(buffer.get(i * vertexSize + posOffset),
 					buffer.get(i * vertexSize + posOffset + 1),
 					buffer.get(i * vertexSize + posOffset + 2));
-			vertex.getNormal().set(buffer.get(i * vertexSize + norOffset),
-					buffer.get(i * vertexSize + norOffset + 1),
-					buffer.get(i * vertexSize + norOffset + 2));
+			if(norOffset != -1)
+				vertex.getNormal().set(buffer.get(i * vertexSize + norOffset),
+						buffer.get(i * vertexSize + norOffset + 1),
+						buffer.get(i * vertexSize + norOffset + 2));
+			if(tanOffset != -1)
+				vertex.getTangent().set(buffer.get(i * vertexSize + tanOffset),
+						buffer.get(i * vertexSize + tanOffset + 1),
+						buffer.get(i * vertexSize + tanOffset + 2));
 
 			int j = 0;
 			for(VertexAttribute attr : mesh.getVertexAttributes()) {
 				if(attr.usage == VertexAttributes.Usage.Position
-				|| attr.usage == VertexAttributes.Usage.Normal)
+				|| attr.usage == VertexAttributes.Usage.Normal
+				|| attr.usage == VertexAttributes.Usage.Tangent)
 					continue;
 
 				for(int k = 0; k < attr.getSizeInBytes() / 4; k++)
