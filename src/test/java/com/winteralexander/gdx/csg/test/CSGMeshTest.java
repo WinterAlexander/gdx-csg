@@ -60,8 +60,10 @@ public class CSGMeshTest {
 	@Test
 	public void ensureNotDupVertices() {
 		ModelBuilder builder = new ModelBuilder();
-		Model box = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Model second = builder.createSphere(1f, 1f, 1f, 10, 10, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model box = builder.createBox(1f, 1f, 1f, new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model second = builder.createSphere(1f, 1f, 1f, 10, 10, new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh mesh = box.meshes.get(0);
 		Mesh other = second.meshes.get(0);
 		other.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
@@ -114,8 +116,10 @@ public class CSGMeshTest {
 	@Test
 	public void testCubeCubeSubtraction() {
 		ModelBuilder builder = new ModelBuilder();
-		Model box = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Model cube = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model box = builder.createBox(1f, 1f, 1f, new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model cube = builder.createBox(1f, 1f, 1f, new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh cubeMesh = cube.meshes.get(0);
 		cubeMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
 				.translate(0f, 0.3f, 0f));
@@ -128,8 +132,10 @@ public class CSGMeshTest {
 	@Test
 	public void testCubeSphereSubtraction() {
 		ModelBuilder builder = new ModelBuilder();
-		Model box = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Model sphere = builder.createSphere(1f, 1f, 1f, 50, 50, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model box = builder.createBox(1f, 1f, 1f, new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model sphere = builder.createSphere(1f, 1f, 1f, 50, 50, new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh sphereMesh = sphere.meshes.get(0);
 		sphereMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
 				.translate(0.3f, 0.3f, 0.3f));
@@ -143,8 +149,10 @@ public class CSGMeshTest {
 	@Test
 	public void testCubeCylinderSubtraction() {
 		ModelBuilder builder = new ModelBuilder();
-		Model box = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Model second = builder.createCylinder(0.8f, 1f, 0.8f, 25, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model box = builder.createBox(1f, 1f, 1f, new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model second = builder.createCylinder(0.8f, 1f, 0.8f, 25, new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh other = second.meshes.get(0);
 		other.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
 				.translate(0f, 0.8f, 0f));
@@ -167,8 +175,10 @@ public class CSGMeshTest {
 	@Test
 	public void testCubePrismSubtraction() {
 		ModelBuilder builder = new ModelBuilder();
-		Model box = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Model second = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model box = builder.createBox(1f, 1f, 1f, new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model second = builder.createBox(1f, 1f, 1f, new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh mesh = box.meshes.get(0);
 		Mesh other = second.meshes.get(0);
 		other.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
@@ -213,8 +223,10 @@ public class CSGMeshTest {
 	@Test
 	public void testCubeSphereIntersection() {
 		ModelBuilder builder = new ModelBuilder();
-		Model box = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Model sphere = builder.createSphere(1f, 1f, 1f, 50, 50, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model box = builder.createBox(1f, 1f, 1f, new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model sphere = builder.createSphere(1f, 1f, 1f, 50, 50, new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh sphereMesh = sphere.meshes.get(0);
 		sphereMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
 				.translate(0.3f, 0.3f, 0.3f));
@@ -227,8 +239,10 @@ public class CSGMeshTest {
 	@Test
 	public void testCubeSphereUnion() {
 		ModelBuilder builder = new ModelBuilder();
-		Model box = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Model sphere = builder.createSphere(1f, 1f, 1f, 50, 50, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model box = builder.createBox(1f, 1f, 1f, new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model sphere = builder.createSphere(1f, 1f, 1f, 50, 50, new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh sphereMesh = sphere.meshes.get(0);
 		sphereMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
 				.translate(0.3f, 0.3f, 0.3f));
@@ -242,8 +256,10 @@ public class CSGMeshTest {
 	public void testSameUnion() {
 
 		ModelBuilder builder = new ModelBuilder();
-		Model box = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Model second = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model box = builder.createBox(1f, 1f, 1f, new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model second = builder.createBox(1f, 1f, 1f, new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh other = second.meshes.get(0);
 		other.transform(new Matrix4().translate(0f, 0.1f, 0f));
 		CSGMesh mesh1 = CSGMesh.fromMesh(box.meshes.get(0));
@@ -277,7 +293,8 @@ public class CSGMeshTest {
 	@Test
 	public void testCylinderUnions() {
 		ModelBuilder builder = new ModelBuilder();
-		Model cylinder = builder.createCylinder(0.5f, 2f, 0.5f, 10, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model cylinder = builder.createCylinder(0.5f, 2f, 0.5f, 10, new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh cylMesh = cylinder.meshes.get(0);
 		CSGMesh cylinder1 = CSGMesh.fromMesh(cylMesh);
 
@@ -313,7 +330,8 @@ public class CSGMeshTest {
 		CSGMesh cylinders = copy1;//CSGUtil.union(firstUnion, cylinder3);
 
 		cylinder.meshes.set(0, cylinders.toMesh());
-		cylinder.meshParts.get(0).set("box", cylinder.meshes.get(0), 0, cylinder.meshes.get(0).getNumIndices(), GL_TRIANGLES);
+		cylinder.meshParts.get(0).set("box",
+				cylinder.meshes.get(0), 0, cylinder.meshes.get(0).getNumIndices(), GL_TRIANGLES);
 		cylinder.meshParts.get(0).update();
 
 		ModelViewer.start(cylinder);
@@ -324,7 +342,9 @@ public class CSGMeshTest {
 	public void testClassicExample() {
 		ModelBuilder builder = new ModelBuilder();
 		Model box = builder.createBox(1f, 1f, 1f, new Material(),
-				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.ColorPacked);
+				VertexAttributes.Usage.Position
+						| VertexAttributes.Usage.Normal
+						| VertexAttributes.Usage.ColorPacked);
 
 		for(Mesh mesh : box.meshes) {
 			FloatBuffer buffer = mesh.getVerticesBuffer(true);
@@ -337,7 +357,9 @@ public class CSGMeshTest {
 		}
 
 		Model sphere = builder.createSphere(1.35f, 1.35f, 1.35f, 20, 20, new Material(),
-				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.ColorPacked);
+				VertexAttributes.Usage.Position
+						| VertexAttributes.Usage.Normal
+						| VertexAttributes.Usage.ColorPacked);
 
 		for(Mesh mesh : sphere.meshes) {
 			FloatBuffer buffer = mesh.getVerticesBuffer(true);
@@ -350,7 +372,9 @@ public class CSGMeshTest {
 		}
 
 		Model cylinder = builder.createCylinder(0.6f, 2f, 0.6f, 20, new Material(),
-				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.ColorPacked);
+				VertexAttributes.Usage.Position
+						| VertexAttributes.Usage.Normal
+						| VertexAttributes.Usage.ColorPacked);
 
 		for(Mesh mesh : cylinder.meshes) {
 			FloatBuffer buffer = mesh.getVerticesBuffer(true);
@@ -409,7 +433,8 @@ public class CSGMeshTest {
 		CSGMesh last = copy1;*/
 
 		box.meshes.set(0, last.toMesh());
-		box.meshParts.get(0).set("box", box.meshes.get(0), 0, box.meshes.get(0).getNumIndices(), GL_TRIANGLES);
+		box.meshParts.get(0).set("box",
+				box.meshes.get(0), 0, box.meshes.get(0).getNumIndices(), GL_TRIANGLES);
 		box.meshParts.get(0).update();
 
 		ModelViewer.start(box);

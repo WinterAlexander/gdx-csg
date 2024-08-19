@@ -18,6 +18,8 @@ public class Triangle {
 
 	private final Vector3 normal = new Vector3();
 
+	private final Vector3 tmpBarycentric = new Vector3();
+
 	public Triangle() {}
 
 	public Triangle(float[] array) {
@@ -103,6 +105,31 @@ public class Triangle {
 		return p1.epsilonEquals(other.p1, epsilon)
 				&& p2.epsilonEquals(other.p2, epsilon)
 				&& p3.epsilonEquals(other.p3, epsilon);
+	}
+
+	public Vector3 getBarycentricCoordinates(Vector3 point) {
+		float x = point.x;
+		float y = point.y;
+		float z = point.z;
+
+		float xA = p1.x;
+		float xB = p2.x;
+		float xC = p3.x;
+
+		float yA = p1.y;
+		float yB = p2.y;
+		float yC = p3.y;
+
+		float zA = p1.z;
+		float zB = p2.z;
+		float zC = p3.z;
+
+		//TODO wrong, need to project in 2D first
+		tmpBarycentric.x = (-(x - xB) * (yC - yB) + (y - yB) * (xC - xB)) / (-(xA - xB) * (yC - yB) + (yA - yB) * (xC - xB));
+		tmpBarycentric.y = (-(x - xC) * (yA - yC) + (y - yC) * (xA - xC)) / (-(xB - xC) * (yA - yC) + (yB - yC) * (xA - xC));
+		tmpBarycentric.z = 1f - tmpBarycentric.x - tmpBarycentric.y;
+
+		return tmpBarycentric;
 	}
 
 	public void toArray(float[] out) {

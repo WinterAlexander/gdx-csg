@@ -127,6 +127,28 @@ public class CSGMesh {
 		toAdd.clear();
 	}
 
+	private void interpolate(MeshVertex out,
+	                         MeshVertex v1, float w1,
+	                         MeshVertex v2, float w2,
+	                         MeshVertex v3, float w3) {
+		out.getNormal().set(0f, 0f, 0f)
+				.mulAdd(v1.getNormal(), w1)
+				.mulAdd(v2.getNormal(), w2)
+				.mulAdd(v3.getNormal(), w3)
+				.nor();
+
+		out.getTangent().set(0f, 0f, 0f)
+				.mulAdd(v1.getTangent(), w1)
+				.mulAdd(v2.getTangent(), w2)
+				.mulAdd(v3.getTangent(), w3)
+				.nor();
+
+		for(int i = 0; i < out.getOtherAttributes().length; i++)
+			out.getOtherAttributes()[i] = v1.getOtherAttributes()[i] * w1 +
+					v2.getOtherAttributes()[i] * w2 +
+					v3.getOtherAttributes()[i] * w3;
+	}
+
 	private void processSplitTriangle(MeshFace face, float[] array, int offset) {
 		VectorUtil.setFromArray(tmpV1, array, offset);
 		VectorUtil.setFromArray(tmpV2, array, offset + 3);
@@ -161,8 +183,8 @@ public class CSGMesh {
 		if(vertex1 == null) {
 			vertex1 = new MeshVertex(face.getV1().getOtherAttributes().length);
 			vertex1.getPosition().set(tmpV1);
-			vertex1.getNormal().set(face.getNormal());
-			vertex1.getTangent().set(face.getV1().getTangent());
+			Vector3 bary = face.getTriangle().getBarycentricCoordinates(tmpV1);
+			interpolate(vertex1, face.getV1(), bary.x, face.getV2(), bary.y, face.getV3(), bary.z);
 			System.arraycopy(face.getV1().getOtherAttributes(), 0,
 					vertex1.getOtherAttributes(), 0,
 					face.getV1().getOtherAttributes().length);
@@ -173,8 +195,8 @@ public class CSGMesh {
 		if(vertex2 == null) {
 			vertex2 = new MeshVertex(face.getV1().getOtherAttributes().length);
 			vertex2.getPosition().set(tmpV2);
-			vertex2.getNormal().set(face.getNormal());
-			vertex2.getTangent().set(face.getV1().getTangent());
+			Vector3 bary = face.getTriangle().getBarycentricCoordinates(tmpV2);
+			interpolate(vertex2, face.getV1(), bary.x, face.getV2(), bary.y, face.getV3(), bary.z);
 			System.arraycopy(face.getV1().getOtherAttributes(), 0,
 					vertex2.getOtherAttributes(), 0,
 					face.getV1().getOtherAttributes().length);
@@ -185,8 +207,8 @@ public class CSGMesh {
 		if(vertex3 == null) {
 			vertex3 = new MeshVertex(face.getV1().getOtherAttributes().length);
 			vertex3.getPosition().set(tmpV3);
-			vertex3.getNormal().set(face.getNormal());
-			vertex3.getTangent().set(face.getV1().getTangent());
+			Vector3 bary = face.getTriangle().getBarycentricCoordinates(tmpV3);
+			interpolate(vertex3, face.getV1(), bary.x, face.getV2(), bary.y, face.getV3(), bary.z);
 			System.arraycopy(face.getV1().getOtherAttributes(), 0,
 					vertex3.getOtherAttributes(), 0,
 					face.getV1().getOtherAttributes().length);
