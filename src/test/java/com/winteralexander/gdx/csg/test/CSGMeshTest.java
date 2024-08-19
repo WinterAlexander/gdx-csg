@@ -4,10 +4,12 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl.LwjglGraphics;
 import com.badlogic.gdx.backends.lwjgl.LwjglNativesLoader;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
@@ -22,6 +24,7 @@ import org.lwjgl.opengl.Display;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.nio.FloatBuffer;
 
 import static com.badlogic.gdx.graphics.GL20.GL_TRIANGLES;
 import static org.junit.Assert.assertFalse;
@@ -320,9 +323,44 @@ public class CSGMeshTest {
 	@Test
 	public void testClassicExample() {
 		ModelBuilder builder = new ModelBuilder();
-		Model box = builder.createBox(1f, 1f, 1f, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Model sphere = builder.createSphere(1.25f, 1.25f, 1.25f, 15, 15, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Model cylinder = builder.createCylinder(0.5f, 2f, 0.5f, 10, new Material(), VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model box = builder.createBox(1f, 1f, 1f, new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.ColorPacked);
+
+		for(Mesh mesh : box.meshes) {
+			FloatBuffer buffer = mesh.getVerticesBuffer(true);
+			for(int i = 0; i < mesh.getNumVertices(); i++) {
+				buffer.position(i * mesh.getVertexSize() / 4 +
+						mesh.getVertexAttribute(VertexAttributes.Usage.ColorPacked).offset / 4);
+
+				buffer.put(Color.RED.toFloatBits());
+			}
+		}
+
+		Model sphere = builder.createSphere(1.35f, 1.35f, 1.35f, 20, 20, new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.ColorPacked);
+
+		for(Mesh mesh : sphere.meshes) {
+			FloatBuffer buffer = mesh.getVerticesBuffer(true);
+			for(int i = 0; i < mesh.getNumVertices(); i++) {
+				buffer.position(i * mesh.getVertexSize() / 4 +
+						mesh.getVertexAttribute(VertexAttributes.Usage.ColorPacked).offset / 4);
+
+				buffer.put(Color.BLUE.toFloatBits());
+			}
+		}
+
+		Model cylinder = builder.createCylinder(0.6f, 2f, 0.6f, 20, new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.ColorPacked);
+
+		for(Mesh mesh : cylinder.meshes) {
+			FloatBuffer buffer = mesh.getVerticesBuffer(true);
+			for(int i = 0; i < mesh.getNumVertices(); i++) {
+				buffer.position(i * mesh.getVertexSize() / 4 +
+						mesh.getVertexAttribute(VertexAttributes.Usage.ColorPacked).offset / 4);
+
+				buffer.put(Color.GREEN.toFloatBits());
+			}
+		}
 
 		CSGMesh boxCSG = CSGMesh.fromMesh(box.meshes.get(0));
 		CSGMesh sphereCSG = CSGMesh.fromMesh(sphere.meshes.get(0));

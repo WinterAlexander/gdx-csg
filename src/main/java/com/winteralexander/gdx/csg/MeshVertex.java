@@ -4,6 +4,9 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
+
 import static com.winteralexander.gdx.utils.Validation.ensureNotNull;
 
 /**
@@ -16,32 +19,27 @@ import static com.winteralexander.gdx.utils.Validation.ensureNotNull;
 public class MeshVertex {
 	private final Vector3 position;
 	private final Vector3 normal;
-	private final Color color;
-	private final Vector2 texCoordinates;
+	private final float[] otherAttributes;
 
-	public MeshVertex() {
-		this(new Vector3(), new Vector3(), new Color(), new Vector2());
+	public MeshVertex(int otherAttributesCount) {
+		this(new Vector3(), new Vector3(), new float[otherAttributesCount]);
 	}
 
 	public MeshVertex(Vector3 position,
 	                  Vector3 normal,
-	                  Color color,
-	                  Vector2 texCoordinates) {
+	                  float[] otherAttributes) {
 		ensureNotNull(position, "position");
 		ensureNotNull(normal, "normal");
-		ensureNotNull(color, "color");
-		ensureNotNull(texCoordinates, "texCoordinates");
+		ensureNotNull(otherAttributes, "otherAttributes");
 		this.position = position;
 		this.normal = normal;
-		this.color = color;
-		this.texCoordinates = texCoordinates;
+		this.otherAttributes = otherAttributes;
 	}
 
 	public MeshVertex(MeshVertex other) {
 		this(other.position.cpy(),
 				other.normal.cpy(),
-				other.color.cpy(),
-				other.texCoordinates.cpy());
+				Arrays.copyOf(other.otherAttributes, other.otherAttributes.length));
 	}
 
 	public Vector3 getPosition() {
@@ -52,11 +50,7 @@ public class MeshVertex {
 		return normal;
 	}
 
-	public Color getColor() {
-		return color;
-	}
-
-	public Vector2 getTexCoordinates() {
-		return texCoordinates;
+	public float[] getOtherAttributes() {
+		return otherAttributes;
 	}
 }

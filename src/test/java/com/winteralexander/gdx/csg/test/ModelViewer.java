@@ -82,6 +82,7 @@ public class ModelViewer implements ApplicationListener {
 
 		for(Model model : models)
 			instances.add(new ModelInstance(model));
+
 		Pixmap red = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
 		red.setColor(Color.RED);
 		red.fill();
@@ -95,6 +96,10 @@ public class ModelViewer implements ApplicationListener {
 
 		int j = 0;
 		for(ModelInstance instance : instances) {
+			if(instance.model.meshes.get(0).getVertexAttribute(VertexAttributes.Usage.ColorPacked) != null
+			|| instance.model.meshes.get(0).getVertexAttribute(VertexAttributes.Usage.ColorUnpacked) != null)
+				continue;
+
 			for(int i = 0; i < instance.materials.size; i++) {
 				instance.materials.get(i).set(TextureAttribute.createDiffuse(j % 2 == 0 ? tex1 : tex2));
 			}

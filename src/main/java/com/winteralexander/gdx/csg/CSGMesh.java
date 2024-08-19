@@ -1,6 +1,7 @@
 package com.winteralexander.gdx.csg;
 
 import com.badlogic.gdx.graphics.Mesh;
+import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Plane;
@@ -158,25 +159,34 @@ public class CSGMesh {
 		}
 
 		if(vertex1 == null) {
-			vertex1 = new MeshVertex();
+			vertex1 = new MeshVertex(face.getV1().getOtherAttributes().length);
 			vertex1.getPosition().set(tmpV1);
 			vertex1.getNormal().set(face.getNormal());
+			System.arraycopy(face.getV1().getOtherAttributes(), 0,
+					vertex1.getOtherAttributes(), 0,
+					face.getV1().getOtherAttributes().length);
 			tmpNewVertices.add(vertex1);
 			vertices.add(vertex1);
 		}
 
 		if(vertex2 == null) {
-			vertex2 = new MeshVertex();
+			vertex2 = new MeshVertex(face.getV1().getOtherAttributes().length);
 			vertex2.getPosition().set(tmpV2);
 			vertex2.getNormal().set(face.getNormal());
+			System.arraycopy(face.getV1().getOtherAttributes(), 0,
+					vertex2.getOtherAttributes(), 0,
+					face.getV1().getOtherAttributes().length);
 			tmpNewVertices.add(vertex2);
 			vertices.add(vertex2);
 		}
 
 		if(vertex3 == null) {
-			vertex3 = new MeshVertex();
+			vertex3 = new MeshVertex(face.getV1().getOtherAttributes().length);
 			vertex3.getPosition().set(tmpV3);
 			vertex3.getNormal().set(face.getNormal());
+			System.arraycopy(face.getV1().getOtherAttributes(), 0,
+					vertex3.getOtherAttributes(), 0,
+					face.getV1().getOtherAttributes().length);
 			tmpNewVertices.add(vertex3);
 			vertices.add(vertex3);
 		}
@@ -316,6 +326,26 @@ public class CSGMesh {
 		return faces;
 	}
 
+	public CSGMesh cpy() {
+		Array<MeshVertex> verts = new Array<>();
+		Array<MeshFace> faces = new Array<>();
+
+		vertexIndices.clear();
+		int i = 0;
+		for(MeshVertex v : vertices) {
+			verts.add(new MeshVertex(v));
+			vertexIndices.put(v, i);
+			i++;
+		}
+
+		for(MeshFace f : this.faces)
+			faces.add(new MeshFace(verts.get(vertexIndices.get(f.getV1(), -1)),
+					verts.get(vertexIndices.get(f.getV2(), -1)),
+					verts.get(vertexIndices.get(f.getV3(), -1))));
+
+		return new CSGMesh(verts, faces, attributes);
+	}
+
 	public Mesh toMesh() {
 		Mesh mesh = new Mesh(true, vertices.size, faces.size * 3, attributes);
 
@@ -340,6 +370,18 @@ public class CSGMesh {
 			buffer.put(vertex.getNormal().x);
 			buffer.put(vertex.getNormal().y);
 			buffer.put(vertex.getNormal().z);
+
+			int j = 0;
+			for(VertexAttribute attr : attributes) {
+				if(attr.usage == VertexAttributes.Usage.Position
+				|| attr.usage == VertexAttributes.Usage.Normal)
+					continue;
+
+				buffer.position(i * vertexSize + attr.offset / 4);
+				for(int k = 0; k < attr.getSizeInBytes() / 4; k++)
+					buffer.put(vertex.getOtherAttributes()[j++]);
+			}
+
 			vertexIndices.put(vertex, i);
 		}
 
@@ -365,26 +407,6 @@ public class CSGMesh {
 		return mesh;
 	}
 
-	public CSGMesh cpy() {
-		Array<MeshVertex> verts = new Array<>();
-		Array<MeshFace> faces = new Array<>();
-
-		vertexIndices.clear();
-		int i = 0;
-		for(MeshVertex v : vertices) {
-			verts.add(new MeshVertex(v));
-			vertexIndices.put(v, i);
-			i++;
-		}
-
-		for(MeshFace f : this.faces)
-			faces.add(new MeshFace(verts.get(vertexIndices.get(f.getV1(), -1)),
-					verts.get(vertexIndices.get(f.getV2(), -1)),
-					verts.get(vertexIndices.get(f.getV3(), -1))));
-
-		return new CSGMesh(verts, faces, attributes);
-	}
-
 	public static CSGMesh fromMesh(Mesh mesh) {
 		Array<MeshVertex> vertices = new Array<>(mesh.getNumVertices());
 		Array<MeshFace> faces = new Array<>(mesh.getNumIndices());
@@ -395,15 +417,28 @@ public class CSGMesh {
 		int vertexSize = mesh.getVertexSize() / 4;
 		int posOffset = mesh.getVertexAttribute(VertexAttributes.Usage.Position).offset / 4;
 		int norOffset = mesh.getVertexAttribute(VertexAttributes.Usage.Normal).offset / 4;
+		int otherAttrCount = vertexSize - 6;
 
 		for(int i = 0; i < mesh.getNumVertices(); i++) {
-			MeshVertex vertex = new MeshVertex();
+			MeshVertex vertex = new MeshVertex(otherAttrCount);
 			vertex.getPosition().set(buffer.get(i * vertexSize + posOffset),
 					buffer.get(i * vertexSize + posOffset + 1),
 					buffer.get(i * vertexSize + posOffset + 2));
 			vertex.getNormal().set(buffer.get(i * vertexSize + norOffset),
 					buffer.get(i * vertexSize + norOffset + 1),
 					buffer.get(i * vertexSize + norOffset + 2));
+
+			int j = 0;
+			for(VertexAttribute attr : mesh.getVertexAttributes()) {
+				if(attr.usage == VertexAttributes.Usage.Position
+				|| attr.usage == VertexAttributes.Usage.Normal)
+					continue;
+
+				for(int k = 0; k < attr.getSizeInBytes() / 4; k++)
+					vertex.getOtherAttributes()[j++] =
+							buffer.get(i * vertexSize + attr.offset / 4 + k);
+			}
+
 			vertices.add(vertex);
 		}
 
