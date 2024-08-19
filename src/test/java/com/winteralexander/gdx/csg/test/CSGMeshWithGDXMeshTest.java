@@ -9,14 +9,13 @@ import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
-import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.math.collision.Ray;
 import com.winteralexander.gdx.csg.CSGMesh;
 import com.winteralexander.gdx.csg.CSGUtil;
-import com.winteralexander.gdx.csg.MeshFace;
+import com.winteralexander.gdx.csg.test.debugviewer.CSGMeshViewer;
+import com.winteralexander.gdx.csg.test.debugviewer.ModelViewer;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -27,18 +26,19 @@ import java.lang.reflect.Method;
 import java.nio.FloatBuffer;
 
 import static com.badlogic.gdx.graphics.GL20.GL_TRIANGLES;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
 
 /**
- * Unit tests for the functionality of {@link CSGMesh}
+ * Unit tests for the functionality of {@link CSGMesh} that involves the loading of libGDX's LWJGL
+ * graphics to convert {@link CSGMesh}es from {@link Mesh}. This test is ignored by default because
+ * it cannot run on headless machines like Github CI.
  * <p>
  * Created on 2024-08-12.
  *
  * @author Alexander Winter
  */
 @Ignore
-public class CSGMeshTest {
+public class CSGMeshWithGDXMeshTest {
 	@BeforeClass
 	public static void initGL() throws Exception {
 		LwjglNativesLoader.load();

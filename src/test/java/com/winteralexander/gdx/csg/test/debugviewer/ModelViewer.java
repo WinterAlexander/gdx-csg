@@ -1,4 +1,4 @@
-package com.winteralexander.gdx.csg.test;
+package com.winteralexander.gdx.csg.test.debugviewer;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;

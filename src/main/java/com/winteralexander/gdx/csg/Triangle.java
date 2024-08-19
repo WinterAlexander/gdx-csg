@@ -111,7 +111,7 @@ public class Triangle {
 
 	public Vector3 getBarycentricCoordinates(Vector3 point) {
 		dir1.set(p2).sub(p1);
-		dir2.set(dir1).crs(normal);
+		dir2.set(dir1).crs(getNormal());
 
 		float len2 = dir1.len2();
 		float height2 = dir2.dot(p3.x - p1.x,
