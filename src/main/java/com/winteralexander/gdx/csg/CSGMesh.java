@@ -42,6 +42,7 @@ public class CSGMesh {
 	private final ObjectMap<MeshVertex, InsideStatus> vertexStatus = new ObjectMap<>();
 	// list of faces which intersect in a coplanar way
 	private final HashSet<MeshFace> boundaryFaces = new HashSet<>();
+	private final Array<Edge> cutEdges = new Array<>();
 
 	private final SegmentPlus intersectSegment = new SegmentPlus();
 	private final Plane plane = new Plane();
