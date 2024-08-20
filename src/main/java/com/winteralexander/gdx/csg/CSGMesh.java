@@ -185,9 +185,6 @@ public class CSGMesh {
 			vertex1.getPosition().set(tmpV1);
 			Vector3 bary = face.getTriangle().getBarycentricCoordinates(tmpV1);
 			interpolate(vertex1, face.getV1(), bary.x, face.getV2(), bary.y, face.getV3(), bary.z);
-			System.arraycopy(face.getV1().getOtherAttributes(), 0,
-					vertex1.getOtherAttributes(), 0,
-					face.getV1().getOtherAttributes().length);
 			tmpNewVertices.add(vertex1);
 			vertices.add(vertex1);
 		}
@@ -197,9 +194,6 @@ public class CSGMesh {
 			vertex2.getPosition().set(tmpV2);
 			Vector3 bary = face.getTriangle().getBarycentricCoordinates(tmpV2);
 			interpolate(vertex2, face.getV1(), bary.x, face.getV2(), bary.y, face.getV3(), bary.z);
-			System.arraycopy(face.getV1().getOtherAttributes(), 0,
-					vertex2.getOtherAttributes(), 0,
-					face.getV1().getOtherAttributes().length);
 			tmpNewVertices.add(vertex2);
 			vertices.add(vertex2);
 		}
@@ -209,9 +203,6 @@ public class CSGMesh {
 			vertex3.getPosition().set(tmpV3);
 			Vector3 bary = face.getTriangle().getBarycentricCoordinates(tmpV3);
 			interpolate(vertex3, face.getV1(), bary.x, face.getV2(), bary.y, face.getV3(), bary.z);
-			System.arraycopy(face.getV1().getOtherAttributes(), 0,
-					vertex3.getOtherAttributes(), 0,
-					face.getV1().getOtherAttributes().length);
 			tmpNewVertices.add(vertex3);
 			vertices.add(vertex3);
 		}

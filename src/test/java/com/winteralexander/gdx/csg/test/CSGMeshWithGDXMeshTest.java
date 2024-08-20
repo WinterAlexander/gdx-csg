@@ -441,7 +441,27 @@ public class CSGMeshWithGDXMeshTest {
 	}
 
 	@Test
-	public void testWithTexture() {
+	public void testWithTexturePrism() {
+		ModelBuilder builder = new ModelBuilder();
+		Model box = builder.createBox(1f, 1f, 1f, new Material(),
+				VertexAttributes.Usage.Position
+						| VertexAttributes.Usage.Normal
+						| VertexAttributes.Usage.TextureCoordinates);
+		Model second = builder.createBox(1f, 1f, 1f, new Material(),
+				VertexAttributes.Usage.Position
+						| VertexAttributes.Usage.Normal
+						| VertexAttributes.Usage.TextureCoordinates);
+		Mesh mesh = second.meshes.get(0);
+		mesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
+				.translate(0.3f, 0.3f, 0.3f));
+
+		CSGUtil.subtraction(box, mesh);
+
+		ModelViewer.start(box);
+	}
+
+	@Test
+	public void testWithTextureSphere() {
 		ModelBuilder builder = new ModelBuilder();
 		Model box = builder.createBox(1f, 1f, 1f, new Material(),
 				VertexAttributes.Usage.Position
