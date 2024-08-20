@@ -356,7 +356,7 @@ public class CSGMeshWithGDXMeshTest {
 			}
 		}
 
-		Model sphere = builder.createSphere(1.35f, 1.35f, 1.35f, 20, 20, new Material(),
+		Model sphere = builder.createSphere(1.35f, 1.35f, 1.35f, 10, 10, new Material(),
 				VertexAttributes.Usage.Position
 						| VertexAttributes.Usage.Normal
 						| VertexAttributes.Usage.ColorPacked);
@@ -371,7 +371,7 @@ public class CSGMeshWithGDXMeshTest {
 			}
 		}
 
-		Model cylinder = builder.createCylinder(0.6f, 2f, 0.6f, 20, new Material(),
+		Model cylinder = builder.createCylinder(0.6f, 2f, 0.6f, 10, new Material(),
 				VertexAttributes.Usage.Position
 						| VertexAttributes.Usage.Normal
 						| VertexAttributes.Usage.ColorPacked);
@@ -470,15 +470,21 @@ public class CSGMeshWithGDXMeshTest {
 						| VertexAttributes.Usage.Normal
 						| VertexAttributes.Usage.TextureCoordinates);
 
-		Model sphere = builder.createSphere(1f, 1f, 1f, 6, 6, new Material(),
+		Model sphere = builder.createSphere(1.25f, 1.25f, 1.25f, 20, 20, new Material(),
 				VertexAttributes.Usage.Position
 						| VertexAttributes.Usage.Normal
 						| VertexAttributes.Usage.TextureCoordinates);
 		Mesh sphereMesh = sphere.meshes.get(0);
 		sphereMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
-				.translate(0.3f, 0.3f, 0.3f));
+				.translate(0f, 0f, 0f));
+
+		Model bigger = builder.createSphere(1.4f, 1.4f, 1.4f, 20, 20, new Material(),
+				VertexAttributes.Usage.Position
+						| VertexAttributes.Usage.Normal
+						| VertexAttributes.Usage.TextureCoordinates);
 
 		CSGUtil.subtraction(box, sphereMesh);
+		CSGUtil.intersection(box, bigger.meshes.get(0));
 
 		System.out.println("Vertex count: " + box.meshes.get(0).getNumVertices());
 
