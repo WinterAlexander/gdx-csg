@@ -453,9 +453,11 @@ public class CSGMeshWithGDXMeshTest {
 						| VertexAttributes.Usage.TextureCoordinates);
 		Mesh mesh = second.meshes.get(0);
 		mesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
-				.translate(0.3f, 0.3f, 0.3f));
+				.translate(0.25f, 0.25f, 0.25f));
 
 		CSGUtil.subtraction(box, mesh);
+
+		System.out.println("Vertex count: " + box.meshes.get(0).getNumVertices());
 
 		ModelViewer.start(box);
 	}
@@ -468,7 +470,7 @@ public class CSGMeshWithGDXMeshTest {
 						| VertexAttributes.Usage.Normal
 						| VertexAttributes.Usage.TextureCoordinates);
 
-		Model sphere = builder.createSphere(1f, 1f, 1f, 50, 50, new Material(),
+		Model sphere = builder.createSphere(1f, 1f, 1f, 6, 6, new Material(),
 				VertexAttributes.Usage.Position
 						| VertexAttributes.Usage.Normal
 						| VertexAttributes.Usage.TextureCoordinates);
@@ -478,6 +480,13 @@ public class CSGMeshWithGDXMeshTest {
 
 		CSGUtil.subtraction(box, sphereMesh);
 
+		System.out.println("Vertex count: " + box.meshes.get(0).getNumVertices());
+
 		ModelViewer.start(box);
+	}
+
+	@Test
+	public void testSingleTriTexture() {
+
 	}
 }

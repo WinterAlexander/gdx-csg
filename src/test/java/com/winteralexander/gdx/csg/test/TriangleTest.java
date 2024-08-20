@@ -43,9 +43,32 @@ public class TriangleTest {
 		expected.set(0.5f, 0.5f, 0f);
 		assertEquals(expected, triangle.getBarycentricCoordinates(point));
 
+		triangle.p1.set(0f, 0f, 0f);
+		triangle.p2.set(0f, 0f, 2f);
+		triangle.p3.set(0f, 2f, 0f);
+
+		point.set(triangle.p3);
+		expected.set(0f, 0f, 1f);
+		assertEquals(expected, triangle.getBarycentricCoordinates(point));
+
 		Random random = new Random();
 
 		for(int i = 0; i < 1000; i++) {
+			triangle.p1.set(random.nextFloat() * 10f - 5f,
+					random.nextFloat() * 10f - 5f,
+					random.nextFloat() * 10f - 5f);
+			do {
+				triangle.p2.set(random.nextFloat() * 10f - 5f,
+						random.nextFloat() * 10f - 5f,
+						random.nextFloat() * 10f - 5f);
+			} while(triangle.p2.dst2(triangle.p1) < 1e-3f);
+			do {
+				triangle.p3.set(random.nextFloat() * 10f - 5f,
+						random.nextFloat() * 10f - 5f,
+						random.nextFloat() * 10f - 5f);
+			} while(triangle.p3.dst2(triangle.p1) < 1e-3f
+				|| triangle.p3.dst2(triangle.p2) < 1e-3f);
+
 			float alpha = random.nextFloat();
 			float beta = random.nextFloat() * (1f - alpha);
 			float gamma = 1f - alpha - beta;

@@ -15,6 +15,7 @@ import com.winteralexander.gdx.utils.math.VectorUtil;
 
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
+import java.util.HashMap;
 import java.util.HashSet;
 
 import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.COPLANAR_FACE_FACE;
@@ -54,7 +55,7 @@ public class CSGMesh {
 
 	private final Array<MeshFace> toRemove = new Array<>();
 	private final Array<MeshFace> toAdd = new Array<>();
-	private final Array<MeshVertex> tmpNewVertices = new Array<>();
+	private final HashMap<MeshVertex, MeshFace> tmpNewVertices = new HashMap<>();
 
 	private final Ray tmpRay = new Ray();
 	private final SegmentPlus tmpSegment = new SegmentPlus();
@@ -171,7 +172,10 @@ public class CSGMesh {
 				vertex3 = faceVertex;
 		}
 
-		for(MeshVertex addedVertex : tmpNewVertices) {
+		for(MeshVertex addedVertex : tmpNewVertices.keySet()) {
+			if(!tmpNewVertices.get(addedVertex).getNormal().epsilonEquals(face.getNormal(), tolerance))
+				continue;
+
 			if(addedVertex.getPosition().epsilonEquals(tmpV1, tolerance))
 				vertex1 = addedVertex;
 			if(addedVertex.getPosition().epsilonEquals(tmpV2, tolerance))
@@ -185,7 +189,7 @@ public class CSGMesh {
 			vertex1.getPosition().set(tmpV1);
 			Vector3 bary = face.getTriangle().getBarycentricCoordinates(tmpV1);
 			interpolate(vertex1, face.getV1(), bary.x, face.getV2(), bary.y, face.getV3(), bary.z);
-			tmpNewVertices.add(vertex1);
+			tmpNewVertices.put(vertex1, face);
 			vertices.add(vertex1);
 		}
 
@@ -194,7 +198,7 @@ public class CSGMesh {
 			vertex2.getPosition().set(tmpV2);
 			Vector3 bary = face.getTriangle().getBarycentricCoordinates(tmpV2);
 			interpolate(vertex2, face.getV1(), bary.x, face.getV2(), bary.y, face.getV3(), bary.z);
-			tmpNewVertices.add(vertex2);
+			tmpNewVertices.put(vertex2, face);
 			vertices.add(vertex2);
 		}
 
@@ -203,7 +207,7 @@ public class CSGMesh {
 			vertex3.getPosition().set(tmpV3);
 			Vector3 bary = face.getTriangle().getBarycentricCoordinates(tmpV3);
 			interpolate(vertex3, face.getV1(), bary.x, face.getV2(), bary.y, face.getV3(), bary.z);
-			tmpNewVertices.add(vertex3);
+			tmpNewVertices.put(vertex3, face);
 			vertices.add(vertex3);
 		}
 
