@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
+import com.badlogic.gdx.math.collision.Segment;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectIntMap;
 import com.badlogic.gdx.utils.ObjectMap;
@@ -18,6 +19,7 @@ import java.nio.ShortBuffer;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import static com.winteralexander.gdx.csg.IntersectorPlus.LineIntersectionResult.COLLINEAR;
 import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.COPLANAR_FACE_FACE;
 import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.NONCOPLANAR_FACE_FACE;
 import static com.winteralexander.gdx.csg.IntersectorPlus.intersectTriangleRay;
@@ -42,7 +44,7 @@ public class CSGMesh {
 	private final ObjectMap<MeshVertex, InsideStatus> vertexStatus = new ObjectMap<>();
 	// list of faces which intersect in a coplanar way
 	private final HashSet<MeshFace> boundaryFaces = new HashSet<>();
-	private final Array<Edge> cutEdges = new Array<>();
+	private final Array<Segment> cutEdges = new Array<>();
 
 	private final SegmentPlus intersectSegment = new SegmentPlus();
 	private final Plane plane = new Plane();
@@ -53,6 +55,7 @@ public class CSGMesh {
 	private final Vector3 tmpV1 = new Vector3(),
 			tmpV2 = new Vector3(),
 			tmpV3 = new Vector3();
+	private final Vector3 tmpSegmentIntersection = new Vector3();
 
 	private final Array<MeshFace> toRemove = new Array<>();
 	private final Array<MeshFace> toAdd = new Array<>();
@@ -94,6 +97,7 @@ public class CSGMesh {
 				TriangleIntersectionResult result = intersectTriangleTriangle(face.getTriangle(),
 						otherFace.getTriangle(), tolerance, intersectSegment);
 				if(result == NONCOPLANAR_FACE_FACE) {
+					cutEdges.add(intersectSegment.cpy());
 					plane.set(otherFace.getPosition1(), otherFace.getNormal());
 					splitFace(i, plane);
 
@@ -110,6 +114,10 @@ public class CSGMesh {
 			}
 		}
 		tmpNewVertices.clear();
+
+		for(int i = 0; i < faces.size; i++) {
+			checkForMergeWithNeighbors(faces.get(i));
+		}
 	}
 
 	private void splitFace(int faceIndex, Plane plane) {
@@ -117,16 +125,112 @@ public class CSGMesh {
 		face.getTriangle().toArray(tmpArray);
 		Intersector.splitTriangle(tmpArray, plane, splitTriangle);
 
-		for(int i = 0; i < splitTriangle.numBack; i++) {
+		for(int i = 0; i < splitTriangle.numBack; i++)
 			processSplitTriangle(face, splitTriangle.back, i * 9);
-		}
 
-		for(int i = 0; i < splitTriangle.numFront; i++) {
+		for(int i = 0; i < splitTriangle.numFront; i++)
 			processSplitTriangle(face, splitTriangle.front, i * 9);
-		}
 		faces.set(faceIndex, toAdd.get(0));
 		faces.addAll(toAdd, 1, toAdd.size - 1);
+
+		for(MeshFace newFace : toAdd)
+			checkForMergeWithNeighbors(newFace);
 		toAdd.clear();
+	}
+
+	private void checkForMergeWithNeighbors(MeshFace face) {
+		faceLoop:
+		for(int i = 0; i < faces.size; i++) {
+			MeshFace current = faces.get(i);
+
+			if(current == face)
+				continue;
+
+			int countMatching = 0;
+			MeshVertex firstMatch = null, secondMatch = null;
+			MeshVertex nonMatchingA = null, nonMatchingB = null;
+
+			if(face.getV1() == current.getV1()
+			|| face.getV1() == current.getV2()
+			|| face.getV1() == current.getV3()) {
+				countMatching++;
+				firstMatch = face.getV1();
+			} else
+				nonMatchingA = face.getV1();
+
+			if(face.getV2() == current.getV1()
+			|| face.getV2() == current.getV2()
+			|| face.getV2() == current.getV3()) {
+				countMatching++;
+				if(firstMatch == null)
+					firstMatch = face.getV2();
+				else
+					secondMatch = face.getV2();
+			} else
+				nonMatchingA = face.getV2();
+
+			if(face.getV3() == current.getV1()
+			|| face.getV3() == current.getV2()
+			|| face.getV3() == current.getV3()) {
+				countMatching++;
+				if(firstMatch == null)
+					firstMatch = face.getV3();
+				else
+					secondMatch = face.getV3();
+			} else
+				nonMatchingA = face.getV3();
+
+			if(countMatching == 3)
+				continue;
+				//throw new IllegalStateException("Duplicate triangles in mesh");
+
+			if(countMatching != 2)
+				continue;
+
+			if(current.getV1() != firstMatch && current.getV1() != secondMatch)
+				nonMatchingB = current.getV1();
+			else if(current.getV2() != firstMatch && current.getV2() != secondMatch)
+				nonMatchingB = current.getV2();
+			else if(current.getV3() != firstMatch && current.getV3() != secondMatch)
+				nonMatchingB = current.getV3();
+
+			boolean collinearWithFirst = IntersectorPlus.intersectSegmentSegment(
+					nonMatchingA.getPosition(), nonMatchingB.getPosition(),
+					nonMatchingA.getPosition(), firstMatch.getPosition(),
+					tolerance, tmpSegmentIntersection) == COLLINEAR;
+
+			boolean collinearWithSecond = IntersectorPlus.intersectSegmentSegment(
+					nonMatchingA.getPosition(), nonMatchingB.getPosition(),
+					nonMatchingA.getPosition(), secondMatch.getPosition(),
+					tolerance, tmpSegmentIntersection) == COLLINEAR;
+
+			if(!collinearWithFirst && !collinearWithSecond)
+				continue;
+
+			if(collinearWithFirst && collinearWithSecond)
+				continue;
+				//throw new IllegalStateException("Invalid 2 faces");
+
+			for(Segment segment : cutEdges)
+				if(IntersectorPlus.intersectSegmentSegment(segment.a, segment.b,
+						firstMatch.getPosition(), secondMatch.getPosition(),
+						tolerance, tmpSegmentIntersection) == COLLINEAR)
+					continue faceLoop;
+
+			if(collinearWithFirst) {
+				face.getVertices()[0] = nonMatchingA;
+				face.getVertices()[1] = secondMatch;
+				face.getVertices()[2] = nonMatchingB;
+			} else {
+				face.getVertices()[0] = nonMatchingA;
+				face.getVertices()[1] = firstMatch;
+				face.getVertices()[2] = nonMatchingB;
+			}
+
+			faces.removeIndex(i);
+			checkForMergeWithNeighbors(face);
+			return;
+		}
 	}
 
 	private void interpolate(MeshVertex out,
