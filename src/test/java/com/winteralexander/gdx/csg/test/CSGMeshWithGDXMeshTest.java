@@ -492,6 +492,53 @@ public class CSGMeshWithGDXMeshTest {
 	}
 
 	@Test
+	public void testCylinder() {
+		ModelBuilder builder = new ModelBuilder();
+		Model cylinder = builder.createCylinder(1f, 0.25f, 1f, 20, new Material(),
+				VertexAttributes.Usage.Position
+						| VertexAttributes.Usage.Normal
+						| VertexAttributes.Usage.TextureCoordinates);
+		Model sphere = builder.createSphere(1.25f, 1.25f, 1.25f, 20, 20, new Material(),
+				VertexAttributes.Usage.Position
+						| VertexAttributes.Usage.Normal
+						| VertexAttributes.Usage.TextureCoordinates);
+		Model cylinder2 = builder.createBox(1f, 0.25f, 1f, new Material(),
+				VertexAttributes.Usage.Position
+						| VertexAttributes.Usage.Normal
+						| VertexAttributes.Usage.TextureCoordinates);
+		Mesh sphereMesh = sphere.meshes.get(0);
+		sphereMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
+				.translate(0f, -0.55f, 0f));
+		cylinder2.meshes.get(0).transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
+				.translate(0f, 0.15f, 0f));
+/*
+		FloatBuffer buffer = sphereMesh.getVerticesBuffer(true);
+		for(int i = 0; i < sphereMesh.getNumVertices(); i++) {
+			buffer.position(i * sphereMesh.getVertexSize() / 4 +
+					sphereMesh.getVertexAttribute(VertexAttributes.Usage.TextureCoordinates).offset / 4);
+
+			buffer.put(1f);
+			buffer.put(1f);
+		}
+
+
+		FloatBuffer buffer2 = cylinder2.meshes.get(0).getVerticesBuffer(true);
+		for(int i = 0; i < cylinder2.meshes.get(0).getNumVertices(); i++) {
+			buffer2.position(i * cylinder2.meshes.get(0).getVertexSize() / 4 +
+					cylinder2.meshes.get(0).getVertexAttribute(VertexAttributes.Usage.TextureCoordinates).offset / 4);
+
+			buffer2.put(1f);
+			buffer2.put(1f);
+		}
+*/
+		CSGUtil.subtraction(sphere, cylinder2.meshes.get(0));
+
+		CSGUtil.subtraction(cylinder, sphere.meshes.get(0));
+
+		ModelViewer.start(cylinder);
+	}
+
+	@Test
 	public void testSingleTriTexture() {
 
 	}
