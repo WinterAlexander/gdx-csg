@@ -11,7 +11,7 @@ import static java.lang.Math.*;
 
 /**
  * Extension of libGDX's {@link com.badlogic.gdx.math.Intersector} that adds support for some extra
- * intersection detection
+ * intersection detection. The functions of this class are not thread safe.
  * <p>
  * Created on 2024-08-04.
  *

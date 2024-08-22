@@ -64,8 +64,7 @@ public class CSGMesh {
 	private final Ray tmpRay = new Ray();
 	private final SegmentPlus tmpSegment = new SegmentPlus();
 
-	public float tolerance = 1e-5f;
-	public boolean enableMerging = true;
+	private CSGConfiguration config = CSGConfiguration.DEFAULT;
 
 	public CSGMesh(Array<MeshVertex> vertices,
 	               Array<MeshFace> faces,
@@ -96,7 +95,7 @@ public class CSGMesh {
 			for(MeshFace otherFace : other.faces) {
 				MeshFace face = faces.get(i);
 				TriangleIntersectionResult result = intersectTriangleTriangle(face.getTriangle(),
-						otherFace.getTriangle(), tolerance, intersectSegment);
+						otherFace.getTriangle(), config.tolerance, intersectSegment);
 				if(result == NONCOPLANAR_FACE_FACE) {
 					cutEdges.add(intersectSegment.cpy());
 					plane.set(otherFace.getPosition1(), otherFace.getNormal());
@@ -141,7 +140,7 @@ public class CSGMesh {
 	}
 
 	private void checkForMergeWithNeighbors(MeshFace face) {
-		if(!enableMerging)
+		if(!config.enableMerging)
 			return;
 
 		faceLoop:
@@ -202,12 +201,12 @@ public class CSGMesh {
 			boolean collinearWithFirst = IntersectorPlus.intersectSegmentSegment(
 					nonMatchingA.getPosition(), nonMatchingB.getPosition(),
 					nonMatchingA.getPosition(), firstMatch.getPosition(),
-					tolerance, tmpSegmentIntersection) == COLLINEAR;
+					config.tolerance, tmpSegmentIntersection) == COLLINEAR;
 
 			boolean collinearWithSecond = IntersectorPlus.intersectSegmentSegment(
 					nonMatchingA.getPosition(), nonMatchingB.getPosition(),
 					nonMatchingA.getPosition(), secondMatch.getPosition(),
-					tolerance, tmpSegmentIntersection) == COLLINEAR;
+					config.tolerance, tmpSegmentIntersection) == COLLINEAR;
 
 			if(!collinearWithFirst && !collinearWithSecond)
 				continue;
@@ -219,7 +218,7 @@ public class CSGMesh {
 			for(Segment segment : cutEdges)
 				if(IntersectorPlus.intersectSegmentSegment(segment.a, segment.b,
 						firstMatch.getPosition(), secondMatch.getPosition(),
-						tolerance, tmpSegmentIntersection) == COLLINEAR) {
+						config.tolerance, tmpSegmentIntersection) == COLLINEAR) {
 					continue faceLoop;
 				}
 
@@ -276,32 +275,33 @@ public class CSGMesh {
 		VectorUtil.setFromArray(tmpV2, array, offset + 3);
 		VectorUtil.setFromArray(tmpV3, array, offset + 6);
 
-		if(tmpV1.epsilonEquals(tmpV2, tolerance)
-		|| tmpV1.epsilonEquals(tmpV3, tolerance)
-		|| tmpV2.epsilonEquals(tmpV3, tolerance))
+		if(tmpV1.epsilonEquals(tmpV2, config.tolerance)
+		|| tmpV1.epsilonEquals(tmpV3, config.tolerance)
+		|| tmpV2.epsilonEquals(tmpV3, config.tolerance))
 			return;
 			//throw new IllegalStateException("Triangle has duplicate points");
 
 		MeshVertex vertex1 = null, vertex2 = null, vertex3 = null;
 
 		for(MeshVertex faceVertex : face.getVertices()) {
-			if(faceVertex.getPosition().epsilonEquals(tmpV1, tolerance))
+			if(faceVertex.getPosition().epsilonEquals(tmpV1,config. tolerance))
 				vertex1 = faceVertex;
-			if(faceVertex.getPosition().epsilonEquals(tmpV2, tolerance))
+			if(faceVertex.getPosition().epsilonEquals(tmpV2, config.tolerance))
 				vertex2 = faceVertex;
-			if(faceVertex.getPosition().epsilonEquals(tmpV3, tolerance))
+			if(faceVertex.getPosition().epsilonEquals(tmpV3, config.tolerance))
 				vertex3 = faceVertex;
 		}
 
 		for(MeshVertex addedVertex : tmpNewVertices.keySet()) {
-			if(!tmpNewVertices.get(addedVertex).getNormal().epsilonEquals(face.getNormal(), tolerance))
+			if(!tmpNewVertices.get(addedVertex).getNormal().epsilonEquals(face.getNormal(),
+					config.tolerance))
 				continue;
 
-			if(addedVertex.getPosition().epsilonEquals(tmpV1, tolerance))
+			if(addedVertex.getPosition().epsilonEquals(tmpV1, config.tolerance))
 				vertex1 = addedVertex;
-			if(addedVertex.getPosition().epsilonEquals(tmpV2, tolerance))
+			if(addedVertex.getPosition().epsilonEquals(tmpV2, config.tolerance))
 				vertex2 = addedVertex;
-			if(addedVertex.getPosition().epsilonEquals(tmpV3, tolerance))
+			if(addedVertex.getPosition().epsilonEquals(tmpV3, config.tolerance))
 				vertex3 = addedVertex;
 		}
 
@@ -356,7 +356,7 @@ public class CSGMesh {
 
 		faceLoop:
 		for(MeshFace face : faces) {
-			if(!intersectTriangleRay(face.getTriangle(), tmpRay, tolerance, tmpSegment))
+			if(!intersectTriangleRay(face.getTriangle(), tmpRay, config.tolerance, tmpSegment))
 				continue;
 
 			float t = tmpRay.direction.dot(tmpSegment.a.x - tmpRay.origin.x,
@@ -364,24 +364,24 @@ public class CSGMesh {
 					tmpSegment.a.z - tmpRay.origin.z);
 			float d = tmpRay.direction.dot(face.getNormal());
 
-			if(Math.abs(d) <= tolerance) {
+			if(Math.abs(d) <= config.tolerance) {
 				float t2 = tmpRay.direction.dot(tmpSegment.b.x - tmpRay.origin.x,
 						tmpSegment.b.y - tmpRay.origin.y,
 						tmpSegment.b.z - tmpRay.origin.z);
 
-				if(Math.min(t, t2) < tolerance && Math.max(t, t2) > -tolerance)
+				if(Math.min(t, t2) < config.tolerance && Math.max(t, t2) > -config.tolerance)
 					return InsideStatus.BOUNDARY;
 
 				continue;
 			}
 
-			if(Math.abs(t) < tolerance)
+			if(Math.abs(t) < config.tolerance)
 				return InsideStatus.BOUNDARY;
 
 			if(t < 0f)
 				continue;
 
-			if (Math.abs(t - minT) < tolerance) {
+			if (Math.abs(t - minT) < config.tolerance) {
 				upFacing = upFacing && d > 0f;
 			} else if(t < minT) {
 				minT = t;
@@ -623,6 +623,14 @@ public class CSGMesh {
 
 	public void clearInsideStatus() {
 		vertexStatus.clear();
+	}
+
+	public CSGConfiguration getConfig() {
+		return config;
+	}
+
+	public void setConfig(CSGConfiguration config) {
+		this.config = config;
 	}
 
 	public enum InsideStatus {
