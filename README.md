@@ -1,5 +1,7 @@
 # gdx-csg
 
+[![](https://jitpack.io/v/WinterAlexander/gdx-csg.svg)](https://jitpack.io/#WinterAlexander/gdx-csg)
+
 Library to perform [Constructive Solid Geometry (CSG)](https://en.wikipedia.org/wiki/Constructive_solid_geometry) operations on meshes that is specialized to work with libGDX.
 
 ## Limitations
