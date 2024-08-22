@@ -65,6 +65,7 @@ public class CSGMesh {
 	private final SegmentPlus tmpSegment = new SegmentPlus();
 
 	public float tolerance = 1e-5f;
+	public boolean enableMerging = true;
 
 	public CSGMesh(Array<MeshVertex> vertices,
 	               Array<MeshFace> faces,
@@ -115,9 +116,10 @@ public class CSGMesh {
 		}
 		tmpNewVertices.clear();
 
-		for(int i = 0; i < faces.size; i++) {
-			checkForMergeWithNeighbors(faces.get(i));
-		}
+		for(int j = 0; j < 10; j++)
+			for(int i = 0; i < faces.size; i++) {
+				checkForMergeWithNeighbors(faces.get(i));
+			}
 	}
 
 	private void splitFace(int faceIndex, Plane plane) {
@@ -133,12 +135,15 @@ public class CSGMesh {
 		faces.set(faceIndex, toAdd.get(0));
 		faces.addAll(toAdd, 1, toAdd.size - 1);
 
-		for(MeshFace newFace : toAdd)
-			checkForMergeWithNeighbors(newFace);
+		//for(MeshFace newFace : toAdd)
+		//	checkForMergeWithNeighbors(newFace);
 		toAdd.clear();
 	}
 
 	private void checkForMergeWithNeighbors(MeshFace face) {
+		if(!enableMerging)
+			return;
+
 		faceLoop:
 		for(int i = 0; i < faces.size; i++) {
 			MeshFace current = faces.get(i);
@@ -214,17 +219,28 @@ public class CSGMesh {
 			for(Segment segment : cutEdges)
 				if(IntersectorPlus.intersectSegmentSegment(segment.a, segment.b,
 						firstMatch.getPosition(), secondMatch.getPosition(),
-						tolerance, tmpSegmentIntersection) == COLLINEAR)
+						tolerance, tmpSegmentIntersection) == COLLINEAR) {
 					continue faceLoop;
+				}
 
 			if(collinearWithFirst) {
 				face.getVertices()[0] = nonMatchingA;
 				face.getVertices()[1] = secondMatch;
 				face.getVertices()[2] = nonMatchingB;
+
+				if(face.getNormal().dot(current.getNormal()) < 0f) {
+					face.getVertices()[1] = nonMatchingB;
+					face.getVertices()[2] = secondMatch;
+				}
 			} else {
 				face.getVertices()[0] = nonMatchingA;
 				face.getVertices()[1] = firstMatch;
 				face.getVertices()[2] = nonMatchingB;
+
+				if(face.getNormal().dot(current.getNormal()) < 0f) {
+					face.getVertices()[1] = nonMatchingB;
+					face.getVertices()[2] = firstMatch;
+				}
 			}
 
 			faces.removeIndex(i);

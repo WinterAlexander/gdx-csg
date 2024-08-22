@@ -170,7 +170,6 @@ public class CSGMeshWithGDXMeshTest {
 		ModelViewer.start(box);
 	}
 
-
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testCubePrismSubtraction() {
@@ -195,6 +194,8 @@ public class CSGMeshWithGDXMeshTest {
 
 		csg.classifyFaces(copy2);
 		otherCsg.classifyFaces(copy1);
+
+		//CSGMeshViewer.start(csg, otherCsg);
 
 		csg.removeFaces(true, true);
 		otherCsg.removeFaces(false, true);

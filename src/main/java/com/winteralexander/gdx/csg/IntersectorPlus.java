@@ -151,8 +151,8 @@ public class IntersectorPlus {
 			return NONE;
 
 		if(result == COLLINEAR) {
-			float t1 = tmpSegmentDir1.dot(secondStart);
-			float t2 = tmpSegmentDir1.dot(secondEnd);
+			float t1 = tmpSegmentDir1.dot(secondStart.x - firstStart.x, secondStart.y - firstStart.y, secondStart.z - firstStart.z);
+			float t2 = tmpSegmentDir1.dot(secondEnd.x - firstStart.x, secondEnd.y - firstStart.y, secondEnd.z - firstStart.z);
 
 			float tMin = min(t1, t2);
 			float tMax = max(t1, t2);
