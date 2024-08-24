@@ -43,11 +43,6 @@ import static com.badlogic.gdx.graphics.VertexAttributes.Usage.*;
 public class ModelViewer implements ApplicationListener {
 	private static final Queue<Consumer<ShapeRenderer>> __debugOnlyRenderables = new Queue<>();
 
-	private final static int DEFAULT_ATTRIBUTES = VertexAttributes.Usage.Position
-			| VertexAttributes.Usage.Normal
-			| VertexAttributes.Usage.Tangent
-			| TextureCoordinates;
-
 	private ModelBatch modelBatch;
 	private Viewport viewport;
 
@@ -243,86 +238,6 @@ public class ModelViewer implements ApplicationListener {
 	@Override
 	public void dispose() {
 
-	}
-
-	public static void main(String[] args) {
-		new LwjglApplication(new ModelViewer() {
-			@Override
-			public void create() {
-
-				ModelBuilder builder = new ModelBuilder();
-				Model model1 = generateSixFacedCube(builder);
-
-				Model model2 = generateSixFacedCube(builder);
-				model2.meshes.get(0).transform(
-						new Matrix4()
-								.setToRotation(new Vector3(0f, 1f, 0f), 45f)
-								.translate(0f, 0.8f, 0f));
-				ModelViewer viewer = this;
-				viewer.models.add(model1, model2);
-				super.create();
-			}
-		});
-	}
-
-	private static Model generateSixFacedCube(ModelBuilder builder) {
-		float s = 0.5f;
-		builder.begin();
-		builder.part("front",
-				GL20.GL_TRIANGLES,
-				DEFAULT_ATTRIBUTES,
-				new Material()).rect(
-				s, -s, -s,
-				-s, -s, -s,
-				-s, s, -s,
-				s, s, -s,
-				0f, 0f, -1f);
-		builder.part("back",
-				GL20.GL_TRIANGLES,
-				DEFAULT_ATTRIBUTES,
-				new Material()).rect(
-				-s, -s, s,
-				s, -s, s,
-				s, s, s,
-				-s, s, s,
-				0f, 0f, 1f);
-		builder.part("bottom",
-				GL20.GL_TRIANGLES,
-				DEFAULT_ATTRIBUTES,
-				new Material()).rect(
-				-s, -s, s,
-				-s, -s, -s,
-				s, -s, -s,
-				s, -s, s,
-				0f, -1f, 0f);
-		builder.part("top",
-				GL20.GL_TRIANGLES,
-				DEFAULT_ATTRIBUTES,
-				new Material()).rect(
-				-s, s, -s,
-				-s, s, s,
-				s, s, s,
-				s, s, -s,
-				0f, 1f, 0f);
-		builder.part("left",
-				GL20.GL_TRIANGLES,
-				DEFAULT_ATTRIBUTES,
-				new Material()).rect(
-				-s, -s, -s,
-				-s, -s, s,
-				-s, s, s,
-				-s, s, -s,
-				-1f, 0f, 0f);
-		builder.part("right",
-				GL20.GL_TRIANGLES,
-				DEFAULT_ATTRIBUTES,
-				new Material()).rect(
-				s, -s, s,
-				s, -s, -s,
-				s, s, -s,
-				s, s, s,
-				1f, 0f, 0f);
-		return builder.end();
 	}
 
 	public static void start(Model... models) {

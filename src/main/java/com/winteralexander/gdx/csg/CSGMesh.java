@@ -20,7 +20,9 @@ import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.UUID;
 
+import static com.badlogic.gdx.graphics.GL20.GL_TRIANGLES;
 import static com.winteralexander.gdx.csg.IntersectorPlus.LineIntersectionResult.COLLINEAR;
 import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.COPLANAR_FACE_FACE;
 import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.NONCOPLANAR_FACE_FACE;
@@ -487,6 +489,84 @@ public class CSGMesh {
 					verts.get(vertexIndices.get(f.getV3(), -1))));
 
 		return new CSGMesh(verts, faces, attributes);
+	}
+
+	public MeshPart toMeshPart(Mesh mesh) {
+		FloatBuffer buffer = mesh.getVerticesBuffer(true);
+		ShortBuffer idxBuffer = mesh.getIndicesBuffer(true);
+
+		int vertexSize = mesh.getVertexSize() / 4;
+
+		int posOffset = mesh.getVertexAttribute(VertexAttributes.Usage.Position).offset / 4;
+		VertexAttribute norAttr = mesh.getVertexAttribute(VertexAttributes.Usage.Normal);
+		VertexAttribute tanAttr = mesh.getVertexAttribute(VertexAttributes.Usage.Tangent);
+		int norOffset = norAttr == null ? -1 : norAttr.offset / 4;
+		int tanOffset = tanAttr == null ? -1 : tanAttr.offset / 4;
+
+		buffer.limit((mesh.getNumVertices() + vertices.size) * vertexSize);
+		idxBuffer.limit(mesh.getNumIndices() + faces.size * 3);
+
+		int vOffset = mesh.getNumVertices() * vertexSize;
+
+		vertexIndices.clear();
+		for(int i = 0; i < vertices.size; i++) {
+			MeshVertex vertex = vertices.get(i);
+			buffer.position(vOffset + i * vertexSize + posOffset);
+			buffer.put(vertex.getPosition().x);
+			buffer.put(vertex.getPosition().y);
+			buffer.put(vertex.getPosition().z);
+			if(norOffset != -1) {
+				buffer.position(vOffset + i * vertexSize + norOffset);
+				buffer.put(vertex.getNormal().x);
+				buffer.put(vertex.getNormal().y);
+				buffer.put(vertex.getNormal().z);
+			}
+
+			if(tanOffset != -1) {
+				buffer.position(vOffset + i * vertexSize + tanOffset);
+				buffer.put(vertex.getTangent().x);
+				buffer.put(vertex.getTangent().y);
+				buffer.put(vertex.getTangent().z);
+			}
+
+			int j = 0;
+			for(VertexAttribute attr : attributes) {
+				if(attr.usage == VertexAttributes.Usage.Position
+						|| attr.usage == VertexAttributes.Usage.Normal
+						|| attr.usage == VertexAttributes.Usage.Tangent)
+					continue;
+
+				buffer.position(vOffset + i * vertexSize + attr.offset / 4);
+				for(int k = 0; k < attr.getSizeInBytes() / 4; k++)
+					buffer.put(vertex.getOtherAttributes()[j++]);
+			}
+
+			vertexIndices.put(vertex, i);
+		}
+
+		int fOffset = mesh.getNumIndices();
+
+		for(int i = 0; i < faces.size; i++) {
+			MeshFace face = faces.get(i);
+			idxBuffer.position(fOffset + i * 3);
+
+			int idx1 = vertexIndices.get(face.getV1(), -1);
+			int idx2 = vertexIndices.get(face.getV2(), -1);
+			int idx3 = vertexIndices.get(face.getV3(), -1);
+
+			if(idx1 == -1 || idx2 == -1 || idx3 == -1)
+				throw new IllegalStateException("CSGMesh has a face refering to a vertex not in " +
+						"the mesh. Face #" + i + " has vertices " +
+						"#" + idx1 + ", #" + idx2 + " and #" + idx3);
+
+			idxBuffer.put((short)idx1);
+			idxBuffer.put((short)idx2);
+			idxBuffer.put((short)idx3);
+		}
+		vertexIndices.clear();
+
+		return new MeshPart("id" + UUID.randomUUID(),
+				mesh, mesh.getNumIndices() / 3, faces.size, GL_TRIANGLES);
 	}
 
 	public Mesh toMesh() {

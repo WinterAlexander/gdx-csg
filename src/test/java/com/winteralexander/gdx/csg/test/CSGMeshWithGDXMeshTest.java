@@ -5,6 +5,7 @@ import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl.LwjglGraphics;
 import com.badlogic.gdx.backends.lwjgl.LwjglNativesLoader;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Material;
@@ -26,6 +27,7 @@ import java.lang.reflect.Method;
 import java.nio.FloatBuffer;
 
 import static com.badlogic.gdx.graphics.GL20.GL_TRIANGLES;
+import static com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates;
 import static org.junit.Assert.assertNotSame;
 
 /**
@@ -39,6 +41,12 @@ import static org.junit.Assert.assertNotSame;
  */
 @Ignore
 public class CSGMeshWithGDXMeshTest {
+
+	private final static int DEFAULT_ATTRIBUTES = VertexAttributes.Usage.Position
+			| VertexAttributes.Usage.Normal
+			| VertexAttributes.Usage.Tangent
+			| TextureCoordinates;
+
 	@BeforeClass
 	public static void initGL() throws Exception {
 		LwjglNativesLoader.load();
@@ -55,6 +63,77 @@ public class CSGMeshWithGDXMeshTest {
 		Method method = gfx.getDeclaredMethod("setupDisplay");
 		method.setAccessible(true);
 		method.invoke(Gdx.graphics);
+	}
+
+	private static Model generateSixFacedCube(ModelBuilder builder) {
+		float s = 0.5f;
+		builder.begin();
+		builder.part("front",
+				GL20.GL_TRIANGLES,
+				DEFAULT_ATTRIBUTES,
+				new Material()).rect(
+				s, -s, -s,
+				-s, -s, -s,
+				-s, s, -s,
+				s, s, -s,
+				0f, 0f, -1f);
+		builder.part("back",
+				GL20.GL_TRIANGLES,
+				DEFAULT_ATTRIBUTES,
+				new Material()).rect(
+				-s, -s, s,
+				s, -s, s,
+				s, s, s,
+				-s, s, s,
+				0f, 0f, 1f);
+		builder.part("bottom",
+				GL20.GL_TRIANGLES,
+				DEFAULT_ATTRIBUTES,
+				new Material()).rect(
+				-s, -s, s,
+				-s, -s, -s,
+				s, -s, -s,
+				s, -s, s,
+				0f, -1f, 0f);
+		builder.part("top",
+				GL20.GL_TRIANGLES,
+				DEFAULT_ATTRIBUTES,
+				new Material()).rect(
+				-s, s, -s,
+				-s, s, s,
+				s, s, s,
+				s, s, -s,
+				0f, 1f, 0f);
+		builder.part("left",
+				GL20.GL_TRIANGLES,
+				DEFAULT_ATTRIBUTES,
+				new Material()).rect(
+				-s, -s, -s,
+				-s, -s, s,
+				-s, s, s,
+				-s, s, -s,
+				-1f, 0f, 0f);
+		builder.part("right",
+				GL20.GL_TRIANGLES,
+				DEFAULT_ATTRIBUTES,
+				new Material()).rect(
+				s, -s, s,
+				s, -s, -s,
+				s, s, -s,
+				s, s, s,
+				1f, 0f, 0f);
+		return builder.end();
+	}
+
+	private static void assertNoDupVertex(CSGMesh csg) {
+		for(int i = 0; i < csg.getVertices().size; i++) {
+			for(int j = i + 1; j < csg.getVertices().size; j++) {
+				if(i == j)
+					continue;
+
+				assertNotSame(csg.getVertices().get(i), csg.getVertices().get(j));
+			}
+		}
 	}
 
 	@Test
@@ -100,17 +179,6 @@ public class CSGMeshWithGDXMeshTest {
 
 		assertNoDupVertex(csg);
 		assertNoDupVertex(otherCsg);
-	}
-
-	private static void assertNoDupVertex(CSGMesh csg) {
-		for(int i = 0; i < csg.getVertices().size; i++) {
-			for(int j = i + 1; j < csg.getVertices().size; j++) {
-				if(i == j)
-					continue;
-
-				assertNotSame(csg.getVertices().get(i), csg.getVertices().get(j));
-			}
-		}
 	}
 
 	@Test
