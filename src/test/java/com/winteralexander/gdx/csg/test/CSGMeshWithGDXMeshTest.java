@@ -10,9 +10,11 @@ import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Array;
 import com.winteralexander.gdx.csg.CSGMesh;
 import com.winteralexander.gdx.csg.CSGUtil;
 import com.winteralexander.gdx.csg.test.debugviewer.CSGMeshViewer;
@@ -608,7 +610,14 @@ public class CSGMeshWithGDXMeshTest {
 	}
 
 	@Test
-	public void testSingleTriTexture() {
+	public void testMeshPart() {
+		ModelBuilder builder = new ModelBuilder();
+		Model box = generateSixFacedCube(builder);
+
+		Array<CSGMesh> csgMeshes = new Array<>();
+		for(MeshPart meshPart : box.meshParts)
+			csgMeshes.add(CSGMesh.fromMeshPart(meshPart));
+
 
 	}
 }
