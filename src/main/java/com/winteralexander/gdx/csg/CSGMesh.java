@@ -873,14 +873,4 @@ public class CSGMesh implements Serializable {
 	public enum InsideStatus {
 		INSIDE, BOUNDARY, OUTSIDE
 	}
-
-	private static class FaceIntersection {
-		public final boolean upFacing;
-		public final float t;
-
-		public FaceIntersection(boolean upFacing, float t) {
-			this.upFacing = upFacing;
-			this.t = t;
-		}
-	}
 }
