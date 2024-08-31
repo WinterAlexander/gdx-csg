@@ -11,8 +11,12 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectIntMap;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult;
+import com.winteralexander.gdx.utils.io.Serializable;
 import com.winteralexander.gdx.utils.math.VectorUtil;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 import java.util.HashMap;
@@ -23,6 +27,9 @@ import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionRe
 import static com.winteralexander.gdx.csg.IntersectorPlus.intersectTriangleRay;
 import static com.winteralexander.gdx.csg.IntersectorPlus.intersectTriangleTriangle;
 import static com.winteralexander.gdx.utils.Validation.ensureNotNull;
+import static com.winteralexander.gdx.utils.io.SerializationUtil.readVec3;
+import static com.winteralexander.gdx.utils.io.SerializationUtil.writeVec3;
+import static com.winteralexander.gdx.utils.io.StreamUtil.*;
 
 /**
  * A mesh for CSG operation. A {@link CSGMesh} can be built from a {@link Mesh} and then can
@@ -32,11 +39,11 @@ import static com.winteralexander.gdx.utils.Validation.ensureNotNull;
  *
  * @author Alexander Winter
  */
-public class CSGMesh {
+public class CSGMesh implements Serializable {
 	private final Array<MeshVertex> vertices;
 	private final Array<MeshFace> faces;
 
-	private final VertexAttributes attributes;
+	private VertexAttributes attributes;
 
 	private final ObjectIntMap<MeshVertex> vertexIndices = new ObjectIntMap<>();
 	private final ObjectMap<MeshVertex, InsideStatus> vertexStatus = new ObjectMap<>();
@@ -61,6 +68,10 @@ public class CSGMesh {
 	private final SegmentPlus tmpSegment = new SegmentPlus();
 
 	public float tolerance = 1e-5f;
+
+	public CSGMesh() {
+		this(new Array<>(), new Array<>(), new VertexAttributes());
+	}
 
 	public CSGMesh(Array<MeshVertex> vertices,
 	               Array<MeshFace> faces,
@@ -332,6 +343,80 @@ public class CSGMesh {
 
 		for(MeshVertex vertex : vertices)
 			vertex.getNormal().scl(-1f);
+	}
+
+	@Override
+	public void readFrom(InputStream stream) throws IOException {
+		vertices.clear();
+		faces.clear();
+
+		int attrCount = readUnsignedByte(stream);
+		VertexAttribute[] attrs = new VertexAttribute[attrCount];
+		for(int i = 0; i < attrCount; i++) {
+			attrs[i] = new VertexAttribute(readInt(stream),
+					readInt(stream),
+					readInt(stream),
+					readBoolean(stream),
+					readUTF(stream),
+					readInt(stream));
+		}
+
+		attributes = new VertexAttributes(attrs);
+
+		int vertexCount = readInt(stream);
+		int vertexAttribsSize = readUnsignedByte(stream);
+
+		for(int i = 0; i < vertexCount; i++) {
+			MeshVertex meshVertex = new MeshVertex(vertexAttribsSize);
+			readVec3(stream, meshVertex.getPosition());
+			readVec3(stream, meshVertex.getNormal());
+			readVec3(stream, meshVertex.getTangent());
+			for(int j = 0; j < vertexAttribsSize; j++) {
+				meshVertex.getOtherAttributes()[j] = readFloat(stream);
+			}
+		}
+
+		int faceCount = readInt(stream);
+		for(int i = 0; i < faceCount; i++) {
+			faces.add(new MeshFace(vertices.get(readShort(stream)),
+					vertices.get(readShort(stream)),
+					vertices.get(readShort(stream))));
+		}
+	}
+
+	@Override
+	public void writeTo(OutputStream stream) throws IOException {
+		writeByte(stream, attributes.size());
+		for(VertexAttribute attribute : attributes) {
+			writeInt(stream, attribute.usage);
+			writeInt(stream, attribute.numComponents);
+			writeInt(stream, attribute.type);
+			writeBoolean(stream, attribute.normalized);
+			writeUTF(stream, attribute.alias);
+			writeInt(stream, attribute.unit);
+		}
+
+		writeInt(stream, vertices.size);
+		writeByte(stream, vertices.get(0).getOtherAttributes().length);
+		vertexIndices.clear();
+		int i = 0;
+		for(MeshVertex vertex : vertices) {
+			writeVec3(stream, vertex.getPosition());
+			writeVec3(stream, vertex.getNormal());
+			writeVec3(stream, vertex.getTangent());
+			for(float f : vertex.getOtherAttributes())
+				writeFloat(stream, f);
+			vertexIndices.put(vertex, i);
+			i++;
+		}
+
+		writeInt(stream, faces.size);
+		for(MeshFace face : faces) {
+			writeShort(stream, vertexIndices.get(face.getV1(), -1));
+			writeShort(stream, vertexIndices.get(face.getV2(), -1));
+			writeShort(stream, vertexIndices.get(face.getV3(), -1));
+		}
+		vertexIndices.clear();
 	}
 
 	public InsideStatus getInsideStatus(MeshVertex vertex) {
