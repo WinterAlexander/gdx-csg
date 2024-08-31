@@ -33,4 +33,8 @@ public class SegmentPlus extends Segment {
 	public String toString() {
 		return a + " -> " + b;
 	}
+
+	public SegmentPlus cpy() {
+		return new SegmentPlus(a, b);
+	}
 }

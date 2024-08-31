@@ -52,6 +52,7 @@ public class TriangleViewer implements ApplicationListener {
 
 	private final Array<Triangle> triangles = new Array<>();
 	private final Array<Ray> rays = new Array<>();
+	private final Array<Segment> segments = new Array<>();
 
 	private final Plane tmpPlane = new Plane();
 	private final Vector3 tmpStart = new Vector3();
@@ -68,9 +69,10 @@ public class TriangleViewer implements ApplicationListener {
 		this.triangles.addAll(triangles);
 	}
 
-	public TriangleViewer(Triangle[] triangles, Ray[] rays) {
+	public TriangleViewer(Triangle[] triangles, Ray[] rays, Segment[] segments) {
 		this.triangles.addAll(triangles);
 		this.rays.addAll(rays);
+		this.segments.addAll(segments);
 	}
 
 	@Override
@@ -115,8 +117,14 @@ public class TriangleViewer implements ApplicationListener {
 				r.line(tmpStart, tmpEnd);
 			}
 
+			r.setColor(Color.GRAY);
+			for(Segment segment : segments) {
+				r.line(segment.a, segment.b);
+			}
+
 			r.setColor(Color.BLUE);
 			r.line(intersectionSegment.a, intersectionSegment.b);
+
 		});
 		InputUtil.registerInput(new InputAdapter() {
 			@Override
@@ -253,7 +261,12 @@ public class TriangleViewer implements ApplicationListener {
 				1f, 1f, 0f)));
 	}
 
+
 	public static void start(Triangle[] triangles, Ray[] rays) {
+		start(triangles, rays, new Segment[0]);
+	}
+
+	public static void start(Triangle[] triangles, Ray[] rays, Segment[] segments) {
 		if(Gdx.gl != null) {
 			Display.destroy();
 			Gdx.gl = null;
@@ -265,7 +278,7 @@ public class TriangleViewer implements ApplicationListener {
 		}
 
 		try {
-			new LwjglApplication(new TriangleViewer(triangles, rays),
+			new LwjglApplication(new TriangleViewer(triangles, rays, segments),
 					new LwjglApplicationConfiguration() {{
 						width = 1600;
 						height = 900;

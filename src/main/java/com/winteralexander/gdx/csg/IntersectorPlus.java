@@ -11,7 +11,7 @@ import static java.lang.Math.*;
 
 /**
  * Extension of libGDX's {@link com.badlogic.gdx.math.Intersector} that adds support for some extra
- * intersection detection
+ * intersection detection. The functions of this class are not thread safe.
  * <p>
  * Created on 2024-08-04.
  *
@@ -151,8 +151,8 @@ public class IntersectorPlus {
 			return NONE;
 
 		if(result == COLLINEAR) {
-			float t1 = tmpSegmentDir1.dot(secondStart);
-			float t2 = tmpSegmentDir1.dot(secondEnd);
+			float t1 = tmpSegmentDir1.dot(secondStart.x - firstStart.x, secondStart.y - firstStart.y, secondStart.z - firstStart.z);
+			float t2 = tmpSegmentDir1.dot(secondEnd.x - firstStart.x, secondEnd.y - firstStart.y, secondEnd.z - firstStart.z);
 
 			float tMin = min(t1, t2);
 			float tMax = max(t1, t2);

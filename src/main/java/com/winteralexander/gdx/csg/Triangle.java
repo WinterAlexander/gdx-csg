@@ -121,19 +121,10 @@ public class Triangle {
 		float x = dir1.dot(point.x - p1.x, point.y - p1.y, point.z - p1.z) / len2;
 		float y = dir2.dot(point.x - p1.x, point.y - p1.y, point.z - p1.z) / height2;
 
-		float xA = 0f;
-		float yA = 0f;
-
-		float xB = 1f;
-		float yB = 0f;
-
 		float xC = dir1.dot(p3.x - p1.x, p3.y - p1.y, p3.z - p1.z) / len2;
-		float yC = 1f;
 
-		tmpBarycentric.x = (-(x - xB) * (yC - yB) + (y - yB) * (xC - xB))
-				/ (-(xA - xB) * (yC - yB) + (yA - yB) * (xC - xB));
-		tmpBarycentric.y = (-(x - xC) * (yA - yC) + (y - yC) * (xA - xC))
-				/ (-(xB - xC) * (yA - yC) + (yB - yC) * (xA - xC));
+		tmpBarycentric.x = (1f - x) + y * (xC - 1f);
+		tmpBarycentric.y = (x - xC) + xC * (1f - y);
 		tmpBarycentric.z = 1f - tmpBarycentric.x - tmpBarycentric.y;
 
 		return tmpBarycentric;

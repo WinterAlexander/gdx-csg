@@ -5,13 +5,16 @@ import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl.LwjglGraphics;
 import com.badlogic.gdx.backends.lwjgl.LwjglNativesLoader;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Array;
 import com.winteralexander.gdx.csg.CSGMesh;
 import com.winteralexander.gdx.csg.CSGUtil;
 import com.winteralexander.gdx.csg.test.debugviewer.CSGMeshViewer;
@@ -26,6 +29,7 @@ import java.lang.reflect.Method;
 import java.nio.FloatBuffer;
 
 import static com.badlogic.gdx.graphics.GL20.GL_TRIANGLES;
+import static com.badlogic.gdx.graphics.VertexAttributes.Usage.TextureCoordinates;
 import static org.junit.Assert.assertNotSame;
 
 /**
@@ -39,6 +43,12 @@ import static org.junit.Assert.assertNotSame;
  */
 @Ignore
 public class CSGMeshWithGDXMeshTest {
+
+	private final static int DEFAULT_ATTRIBUTES = VertexAttributes.Usage.Position
+			| VertexAttributes.Usage.Normal
+			| VertexAttributes.Usage.Tangent
+			| TextureCoordinates;
+
 	@BeforeClass
 	public static void initGL() throws Exception {
 		LwjglNativesLoader.load();
@@ -55,6 +65,77 @@ public class CSGMeshWithGDXMeshTest {
 		Method method = gfx.getDeclaredMethod("setupDisplay");
 		method.setAccessible(true);
 		method.invoke(Gdx.graphics);
+	}
+
+	private static Model generateSixFacedCube(ModelBuilder builder) {
+		float s = 0.5f;
+		builder.begin();
+		builder.part("front",
+				GL20.GL_TRIANGLES,
+				DEFAULT_ATTRIBUTES,
+				new Material()).rect(
+				s, -s, -s,
+				-s, -s, -s,
+				-s, s, -s,
+				s, s, -s,
+				0f, 0f, -1f);
+		builder.part("back",
+				GL20.GL_TRIANGLES,
+				DEFAULT_ATTRIBUTES,
+				new Material()).rect(
+				-s, -s, s,
+				s, -s, s,
+				s, s, s,
+				-s, s, s,
+				0f, 0f, 1f);
+		builder.part("bottom",
+				GL20.GL_TRIANGLES,
+				DEFAULT_ATTRIBUTES,
+				new Material()).rect(
+				-s, -s, s,
+				-s, -s, -s,
+				s, -s, -s,
+				s, -s, s,
+				0f, -1f, 0f);
+		builder.part("top",
+				GL20.GL_TRIANGLES,
+				DEFAULT_ATTRIBUTES,
+				new Material()).rect(
+				-s, s, -s,
+				-s, s, s,
+				s, s, s,
+				s, s, -s,
+				0f, 1f, 0f);
+		builder.part("left",
+				GL20.GL_TRIANGLES,
+				DEFAULT_ATTRIBUTES,
+				new Material()).rect(
+				-s, -s, -s,
+				-s, -s, s,
+				-s, s, s,
+				-s, s, -s,
+				-1f, 0f, 0f);
+		builder.part("right",
+				GL20.GL_TRIANGLES,
+				DEFAULT_ATTRIBUTES,
+				new Material()).rect(
+				s, -s, s,
+				s, -s, -s,
+				s, s, -s,
+				s, s, s,
+				1f, 0f, 0f);
+		return builder.end();
+	}
+
+	private static void assertNoDupVertex(CSGMesh csg) {
+		for(int i = 0; i < csg.getVertices().size; i++) {
+			for(int j = i + 1; j < csg.getVertices().size; j++) {
+				if(i == j)
+					continue;
+
+				assertNotSame(csg.getVertices().get(i), csg.getVertices().get(j));
+			}
+		}
 	}
 
 	@Test
@@ -100,17 +181,6 @@ public class CSGMeshWithGDXMeshTest {
 
 		assertNoDupVertex(csg);
 		assertNoDupVertex(otherCsg);
-	}
-
-	private static void assertNoDupVertex(CSGMesh csg) {
-		for(int i = 0; i < csg.getVertices().size; i++) {
-			for(int j = i + 1; j < csg.getVertices().size; j++) {
-				if(i == j)
-					continue;
-
-				assertNotSame(csg.getVertices().get(i), csg.getVertices().get(j));
-			}
-		}
 	}
 
 	@Test
@@ -170,7 +240,6 @@ public class CSGMeshWithGDXMeshTest {
 		ModelViewer.start(box);
 	}
 
-
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testCubePrismSubtraction() {
@@ -195,6 +264,8 @@ public class CSGMeshWithGDXMeshTest {
 
 		csg.classifyFaces(copy2);
 		otherCsg.classifyFaces(copy1);
+
+		//CSGMeshViewer.start(csg, otherCsg);
 
 		csg.removeFaces(true, true);
 		otherCsg.removeFaces(false, true);
@@ -492,7 +563,61 @@ public class CSGMeshWithGDXMeshTest {
 	}
 
 	@Test
-	public void testSingleTriTexture() {
+	public void testCylinder() {
+		ModelBuilder builder = new ModelBuilder();
+		Model cylinder = builder.createCylinder(1f, 0.25f, 1f, 20, new Material(),
+				VertexAttributes.Usage.Position
+						| VertexAttributes.Usage.Normal
+						| VertexAttributes.Usage.TextureCoordinates);
+		Model sphere = builder.createSphere(1.25f, 1.25f, 1.25f, 20, 20, new Material(),
+				VertexAttributes.Usage.Position
+						| VertexAttributes.Usage.Normal
+						| VertexAttributes.Usage.TextureCoordinates);
+		Model cylinder2 = builder.createBox(1f, 0.25f, 1f, new Material(),
+				VertexAttributes.Usage.Position
+						| VertexAttributes.Usage.Normal
+						| VertexAttributes.Usage.TextureCoordinates);
+		Mesh sphereMesh = sphere.meshes.get(0);
+		sphereMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
+				.translate(0f, -0.55f, 0f));
+		cylinder2.meshes.get(0).transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
+				.translate(0f, 0.15f, 0f));
+/*
+		FloatBuffer buffer = sphereMesh.getVerticesBuffer(true);
+		for(int i = 0; i < sphereMesh.getNumVertices(); i++) {
+			buffer.position(i * sphereMesh.getVertexSize() / 4 +
+					sphereMesh.getVertexAttribute(VertexAttributes.Usage.TextureCoordinates).offset / 4);
+
+			buffer.put(1f);
+			buffer.put(1f);
+		}
+
+
+		FloatBuffer buffer2 = cylinder2.meshes.get(0).getVerticesBuffer(true);
+		for(int i = 0; i < cylinder2.meshes.get(0).getNumVertices(); i++) {
+			buffer2.position(i * cylinder2.meshes.get(0).getVertexSize() / 4 +
+					cylinder2.meshes.get(0).getVertexAttribute(VertexAttributes.Usage.TextureCoordinates).offset / 4);
+
+			buffer2.put(1f);
+			buffer2.put(1f);
+		}
+*/
+		CSGUtil.subtraction(sphere, cylinder2.meshes.get(0));
+
+		CSGUtil.subtraction(cylinder, sphere.meshes.get(0));
+
+		ModelViewer.start(cylinder);
+	}
+
+	@Test
+	public void testMeshPart() {
+		ModelBuilder builder = new ModelBuilder();
+		Model box = generateSixFacedCube(builder);
+
+		Array<CSGMesh> csgMeshes = new Array<>();
+		for(MeshPart meshPart : box.meshParts)
+			csgMeshes.add(CSGMesh.fromMeshPart(meshPart));
+
 
 	}
 }

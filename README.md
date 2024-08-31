@@ -1,8 +1,14 @@
 # gdx-csg
 
-## Currently WIP, when ready 1.0.0 will release and will be available through jitpack.io
+[![](https://jitpack.io/v/WinterAlexander/gdx-csg.svg)](https://jitpack.io/#WinterAlexander/gdx-csg)
 
 Library to perform [Constructive Solid Geometry (CSG)](https://en.wikipedia.org/wiki/Constructive_solid_geometry) operations on meshes that is specialized to work with libGDX.
+
+## Limitations
+
+  - CSG operations produce 1 mesh, thus if texture coordinates are used all meshes in the CSG operations must share the same texture
+  - Does not support multiple mesh parts per meshes
+  - It often fails due to floating point inaccuracy. Current state of the library is not totally reliable.
 
 ## Screenshots
 

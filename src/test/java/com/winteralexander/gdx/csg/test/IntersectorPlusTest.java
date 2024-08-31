@@ -12,6 +12,7 @@ import java.util.Random;
 
 import static com.winteralexander.gdx.csg.IntersectorPlus.*;
 import static com.winteralexander.gdx.csg.IntersectorPlus.LineIntersectionResult.COLLINEAR;
+import static com.winteralexander.gdx.csg.IntersectorPlus.LineIntersectionResult.NONE;
 import static com.winteralexander.gdx.csg.IntersectorPlus.LineIntersectionResult.POINT;
 import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.*;
 import static org.junit.Assert.*;
@@ -46,7 +47,7 @@ public class IntersectorPlusTest {
 		ray2.direction.set(-9f, 10f, 55f).nor();
 
 		LineIntersectionResult result = intersectRayRay(ray1, ray2, 1e-5f, intersection);
-		assertEquals(LineIntersectionResult.NONE, result);
+		assertEquals(NONE, result);
 	}
 
 	@Test
@@ -160,7 +161,7 @@ public class IntersectorPlusTest {
 		segment2.a.set(0f, 5f, 0f);
 		segment2.b.set(5f, 0f, 0f);
 
-		assertEquals(LineIntersectionResult.NONE, intersectSegmentSegment(segment1,
+		assertEquals(NONE, intersectSegmentSegment(segment1,
 				segment2, 1e-5f, intersection));
 
 		segment1.a.set(0f, 0f, 0f);
@@ -178,8 +179,16 @@ public class IntersectorPlusTest {
 		segment2.a.set(5f, 5f, 0f);
 		segment2.b.set(6f, 6f, 0f);
 
-		assertEquals(LineIntersectionResult.NONE, intersectSegmentSegment(segment1,
+		assertEquals(NONE, intersectSegmentSegment(segment1,
 				segment2, 1e-5f, intersection));
+
+		segment1.a.set(-0.5f, 0.45f, -0.4f);
+		segment1.b.set(-0.5f, 0.45f, -0.35499996f);
+
+		segment2.a.set(-0.5f, 0.45f, -0.35499996f);
+		segment2.b.set(-0.5f, 0.45f, -0.4f);
+
+		assertEquals(COLLINEAR, intersectSegmentSegment(segment1, segment2, 1e-5f, intersection));
 	}
 
 	@Test
@@ -297,14 +306,14 @@ public class IntersectorPlusTest {
 		tri1.set(0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
 		tri2.set(0.49824142f, 0.0f, 0.0f, 0.14803512f, 1.0f, 0.0f, 0.14803512f, 0.0f, 1.0f);
 
-		assertEquals(NONE, intersectTriangleTriangle(tri1, tri2, 1e-5f, segment));
+		assertEquals(TriangleIntersectionResult.NONE, intersectTriangleTriangle(tri1, tri2, 1e-5f, segment));
 
 		tri1.set(0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
 		tri2.set(0.15553457f, 0.0f, 0.1826436f,
 				1.0338287f, 1.0f, 0.1826436f,
 				1.0338287f, 0.0f, 1.1826437f);
 
-		assertEquals(NONE, intersectTriangleTriangle(tri1, tri2, 1e-5f, segment));
+		assertEquals(TriangleIntersectionResult.NONE, intersectTriangleTriangle(tri1, tri2, 1e-5f, segment));
 
 		expected.a.set(0.0f, 0.100607894f, 0.77444464f);
 		expected.b.set(0.0f, 0.45588672f, 0.4191658f);
@@ -320,7 +329,7 @@ public class IntersectorPlusTest {
 		tri2.set(-4.5360066E-4f, 1.5718032f, 0.0f,
 				0.9995464f, 0.571803f, 0.0f,
 				0.9995464f, 1.5718032f, 0.0f);
-		assertEquals(NONE, intersectTriangleTriangle(tri1, tri2, 1e-5f, segment));
+		assertEquals(TriangleIntersectionResult.NONE, intersectTriangleTriangle(tri1, tri2, 1e-5f, segment));
 
 		tri1.set(0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
 		tri2.set(-0.14996159f, 0.83515376f, 0.14882556f,
