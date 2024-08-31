@@ -78,7 +78,9 @@ public class CSGMesh implements Serializable {
 	private CSGConfiguration config = CSGConfiguration.DEFAULT;
 
 	public CSGMesh() {
-		this(new Array<>(), new Array<>(), new VertexAttributes());
+		this(new Array<>(),
+				new Array<>(),
+				null);
 	}
 
 	public CSGMesh(Array<MeshVertex> vertices,
@@ -86,7 +88,6 @@ public class CSGMesh implements Serializable {
 	               VertexAttributes attributes) {
 		ensureNotNull(vertices, "vertices");
 		ensureNotNull(faces, "faces");
-		ensureNotNull(attributes, "attributes");
 		this.vertices = vertices;
 		this.faces = faces;
 		this.attributes = attributes;
@@ -496,9 +497,9 @@ public class CSGMesh implements Serializable {
 			readVec3(stream, meshVertex.getPosition());
 			readVec3(stream, meshVertex.getNormal());
 			readVec3(stream, meshVertex.getTangent());
-			for(int j = 0; j < vertexAttribsSize; j++) {
+			for(int j = 0; j < vertexAttribsSize; j++)
 				meshVertex.getOtherAttributes()[j] = readFloat(stream);
-			}
+			vertices.add(meshVertex);
 		}
 
 		int faceCount = readInt(stream);
@@ -859,6 +860,14 @@ public class CSGMesh implements Serializable {
 
 	public void setConfig(CSGConfiguration config) {
 		this.config = config;
+	}
+
+	public VertexAttributes getAttributes() {
+		return attributes;
+	}
+
+	public void setAttributes(VertexAttributes attributes) {
+		this.attributes = attributes;
 	}
 
 	public enum InsideStatus {

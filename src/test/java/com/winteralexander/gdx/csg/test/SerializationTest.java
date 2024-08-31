@@ -1,6 +1,11 @@
 package com.winteralexander.gdx.csg.test;
 
+import com.badlogic.gdx.graphics.VertexAttribute;
+import com.badlogic.gdx.graphics.VertexAttributes;
+import com.badlogic.gdx.math.Vector3;
 import com.winteralexander.gdx.csg.CSGMesh;
+import com.winteralexander.gdx.csg.MeshFace;
+import com.winteralexander.gdx.csg.MeshVertex;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -21,6 +26,15 @@ public class SerializationTest {
 	public void testSerialization() throws IOException {
 		CSGMesh mesh = new CSGMesh();
 
+		mesh.setAttributes(new VertexAttributes(VertexAttribute.Position()));
+
+		mesh.getVertices().add(new MeshVertex(new Vector3(0f, 0f, 0f), new Vector3(0f, 1f, 0f), new Vector3(1f, 0f, 0f), new float[0]));
+		mesh.getVertices().add(new MeshVertex(new Vector3(1f, 0f, 0f), new Vector3(0f, 1f, 0f), new Vector3(1f, 0f, 0f), new float[0]));
+		mesh.getVertices().add(new MeshVertex(new Vector3(0f, 0f, 1f), new Vector3(0f, 1f, 0f), new Vector3(1f, 0f, 0f), new float[0]));
+
+		mesh.getFaces().add(new MeshFace(mesh.getVertices().get(0),
+				mesh.getVertices().get(1),
+				mesh.getVertices().get(2)));
 
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
@@ -32,6 +46,7 @@ public class SerializationTest {
 
 		other.readFrom(inputStream);
 
-		//assertEquals(mesh.tolerance)
+		assertEquals(mesh.getVertices().size, other.getVertices().size);
+		assertEquals(mesh.getFaces().size, other.getFaces().size);
 	}
 }
