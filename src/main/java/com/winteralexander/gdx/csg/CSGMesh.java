@@ -9,10 +9,7 @@ import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.math.collision.Segment;
-import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.IntMap;
-import com.badlogic.gdx.utils.ObjectIntMap;
-import com.badlogic.gdx.utils.ObjectMap;
+import com.badlogic.gdx.utils.*;
 import com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult;
 import com.winteralexander.gdx.utils.io.Serializable;
 import com.winteralexander.gdx.utils.math.VectorUtil;
@@ -53,6 +50,7 @@ public class CSGMesh implements Serializable {
 
 	private final ObjectIntMap<MeshVertex> vertexIndices = new ObjectIntMap<>();
 	private final ObjectMap<MeshVertex, InsideStatus> vertexStatus = new ObjectMap<>();
+	private final ObjectSet<MeshVertex> usedVertices = new ObjectSet<>();
 	// list of faces which intersect in a coplanar way
 	private final HashSet<MeshFace> boundaryFaces = new HashSet<>();
 	private final Array<Segment> cutEdges = new Array<>();
@@ -444,20 +442,24 @@ public class CSGMesh implements Serializable {
 		faces.removeAll(toRemove, true);
 		toRemove.clear();
 
-		vertexStatus.clear(); // reuse collection to find no longer used vertices
+		deleteFacelessVertices();
+	}
+
+	public void deleteFacelessVertices() {
+		usedVertices.clear();
 		for(MeshFace face : faces) {
-			vertexStatus.put(face.getV1(), InsideStatus.INSIDE);
-			vertexStatus.put(face.getV2(), InsideStatus.INSIDE);
-			vertexStatus.put(face.getV3(), InsideStatus.INSIDE);
+			usedVertices.add(face.getV1());
+			usedVertices.add(face.getV2());
+			usedVertices.add(face.getV3());
 		}
 
 		for(int i = 0; i < vertices.size; i++) {
-			if(!vertexStatus.containsKey(vertices.get(i))) {
+			if(!usedVertices.contains(vertices.get(i))) {
 				vertices.removeIndex(i);
 				i--;
 			}
 		}
-		vertexStatus.clear();
+		usedVertices.clear();
 	}
 
 	public void invertTriangles() {
@@ -543,18 +545,6 @@ public class CSGMesh implements Serializable {
 			writeShort(stream, vertexIndices.get(face.getV3(), -1));
 		}
 		vertexIndices.clear();
-	}
-
-	public InsideStatus getInsideStatus(MeshVertex vertex) {
-		return vertexStatus.get(vertex);
-	}
-
-	public Array<MeshVertex> getVertices() {
-		return vertices;
-	}
-
-	public Array<MeshFace> getFaces() {
-		return faces;
 	}
 
 	public CSGMesh cpy() {
@@ -730,6 +720,42 @@ public class CSGMesh implements Serializable {
 		return mesh;
 	}
 
+	public InsideStatus getInsideStatus(MeshVertex vertex) {
+		return vertexStatus.get(vertex);
+	}
+
+	public void clearInsideStatus() {
+		vertexStatus.clear();
+	}
+
+	public Array<MeshVertex> getVertices() {
+		return vertices;
+	}
+
+	public Array<MeshFace> getFaces() {
+		return faces;
+	}
+
+	public CSGConfiguration getConfig() {
+		return config;
+	}
+
+	public void setConfig(CSGConfiguration config) {
+		this.config = config;
+	}
+
+	public VertexAttributes getAttributes() {
+		return attributes;
+	}
+
+	public void setAttributes(VertexAttributes attributes) {
+		this.attributes = attributes;
+	}
+
+	public enum InsideStatus {
+		INSIDE, BOUNDARY, OUTSIDE
+	}
+
 	public static CSGMesh fromMeshPart(MeshPart meshPart) {
 		Array<MeshVertex> vertices = new Array<>(meshPart.size);
 		Array<MeshFace> faces = new Array<>(meshPart.size / 3);
@@ -848,29 +874,5 @@ public class CSGMesh implements Serializable {
 				out.getOtherAttributes()[j++] =
 						buffer.get(index * vertexSize + attr.offset / 4 + k);
 		}
-	}
-
-	public void clearInsideStatus() {
-		vertexStatus.clear();
-	}
-
-	public CSGConfiguration getConfig() {
-		return config;
-	}
-
-	public void setConfig(CSGConfiguration config) {
-		this.config = config;
-	}
-
-	public VertexAttributes getAttributes() {
-		return attributes;
-	}
-
-	public void setAttributes(VertexAttributes attributes) {
-		this.attributes = attributes;
-	}
-
-	public enum InsideStatus {
-		INSIDE, BOUNDARY, OUTSIDE
 	}
 }
