@@ -35,7 +35,7 @@ import static com.badlogic.gdx.graphics.GL20.GL_DEPTH_BUFFER_BIT;
  * @author Alexander Winter
  */
 public class CSGMeshViewer implements ApplicationListener {
-	private static final Queue<Consumer<ShapeRenderer>> __debugOnlyRenderables = new Queue<>();
+	private final Queue<Consumer<ShapeRenderer>> __debugOnlyRenderables = new Queue<>();
 
 	private final static int DEFAULT_ATTRIBUTES = VertexAttributes.Usage.Position
 			| VertexAttributes.Usage.Normal

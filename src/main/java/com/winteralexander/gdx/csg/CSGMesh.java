@@ -415,7 +415,10 @@ public class CSGMesh implements Serializable {
 			if(status1 == null || status2 == null || status3 == null)
 				throw new IllegalStateException("Some vertices are not classified");
 
-			boolean isBoundaryFace = boundaryFaces.contains(face);
+			boolean isBoundaryFace = boundaryFaces.contains(face)
+					&& status1 == InsideStatus.BOUNDARY
+					&& status2 == InsideStatus.BOUNDARY
+					&& status3 == InsideStatus.BOUNDARY;
 
 			boolean isFaceInside = status1 == InsideStatus.INSIDE
 					|| status2 == InsideStatus.INSIDE

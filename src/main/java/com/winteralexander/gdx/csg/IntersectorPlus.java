@@ -212,13 +212,17 @@ public class IntersectorPlus {
 		int signFace1Vert3 = (distFace1Vert3 > tol ? 1 : (distFace1Vert3 < -tol ? -1 : 0));
 
 		// if all points are on the same side of the plane
-		if(signFace1Vert1 == signFace1Vert2 && signFace1Vert2 == signFace1Vert3)
+		if(signFace1Vert1 == signFace1Vert2 && signFace1Vert2 == signFace1Vert3) {
 			// if they are all 0, they are all in the same plane
-			return !ignoreCoplanar
-					&& signFace1Vert1 == 0
-					&& intersectCoplanarTriangles(first, second, tol)
-						? TriangleIntersectionResult.COPLANAR_FACE_FACE
-						: TriangleIntersectionResult.NONE;
+			if(signFace1Vert1 != 0 || ignoreCoplanar)
+				return TriangleIntersectionResult.NONE;
+
+
+
+			return intersectCoplanarTriangles(first, second, tol)
+					? TriangleIntersectionResult.COPLANAR_FACE_FACE
+					: TriangleIntersectionResult.NONE;
+		}
 
 		rayFromIntersection(first, second, tol, tmpIntersectRay);
 
