@@ -123,7 +123,8 @@ public class CSGMesh implements Serializable {
 					}
 
 				} else if(result == COPLANAR_FACE_FACE) {
-					boundaryFaces.add(face);
+					if(config.enableBoundaryFaces)
+						boundaryFaces.add(face);
 				}
 			}
 		}

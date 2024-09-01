@@ -12,4 +12,5 @@ public class CSGConfiguration {
 
 	public float tolerance = 1e-5f;
 	public boolean enableMerging = true;
+	public boolean enableBoundaryFaces = true;
 }
