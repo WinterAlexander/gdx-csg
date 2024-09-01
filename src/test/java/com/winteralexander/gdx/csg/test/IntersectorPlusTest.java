@@ -11,10 +11,9 @@ import org.junit.Test;
 import java.util.Random;
 
 import static com.winteralexander.gdx.csg.IntersectorPlus.*;
-import static com.winteralexander.gdx.csg.IntersectorPlus.LineIntersectionResult.COLLINEAR;
-import static com.winteralexander.gdx.csg.IntersectorPlus.LineIntersectionResult.NONE;
-import static com.winteralexander.gdx.csg.IntersectorPlus.LineIntersectionResult.POINT;
-import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.*;
+import static com.winteralexander.gdx.csg.IntersectorPlus.LineIntersectionResult.*;
+import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.EDGE_FACE;
+import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.NONCOPLANAR_FACE_FACE;
 import static org.junit.Assert.*;
 
 /**
@@ -312,6 +311,15 @@ public class IntersectorPlusTest {
 		tri2.set(0.15553457f, 0.0f, 0.1826436f,
 				1.0338287f, 1.0f, 0.1826436f,
 				1.0338287f, 0.0f, 1.1826437f);
+
+		assertEquals(TriangleIntersectionResult.NONE, intersectTriangleTriangle(tri1, tri2, 1e-5f, segment));
+
+		tri1.set(2f, 2f, 0.9423616295572568f,
+				0.9685134704003172f, 2f, 0.9678422992674797f,
+				2f, 1.124710354419025f, 1.068692504586136f);
+		tri2.set(2.5f, 1.624710354419025f, 1.568692504586136f,
+				2.5f, 2.5f, 1.442361629557257f,
+				1.588259113885977f, 2.5f, 0.5f);
 
 		assertEquals(TriangleIntersectionResult.NONE, intersectTriangleTriangle(tri1, tri2, 1e-5f, segment));
 
