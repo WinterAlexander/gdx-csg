@@ -199,6 +199,43 @@ public class CSGMeshWithGDXMeshTest {
 		ModelViewer.start(box);
 	}
 
+
+	@Test
+	public void testCubeSubtractionCoplanar() {
+		ModelBuilder builder = new ModelBuilder();
+		Model box = builder.createBox(1f, 1f, 1f, new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model cube = builder.createBox(1f, 1f, 1f, new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Mesh cubeMesh = cube.meshes.get(0);
+		cubeMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
+				.translate(0.5f, 0.3f, 0f));
+
+		CSGUtil.subtraction(box, cubeMesh);
+
+		ModelViewer.start(box);
+	}
+
+	@Test
+	public void testCubeCubeDoubleSubtraction() {
+		ModelBuilder builder = new ModelBuilder();
+		Model box = builder.createBox(1f, 1f, 1f, new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Model cube = builder.createBox(1f, 1f, 1f, new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Mesh cubeMesh = cube.meshes.get(0);
+		cubeMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
+				.translate(0.5f, 0.3f, 0f));
+
+		CSGUtil.subtraction(box, cubeMesh);
+
+		cubeMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
+				.translate(-1f, 0f, 0f));
+		CSGUtil.subtraction(box, cubeMesh);
+
+		ModelViewer.start(box);
+	}
+
 	@Test
 	public void testCubeSphereSubtraction() {
 		ModelBuilder builder = new ModelBuilder();
