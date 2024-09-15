@@ -114,26 +114,28 @@ public class CSGMesh implements Serializable {
 					cutEdges.add(intersectSegment.cpy());
 					plane.set(otherFace.getPosition1(), otherFace.getNormal());
 					splitFace(i, plane);
-
-					if(boundaryFaces.contains(face)) {
-						boundaryFaces.remove(face);
-						i--;
-						break; // go back to determine again if the face that was just split is a
-						// boundary face
-					}
-
-				} else if(result == COPLANAR_FACE_FACE) {
-					if(config.enableBoundaryFaces)
-						boundaryFaces.add(face);
 				}
 			}
 		}
+
+		if(config.enableBoundaryFaces)
+			for(int i = 0; i < faces.size; i++) {
+				for(MeshFace otherFace : other.faces) {
+					MeshFace face = faces.get(i);
+					TriangleIntersectionResult result = intersectTriangleTriangle(face.getTriangle(),
+							otherFace.getTriangle(), config.tolerance, intersectSegment);
+					if(result == COPLANAR_FACE_FACE)
+						boundaryFaces.add(face);
+				}
+			}
 		tmpNewVertices.clear();
 
 		for(int j = 0; j < 10; j++)
 			for(int i = 0; i < faces.size; i++) {
 				checkForMergeWithNeighbors(faces.get(i));
 			}
+
+		deleteFacelessVertices();
 	}
 
 	private void splitFace(int faceIndex, Plane plane) {
@@ -730,6 +732,7 @@ public class CSGMesh implements Serializable {
 
 	public void clearInsideStatus() {
 		vertexStatus.clear();
+		boundaryFaces.clear();
 	}
 
 	public Array<MeshVertex> getVertices() {
@@ -754,6 +757,10 @@ public class CSGMesh implements Serializable {
 
 	public void setAttributes(VertexAttributes attributes) {
 		this.attributes = attributes;
+	}
+
+	public HashSet<MeshFace> getBoundaryFaces() {
+		return boundaryFaces;
 	}
 
 	public enum InsideStatus {

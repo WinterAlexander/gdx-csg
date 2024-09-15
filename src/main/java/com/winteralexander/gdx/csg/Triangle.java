@@ -152,6 +152,15 @@ public class Triangle {
 		out[offset + 8] = p3.z;
 	}
 
+	public Vector3 getPoint(int number) {
+		switch(number) {
+			case 1: return p1;
+			case 2: return p2;
+			case 3: return p3;
+			default: throw new IllegalArgumentException("Point number must be 1, 2 or 3");
+		}
+	}
+
 	@Override
 	public String toString() {
 		return p1 + ", " + p2 + ", " + p3;

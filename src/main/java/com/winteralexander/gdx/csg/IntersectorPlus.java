@@ -140,10 +140,6 @@ public class IntersectorPlus {
 		tmpSegmentDir1.set(firstEnd).sub(firstStart);
 		tmpSegmentDir2.set(secondEnd).sub(secondStart);
 
-		float x = out.x;
-		float y = out.y;
-		float z = out.z;
-
 		LineIntersectionResult result = intersectRayRay(firstStart, tmpSegmentDir1,
 				secondStart, tmpSegmentDir2, tol, out);
 
@@ -217,7 +213,30 @@ public class IntersectorPlus {
 			if(signFace1Vert1 != 0 || ignoreCoplanar)
 				return TriangleIntersectionResult.NONE;
 
+			for(int i = 0; i < 3; i++) {
+				for(int j = 0; j < 3; j++) {
+					Vector3 start = first.getPoint(i + 1);
+					Vector3 end = first.getPoint((i + 1) % 3 + 1);
 
+					LineIntersectionResult result = intersectSegmentSegment(start,
+							end,
+							second.getPoint(j + 1),
+							second.getPoint((j + 1) % 3 + 1),
+							tol,
+							tmpIntersection1);
+
+					if(result == COLLINEAR) {
+						Vector3 otherPointA = first.getPoint((i + 2) % 3 + 1);
+						Vector3 otherPointB = second.getPoint((j + 2) % 3 + 1);
+
+						Vector3 perp = tmpIntersection1.set(end).sub(start);
+						perp.crs(first.getNormal());
+						boolean sameDir = Math.signum(perp.dot(otherPointA)) == Math.signum(perp.dot(otherPointB));
+						return sameDir ? TriangleIntersectionResult.COPLANAR_FACE_FACE
+								: TriangleIntersectionResult.EDGE_EDGE;
+					}
+				}
+			}
 
 			return intersectCoplanarTriangles(first, second, tol)
 					? TriangleIntersectionResult.COPLANAR_FACE_FACE

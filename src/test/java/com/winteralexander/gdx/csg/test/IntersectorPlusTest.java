@@ -12,8 +12,9 @@ import java.util.Random;
 
 import static com.winteralexander.gdx.csg.IntersectorPlus.*;
 import static com.winteralexander.gdx.csg.IntersectorPlus.LineIntersectionResult.*;
-import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.EDGE_FACE;
-import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.NONCOPLANAR_FACE_FACE;
+import static com.winteralexander.gdx.csg.IntersectorPlus.LineIntersectionResult.NONE;
+import static com.winteralexander.gdx.csg.IntersectorPlus.LineIntersectionResult.POINT;
+import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.*;
 import static org.junit.Assert.*;
 
 /**
@@ -421,5 +422,18 @@ public class IntersectorPlusTest {
 		//TriangleViewer.start(new Triangle[]{ tri }, new Ray[]{ ray });
 
 		assertTrue(IntersectorPlus.intersectTriangleRay(tri, ray, 1e-5f, segment));
+	}
+
+	@Test
+	public void testCoplanarIssue() {
+		Triangle tri1 = new Triangle(new Vector3(0.0f, -0.19999999f, 0.5f),
+				new Vector3(0.5f, -0.19999999f, 0.5f),
+				new Vector3(0.0f, 0.5f, 0.5f));
+		Triangle tri2 = new Triangle(new Vector3(0.0f, 0.5f, 0.5f),
+				new Vector3(0.0f, -0.19999999f, 0.5f),
+				new Vector3(0.5f, -0.19999999f, 0.5f));
+		Segment out = new SegmentPlus();
+
+		assertEquals(COPLANAR_FACE_FACE, intersectTriangleTriangle(tri1, tri2, 1e-5f, out));
 	}
 }

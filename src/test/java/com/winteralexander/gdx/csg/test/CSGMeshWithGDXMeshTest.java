@@ -15,6 +15,7 @@ import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
+import com.winteralexander.gdx.csg.CSGConfiguration;
 import com.winteralexander.gdx.csg.CSGMesh;
 import com.winteralexander.gdx.csg.CSGUtil;
 import com.winteralexander.gdx.csg.test.debugviewer.CSGMeshViewer;
@@ -51,6 +52,16 @@ public class CSGMeshWithGDXMeshTest {
 
 	@BeforeClass
 	public static void initGL() throws Exception {
+		if(Gdx.gl != null) {
+			Display.destroy();
+			Gdx.gl = null;
+			Gdx.graphics = null;
+			Gdx.gl20 = null;
+			Gdx.gl30 = null;
+			Gdx.gl31 = null;
+			Gdx.gl32 = null;
+		}
+		
 		LwjglNativesLoader.load();
 		Class<LwjglGraphics> gfx = LwjglGraphics.class;
 		Constructor<LwjglGraphics> cons = gfx.getDeclaredConstructor(LwjglApplicationConfiguration.class);
@@ -211,13 +222,39 @@ public class CSGMeshWithGDXMeshTest {
 		cubeMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
 				.translate(0.5f, 0.3f, 0f));
 
-		CSGUtil.subtraction(box, cubeMesh);
+		CSGMesh minuend = CSGMesh.fromMesh(box.meshes.get(0));
+		CSGMesh subtrahend = CSGMesh.fromMesh(cubeMesh);
+		CSGMesh copy1 = minuend.cpy();
+		CSGMesh copy2 = subtrahend.cpy();
+		copy1.setConfig(CSGConfiguration.DEFAULT);
+		copy2.setConfig(CSGConfiguration.DEFAULT);
 
-		ModelViewer.start(box);
+		copy1.splitTriangles(subtrahend);
+		copy2.splitTriangles(minuend);
+
+		copy1.classifyFaces(subtrahend);
+		copy2.classifyFaces(minuend);
+
+		//CSGMeshViewer.start(copy1, copy2);
+
+		CSGMeshViewer.start(copy1);
+		CSGMeshViewer.start(copy2);
+
+		copy1.removeFaces(true, true);
+		copy2.removeFaces(false, true);
+
+		CSGMeshViewer.start(copy1);
+		CSGMeshViewer.start(copy2);
+
+		copy2.invertTriangles();
+		copy1.mergeWith(copy2);
+		copy1.clearInsideStatus();
+
+		CSGMeshViewer.start(copy1);
 	}
 
 	@Test
-	public void testCubeCubeDoubleSubtraction() {
+	public void testCubeCubeDoubleSubtraction() throws Exception {
 		ModelBuilder builder = new ModelBuilder();
 		Model box = builder.createBox(1f, 1f, 1f, new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
@@ -227,11 +264,64 @@ public class CSGMeshWithGDXMeshTest {
 		cubeMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
 				.translate(0.5f, 0.3f, 0f));
 
-		CSGUtil.subtraction(box, cubeMesh);
+		Mesh minuend = box.meshes.get(0);
+		CSGMesh minuend2 = CSGMesh.fromMesh(minuend);
+		CSGMesh subtrahend = CSGMesh.fromMesh(cubeMesh);
+		CSGMesh copy1 = minuend2.cpy();
+		CSGMesh copy2 = subtrahend.cpy();
+		copy1.setConfig(CSGConfiguration.DEFAULT);
+		copy2.setConfig(CSGConfiguration.DEFAULT);
+
+		copy1.splitTriangles(subtrahend);
+		copy2.splitTriangles(minuend2);
+
+		copy1.classifyFaces(subtrahend);
+		copy2.classifyFaces(minuend2);
+
+		copy1.removeFaces(true, true);
+		copy2.removeFaces(false, true);
+
+		copy2.invertTriangles();
+		copy1.mergeWith(copy2);
+		copy1.clearInsideStatus();
+
+		CSGMeshViewer.start(copy1);
+
+		initGL();
+		box.meshes.set(0, copy1.toMesh());
+		box.meshParts.get(0).set(box.meshParts.get(0).id, box.meshes.get(0), 0, box.meshes.get(0).getNumIndices(), box.meshParts.get(0).primitiveType);
+		box.meshParts.get(0).update();
 
 		cubeMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
 				.translate(-1f, 0f, 0f));
-		CSGUtil.subtraction(box, cubeMesh);
+		Mesh minuend1 = box.meshes.get(0);
+		CSGMesh minuend3 = CSGMesh.fromMesh(minuend1);
+		CSGMesh subtrahend1 = CSGMesh.fromMesh(cubeMesh);
+		CSGMesh copy3 = minuend3.cpy();
+		CSGMesh copy4 = subtrahend1.cpy();
+		copy3.setConfig(CSGConfiguration.DEFAULT);
+		copy4.setConfig(CSGConfiguration.DEFAULT);
+
+		copy3.splitTriangles(subtrahend1);
+		copy4.splitTriangles(minuend3);
+
+		copy3.classifyFaces(subtrahend1);
+		copy4.classifyFaces(minuend3);
+
+		CSGMeshViewer.start(copy3);
+		CSGMeshViewer.start(copy4);
+
+		copy3.removeFaces(true, true);
+		copy4.removeFaces(false, true);
+
+		copy4.invertTriangles();
+		copy3.mergeWith(copy4);
+		copy3.clearInsideStatus();
+
+		initGL();
+		box.meshes.set(0, copy3.toMesh());
+		box.meshParts.get(0).set(box.meshParts.get(0).id, box.meshes.get(0), 0, box.meshes.get(0).getNumIndices(), box.meshParts.get(0).primitiveType);
+		box.meshParts.get(0).update();
 
 		ModelViewer.start(box);
 	}

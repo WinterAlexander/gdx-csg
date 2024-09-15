@@ -37,12 +37,6 @@ import static com.badlogic.gdx.graphics.GL20.GL_DEPTH_BUFFER_BIT;
 public class CSGMeshViewer implements ApplicationListener {
 	private final Queue<Consumer<ShapeRenderer>> __debugOnlyRenderables = new Queue<>();
 
-	private final static int DEFAULT_ATTRIBUTES = VertexAttributes.Usage.Position
-			| VertexAttributes.Usage.Normal
-			| VertexAttributes.Usage.Tangent
-			| VertexAttributes.Usage.TextureCoordinates;
-
-	private ModelBatch modelBatch;
 	private Viewport viewport;
 
 	private final Array<CSGMesh> meshes = new Array<>();
@@ -53,7 +47,10 @@ public class CSGMeshViewer implements ApplicationListener {
 	private PerspectiveCamera cam;
 	private ShapeRenderer debugRenderer;
 
-	private final Vector3 tmpVec3 = new Vector3();
+	private final Vector3 tmpVec = new Vector3(),
+			tmpVec2 = new Vector3(),
+			tmpVec3 = new Vector3(),
+			tmpVec4 = new Vector3();
 
 	public CSGMeshViewer(CSGMesh... meshes) {
 		this.meshes.addAll(meshes);
@@ -66,8 +63,6 @@ public class CSGMeshViewer implements ApplicationListener {
 
 	@Override
 	public void create() {
-		modelBatch = new ModelBatch(new DefaultShaderProvider());
-
 		viewport = new FitViewport(16f, 9f);
 
 		cam = new PerspectiveCamera(67f, 16f, 9f);
@@ -121,6 +116,7 @@ public class CSGMeshViewer implements ApplicationListener {
 				i++;
 				r.set(ShapeRenderer.ShapeType.Line);
 				for(MeshFace face : mesh.getFaces()) {
+					boolean boundaryFace = mesh.getBoundaryFaces().contains(face);
 					CSGMesh.InsideStatus status1 = mesh.getInsideStatus(face.getV1());
 					CSGMesh.InsideStatus status2 = mesh.getInsideStatus(face.getV2());
 					CSGMesh.InsideStatus status3 = mesh.getInsideStatus(face.getV3());
@@ -144,21 +140,27 @@ public class CSGMeshViewer implements ApplicationListener {
 									? Color.BLUE
 									: Color.GREEN);
 
-
-
 					if(status1 == null || status2 == null || status3 == null) {
 						r.setColor(Color.GRAY);
 					}
 
-					r.line(face.getPosition1(), face.getPosition2());
-					r.line(face.getPosition2(), face.getPosition3());
-					r.line(face.getPosition3(), face.getPosition1());
+					if(boundaryFace)
+						r.setColor(Color.ORANGE);
 
-					r.setColor(Color.WHITE);
 					tmpVec3.set(face.getPosition1())
 							.add(face.getPosition2())
 							.add(face.getPosition3())
 							.scl(1f / 3f);
+					for(int k = 0; k < (boundaryFace ? 3 : 2); k++) {
+						tmpVec.set(face.getPosition1()).mulAdd(tmpVec3, k * 0.1f * (i + 1)).scl(1f / (1f + k * 0.1f * (i + 1)));
+						tmpVec2.set(face.getPosition2()).mulAdd(tmpVec3, k * 0.1f * (i + 1)).scl(1f / (1f + k * 0.1f * (i + 1)));
+						tmpVec4.set(face.getPosition3()).mulAdd(tmpVec3, k * 0.1f * (i + 1)).scl(1f / (1f + k * 0.1f * (i + 1)));
+						r.line(tmpVec, tmpVec2);
+						r.line(tmpVec2, tmpVec4);
+						r.line(tmpVec4, tmpVec);
+					}
+
+					r.setColor(Color.WHITE);
 					Vector3 normal = face.getNormal();
 					r.line(tmpVec3.x, tmpVec3.y, tmpVec3.z,
 							tmpVec3.x + normal.x / 10f,
@@ -268,9 +270,7 @@ public class CSGMeshViewer implements ApplicationListener {
 	}
 
 	public static void start(CSGMesh[] meshes, Ray[] rays) {
-
 		if(Gdx.gl != null) {
-
 			Display.destroy();
 			Gdx.gl = null;
 			Gdx.graphics = null;
