@@ -147,8 +147,12 @@ public class IntersectorPlus {
 			return NONE;
 
 		if(result == COLLINEAR) {
-			float t1 = tmpSegmentDir1.dot(secondStart.x - firstStart.x, secondStart.y - firstStart.y, secondStart.z - firstStart.z) / tmpSegmentDir1.len2();
-			float t2 = tmpSegmentDir1.dot(secondEnd.x - firstStart.x, secondEnd.y - firstStart.y, secondEnd.z - firstStart.z) / tmpSegmentDir1.len2();
+			float t1 = tmpSegmentDir1.dot(secondStart.x - firstStart.x,
+					secondStart.y - firstStart.y,
+					secondStart.z - firstStart.z) / tmpSegmentDir1.len2();
+			float t2 = tmpSegmentDir1.dot(secondEnd.x - firstStart.x,
+					secondEnd.y - firstStart.y,
+					secondEnd.z - firstStart.z) / tmpSegmentDir1.len2();
 
 			float tMin = min(t1, t2);
 			float tMax = max(t1, t2);
@@ -258,6 +262,41 @@ public class IntersectorPlus {
 						return overlap
 								? TriangleIntersectionResult.COPLANAR_FACE_FACE
 								: TriangleIntersectionResult.POINT;
+					}
+				}
+			}
+
+			for(int i = 0; i < 3; i++) {
+				Vector3 a = first.getPoint(i + 1);
+				Vector3 e1a = first.getPoint((i + 1) % 3 + 1);
+				Vector3 e2a = first.getPoint((i + 2) % 3 + 1);
+				for(int j = 0; j < 3; j++) {
+					Vector3 b = first.getPoint(j + 1);
+					Vector3 e1b = first.getPoint((j + 1) % 3 + 1);
+					Vector3 e2b = first.getPoint((j + 2) % 3 + 1);
+
+					if(intersectSegmentSegment(a, e1a, e1b, e2b, tol, tmpIntersection1) == POINT
+							&& tmpIntersection1.epsilonEquals(a, tol)) {
+
+						Vector3 perp = tmpIntersection1.set(e1b).sub(e2b);
+						perp.crs(first.getNormal());
+						tmpIntersection1.setZero().mulAdd(e1a, 0.5f).mulAdd(e2a, 0.5f);
+
+						boolean sameDir = Math.signum(perp.dot(tmpIntersection1)) == Math.signum(perp.dot(b));
+						return sameDir ? TriangleIntersectionResult.COPLANAR_FACE_FACE
+								: TriangleIntersectionResult.EDGE_EDGE;
+					}
+
+					if(intersectSegmentSegment(e1a, e1a, b, e2b, tol, tmpIntersection1) == POINT
+							&& tmpIntersection1.epsilonEquals(b, tol)) {
+
+						Vector3 perp = tmpIntersection1.set(e1a).sub(e1a);
+						perp.crs(first.getNormal());
+						tmpIntersection1.setZero().mulAdd(e1b, 0.5f).mulAdd(e2b, 0.5f);
+
+						boolean sameDir = Math.signum(perp.dot(tmpIntersection1)) == Math.signum(perp.dot(a));
+						return sameDir ? TriangleIntersectionResult.COPLANAR_FACE_FACE
+								: TriangleIntersectionResult.EDGE_EDGE;
 					}
 				}
 			}

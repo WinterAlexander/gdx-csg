@@ -11,12 +11,12 @@ import com.winteralexander.gdx.utils.math.MathUtil;
  * @author Alexander Winter
  */
 public class MathUtilPlus {
+	private static final Vector3 tmpVec = new Vector3();
+
 	public static boolean isBetween(Vector3 first, Vector3 second, Vector3 between) {
-		first = first.cpy().nor();
-		second = second.cpy().nor();
-		Vector3 middle = first.cpy().add(second).nor();
+		Vector3 middle = tmpVec.set(first).nor().mulAdd(second, 1f / second.len()).nor();
 		float d = middle.dot(first);
-		float d2 = middle.dot(between.cpy().nor());
+		float d2 = middle.dot(between) / between.len();
 		if(d2 < 0f)
 			return false;
 		return d2 > d;
