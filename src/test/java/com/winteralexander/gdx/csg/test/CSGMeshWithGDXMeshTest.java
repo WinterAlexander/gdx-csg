@@ -285,11 +285,11 @@ public class CSGMeshWithGDXMeshTest {
 		copy1.mergeWith(copy2);
 		copy1.clearInsideStatus();
 
-		CSGMeshViewer.start(copy1);
-
 		initGL();
 		box.meshes.set(0, copy1.toMesh());
-		box.meshParts.get(0).set(box.meshParts.get(0).id, box.meshes.get(0), 0, box.meshes.get(0).getNumIndices(), box.meshParts.get(0).primitiveType);
+		box.meshParts.get(0).set(box.meshParts.get(0).id,
+				box.meshes.get(0), 0,
+				box.meshes.get(0).getNumIndices(), box.meshParts.get(0).primitiveType);
 		box.meshParts.get(0).update();
 
 		cubeMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
@@ -320,7 +320,9 @@ public class CSGMeshWithGDXMeshTest {
 
 		initGL();
 		box.meshes.set(0, copy3.toMesh());
-		box.meshParts.get(0).set(box.meshParts.get(0).id, box.meshes.get(0), 0, box.meshes.get(0).getNumIndices(), box.meshParts.get(0).primitiveType);
+		box.meshParts.get(0).set(box.meshParts.get(0).id,
+				box.meshes.get(0), 0,
+				box.meshes.get(0).getNumIndices(), box.meshParts.get(0).primitiveType);
 		box.meshParts.get(0).update();
 
 		ModelViewer.start(box);

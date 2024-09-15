@@ -147,17 +147,20 @@ public class IntersectorPlus {
 			return NONE;
 
 		if(result == COLLINEAR) {
-			float t1 = tmpSegmentDir1.dot(secondStart.x - firstStart.x, secondStart.y - firstStart.y, secondStart.z - firstStart.z);
-			float t2 = tmpSegmentDir1.dot(secondEnd.x - firstStart.x, secondEnd.y - firstStart.y, secondEnd.z - firstStart.z);
+			float t1 = tmpSegmentDir1.dot(secondStart.x - firstStart.x, secondStart.y - firstStart.y, secondStart.z - firstStart.z) / tmpSegmentDir1.len2();
+			float t2 = tmpSegmentDir1.dot(secondEnd.x - firstStart.x, secondEnd.y - firstStart.y, secondEnd.z - firstStart.z) / tmpSegmentDir1.len2();
 
 			float tMin = min(t1, t2);
 			float tMax = max(t1, t2);
 
-			return tMin < 1f + tol && tMax > -tol ? COLLINEAR : NONE;
+			if(tMin > 1f + tol || tMax < -tol)
+				return NONE;
+
+			return tMin < 1f - tol && tMax > tol ? COLLINEAR : POINT;
 		}
 
-		float t1 = tmpSegmentDir1.dot(out);
-		float t2 = tmpSegmentDir2.dot(out);
+		float t1 = tmpSegmentDir1.dot(out) / tmpSegmentDir1.len2();
+		float t2 = tmpSegmentDir2.dot(out) / tmpSegmentDir1.len2();
 
 		if(t1 < -tol || t1 > 1f + tol || t2 < -tol || t2 > 1f + tol)
 			return NONE;
@@ -214,9 +217,9 @@ public class IntersectorPlus {
 				return TriangleIntersectionResult.NONE;
 
 			for(int i = 0; i < 3; i++) {
+				Vector3 start = first.getPoint(i + 1);
+				Vector3 end = first.getPoint((i + 1) % 3 + 1);
 				for(int j = 0; j < 3; j++) {
-					Vector3 start = first.getPoint(i + 1);
-					Vector3 end = first.getPoint((i + 1) % 3 + 1);
 
 					LineIntersectionResult result = intersectSegmentSegment(start,
 							end,
@@ -234,6 +237,27 @@ public class IntersectorPlus {
 						boolean sameDir = Math.signum(perp.dot(otherPointA)) == Math.signum(perp.dot(otherPointB));
 						return sameDir ? TriangleIntersectionResult.COPLANAR_FACE_FACE
 								: TriangleIntersectionResult.EDGE_EDGE;
+					}
+				}
+			}
+
+			for(int i = 0; i < 3; i++) {
+				Vector3 a = first.getPoint(i + 1);
+				Vector3 a1 = first.getPoint((i + 1) % 3 + 1).cpy().sub(a);
+				Vector3 a2 = first.getPoint((i + 2) % 3 + 1).cpy().sub(a);
+				for(int j = 0; j < 3; j++) {
+					Vector3 b = second.getPoint(j + 1);
+					Vector3 b1 = first.getPoint((j + 1) % 3 + 1).cpy().sub(b);
+					Vector3 b2 = first.getPoint((j + 2) % 3 + 1).cpy().sub(b);
+
+					if(a.epsilonEquals(b, tol)) {
+						boolean overlap = MathUtilPlus.isBetween(a1, a2, b1)
+								|| MathUtilPlus.isBetween(a1, a2, b2)
+								|| MathUtilPlus.isBetween(b1, b2, a1)
+								|| MathUtilPlus.isBetween(b1, b2, a2);
+						return overlap
+								? TriangleIntersectionResult.COPLANAR_FACE_FACE
+								: TriangleIntersectionResult.POINT;
 					}
 				}
 			}

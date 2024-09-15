@@ -106,8 +106,8 @@ public class CSGMesh implements Serializable {
 		tmpNewVertices.clear();
 		boundaryFaces.clear();
 		for(int i = 0; i < faces.size; i++) {
+			MeshFace face = faces.get(i);
 			for(MeshFace otherFace : other.faces) {
-				MeshFace face = faces.get(i);
 				TriangleIntersectionResult result = intersectTriangleTriangle(face.getTriangle(),
 						otherFace.getTriangle(), config.tolerance, intersectSegment);
 				if(result == NONCOPLANAR_FACE_FACE) {
@@ -120,8 +120,8 @@ public class CSGMesh implements Serializable {
 
 		if(config.enableBoundaryFaces)
 			for(int i = 0; i < faces.size; i++) {
+				MeshFace face = faces.get(i);
 				for(MeshFace otherFace : other.faces) {
-					MeshFace face = faces.get(i);
 					TriangleIntersectionResult result = intersectTriangleTriangle(face.getTriangle(),
 							otherFace.getTriangle(), config.tolerance, intersectSegment);
 					if(result == COPLANAR_FACE_FACE)
