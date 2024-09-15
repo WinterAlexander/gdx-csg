@@ -296,6 +296,11 @@ public class IntersectorPlusTest {
 		tri2.set(tri1);
 
 		assertTrue(intersectCoplanarTriangles(tri1, tri2, 1e-5f));
+
+		tri1.set(-1.0f, -0.19999999f, -0.4f, -1.0f, 0.8f, -0.4f, 0.0f, 0.8f, -0.4f);
+		tri2.set(0.5f, -0.19999999f, -0.4f, 0.5f, 0.5f, -0.4f, 0.0f, -0.19999999f, -0.4f);
+
+		assertFalse(intersectCoplanarTriangles(tri1, tri2, 1e-5f));
 	}
 
 	@Test

@@ -164,7 +164,7 @@ public class IntersectorPlus {
 		}
 
 		float t1 = tmpSegmentDir1.dot(out) / tmpSegmentDir1.len2();
-		float t2 = tmpSegmentDir2.dot(out) / tmpSegmentDir1.len2();
+		float t2 = tmpSegmentDir2.dot(out) / tmpSegmentDir2.len2();
 
 		if(t1 < -tol || t1 > 1f + tol || t2 < -tol || t2 > 1f + tol)
 			return NONE;
@@ -489,38 +489,8 @@ public class IntersectorPlus {
 					triangle.p3.y - triangle.p1.y,
 					triangle.p3.z - triangle.p1.z) / len2;
 
-			// check pV > 0 (point is above the floor), applies to all cases
-			if(pV < -tol)
+			if(!inTriangle(pU, pV, p3U, tol))
 				return false;
-
-			if(p3U < tol) {
-				if(p3U > -tol) {
-					// .
-					// |\
-					// ._\
-					// this is for the case where p3U is on top of p1 so close to 0, in this case
-					// check pU > 0 and pV < 1 - pU (under the diagonal)
-					if(pU < -tol || pV - (1f - pU) > tol)
-						return false;
-				} else {
-					// ._
-					//  \ - _
-					//   \____- .
-					// this is for the case where p3U is to the left of p1, in this case check
-					// for both diagonals
-					if(pV - pU / p3U < tol || pV - (1 - pU) / (1 - p3U) > tol)
-						return false;
-				}
-			} else {
-				if(pU < -tol || pV - pU / p3U > tol)
-					return false;
-
-				if(Math.abs(p3U - 1f) > tol) {
-					if((p3U < 1f ? 1f : -1f) * (pV - (1 - pU) / (1 - p3U)) > tol)
-						return false;
-				} else if(pU - 1f > tol)
-					return false;
-			}
 
 			out.b.set(out.a.set(x, y, z));
 			return true;
@@ -639,6 +609,43 @@ public class IntersectorPlus {
 		return true;
 	}
 
+	private static boolean inTriangle(float pU, float pV, float p3U, float tol) {
+		// check pV > 0 (point is above the floor), applies to all cases
+		if(pV < -tol)
+			return false;
+
+		if(p3U < tol) {
+			if(p3U > -tol) {
+				// .
+				// |\
+				// ._\
+				// this is for the case where p3U is on top of p1 so close to 0, in this case
+				// check pU > 0 and pV < 1 - pU (under the diagonal)
+				if(pU < -tol || pV - (1f - pU) > tol)
+					return false;
+			} else {
+				// ._
+				//  \ - _
+				//   \____- .
+				// this is for the case where p3U is to the left of p1, in this case check
+				// for both diagonals
+				if(pV - pU / p3U < tol || pV - (1 - pU) / (1 - p3U) > tol)
+					return false;
+			}
+		} else {
+			if(pU < -tol || pV - pU / p3U > tol)
+				return false;
+
+			if(Math.abs(p3U - 1f) > tol) {
+				if((p3U < 1f ? 1f : -1f) * (pV - (1 - pU) / (1 - p3U)) > tol)
+					return false;
+			} else if(pU - 1f > tol)
+				return false;
+		}
+
+		return true;
+	}
+
 	/**
 	 * Test whether 2 given co-planar triangles are intersecting or not. This function assumes the
 	 * provided triangles are co-planar and if they aren't, the result is undefined.
@@ -678,12 +685,16 @@ public class IntersectorPlus {
 		// otherwise the first triangle can't fit into the second one
 
 		tmpTriangle.set(second).sub(first.p1);
-		tmpSegmentDir2.set(tmpSegmentDir1).crs(first.getNormal());
+		tmpSegmentDir2.set(tmpSegmentDir1).crs(first.getNormal()).scl(-1f);
 
 		float len2 = tmpSegmentDir1.len2();
 		float height2 = tmpSegmentDir2.dot(first.p3.x - first.p1.x,
 				first.p3.y - first.p1.y,
 				first.p3.z - first.p1.z);
+
+		float peakU = tmpSegmentDir1.dot(first.p3.x - first.p1.x,
+				first.p3.y - first.p1.y,
+				first.p3.z - first.p1.z) / len2;
 
 		float p1U = tmpSegmentDir1.dot(tmpTriangle.p1) / len2;
 		float p1V = tmpSegmentDir2.dot(tmpTriangle.p1) / height2;
@@ -694,22 +705,13 @@ public class IntersectorPlus {
 		float p3U = tmpSegmentDir1.dot(tmpTriangle.p3) / len2;
 		float p3V = tmpSegmentDir2.dot(tmpTriangle.p3) / height2;
 
-		if(p1U >= -tol
-				&& p1U <= 1f + tol
-				&& p1V >= -tol
-				&& p1V <= 1f - p1U + tol)
+		if(inTriangle(p1U, p1V, peakU, tol))
 			return true;
 
-		if(p2U >= -tol
-				&& p2U <= 1f + tol
-				&& p2V >= -tol
-				&& p2V <= 1f - p2U + tol)
+		if(inTriangle(p2U, p2V, peakU, tol))
 			return true;
 
-		if(p3U >= -tol
-				&& p3U <= 1f + tol
-				&& p3V >= -tol
-				&& p3V <= 1f - p3U + tol)
+		if(inTriangle(p3U, p3V, peakU, tol))
 			return true;
 
 		return false;

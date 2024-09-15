@@ -26,6 +26,7 @@ import com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult;
 import com.winteralexander.gdx.csg.SegmentPlus;
 import com.winteralexander.gdx.csg.Triangle;
 import com.winteralexander.gdx.utils.input.InputUtil;
+import com.winteralexander.gdx.utils.math.MathUtil;
 import org.lwjgl.opengl.Display;
 
 import java.util.function.Consumer;
@@ -99,6 +100,15 @@ public class TriangleViewer implements ApplicationListener {
 
 		__debugOnlyRenderables.clear();
 		__debugOnlyRenderables.addFirst(r -> {
+
+			float scl = 0.05f * MathUtil.sigmoid(cam.position.dst2(0f, 0f, 0f));
+			r.setColor(Color.RED);
+			r.line(0f, 0f, 0f, scl, 0f, 0f);
+			r.setColor(Color.GREEN);
+			r.line(0f, 0f, 0f, 0f, scl, 0f);
+			r.setColor(Color.BLUE);
+			r.line(0f, 0f, 0f, 0f, 0f, scl);
+
 			r.setColor(intersection == NONE
 					? Color.RED
 					: intersection == null
@@ -261,6 +271,20 @@ public class TriangleViewer implements ApplicationListener {
 				1f, 1f, 0f)));
 	}
 
+	public static void start(Object... objs) {
+		Array<Triangle> tris = new Array<>();
+		Array<Ray> rays = new Array<>();
+		Array<Segment> segments = new Array<>();
+		for(Object obj : objs) {
+			if(obj instanceof Triangle)
+				tris.add((Triangle)obj);
+			if(obj instanceof Ray)
+				rays.add((Ray)obj);
+			if(obj instanceof Segment)
+				segments.add((Segment)obj);
+		}
+		start(tris.toArray(Triangle.class), rays.toArray(Ray.class), segments.toArray(Segment.class));
+	}
 
 	public static void start(Triangle[] triangles, Ray[] rays) {
 		start(triangles, rays, new Segment[0]);

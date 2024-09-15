@@ -258,7 +258,7 @@ public class CSGMeshWithGDXMeshTest {
 		ModelBuilder builder = new ModelBuilder();
 		Model box = builder.createBox(1f, 1f, 1f, new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Model cube = builder.createBox(1f, 1f, 1f, new Material(),
+		Model cube = builder.createBox(1f, 1f, 0.8f, new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh cubeMesh = cube.meshes.get(0);
 		cubeMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
@@ -308,6 +308,7 @@ public class CSGMeshWithGDXMeshTest {
 		copy3.classifyFaces(subtrahend1);
 		copy4.classifyFaces(minuend3);
 
+		CSGMeshViewer.start(copy3, copy4);
 		CSGMeshViewer.start(copy3);
 		CSGMeshViewer.start(copy4);
 
@@ -485,7 +486,6 @@ public class CSGMeshWithGDXMeshTest {
 		CSGMeshViewer.start(copy1);
 
 		CSGUtil.union(box, box.meshes.get(0));
-
 
 		ModelViewer.start(box);
 	}

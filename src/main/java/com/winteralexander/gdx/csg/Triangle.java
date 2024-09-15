@@ -42,6 +42,10 @@ public class Triangle {
 		set(p1, p2, p3);
 	}
 
+	public Triangle(Triangle other) {
+		this(other.p1, other.p2, other.p3);
+	}
+
 	public Vector3 getNormal() {
 		normal.set(p3.x - p1.x, p3.y - p1.y, p3.z - p1.z);
 		normal.crs(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
@@ -159,6 +163,10 @@ public class Triangle {
 			case 3: return p3;
 			default: throw new IllegalArgumentException("Point number must be 1, 2 or 3");
 		}
+	}
+
+	public Triangle cpy() {
+		return new Triangle(this);
 	}
 
 	@Override
