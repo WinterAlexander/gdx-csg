@@ -440,9 +440,7 @@ public class IntersectorPlusTest {
 		tri1.set(new Vector3(0.0f, -0.19999999f, -0.5f), new Vector3(0.0f, -0.19999999f, 0.5f), new Vector3(-0.5f, -0.19999999f, 0.5f));
 		tri2.set(new Vector3(-0.5f, -0.19999999f, 0.5f), new Vector3(0.5f, -0.5f, 0.5f), new Vector3(0.5f, -0.19999999f, 0.5f));
 
-		//TriangleViewer.start(new Triangle[]{ tri1, tri2 }, new Ray[]{});
-
-		//assertEquals(EDGE_EDGE, intersectTriangleTriangle(tri1, tri2, 1e-5f, out));
+		assertEquals(EDGE_EDGE, intersectTriangleTriangle(tri1, tri2, 1e-5f, out));
 
 		tri2.set(new Vector3(0.5f, -0.19999999f, 0.5f), new Vector3(0.5f, -0.19999999f, -0.5f), new Vector3(0.0f, -0.19999999f, 0.5f));
 

@@ -247,18 +247,18 @@ public class IntersectorPlus {
 
 			for(int i = 0; i < 3; i++) {
 				Vector3 a = first.getPoint(i + 1);
-				Vector3 a1 = first.getPoint((i + 1) % 3 + 1).cpy().sub(a);
-				Vector3 a2 = first.getPoint((i + 2) % 3 + 1).cpy().sub(a);
+				Vector3 a1 = tmpIntersection1.set(first.getPoint((i + 1) % 3 + 1)).sub(a);
+				Vector3 a2 = tmpIntersection2.set(first.getPoint((i + 2) % 3 + 1)).sub(a);
 				for(int j = 0; j < 3; j++) {
 					Vector3 b = second.getPoint(j + 1);
-					Vector3 b1 = first.getPoint((j + 1) % 3 + 1).cpy().sub(b);
-					Vector3 b2 = first.getPoint((j + 2) % 3 + 1).cpy().sub(b);
+					Vector3 b1 = tmpSegmentDir1.set(second.getPoint((j + 1) % 3 + 1)).sub(b);
+					Vector3 b2 = tmpSegmentDir2.set(second.getPoint((j + 2) % 3 + 1)).sub(b);
 
 					if(a.epsilonEquals(b, tol)) {
-						boolean overlap = MathUtilPlus.isBetween(a1, a2, b1)
-								|| MathUtilPlus.isBetween(a1, a2, b2)
-								|| MathUtilPlus.isBetween(b1, b2, a1)
-								|| MathUtilPlus.isBetween(b1, b2, a2);
+						boolean overlap = isBetween(a1, a2, b1)
+								|| isBetween(a1, a2, b2)
+								|| isBetween(b1, b2, a1)
+								|| isBetween(b1, b2, a2);
 						return overlap
 								? TriangleIntersectionResult.COPLANAR_FACE_FACE
 								: TriangleIntersectionResult.POINT;
@@ -271,9 +271,9 @@ public class IntersectorPlus {
 				Vector3 e1a = first.getPoint((i + 1) % 3 + 1);
 				Vector3 e2a = first.getPoint((i + 2) % 3 + 1);
 				for(int j = 0; j < 3; j++) {
-					Vector3 b = first.getPoint(j + 1);
-					Vector3 e1b = first.getPoint((j + 1) % 3 + 1);
-					Vector3 e2b = first.getPoint((j + 2) % 3 + 1);
+					Vector3 b = second.getPoint(j + 1);
+					Vector3 e1b = second.getPoint((j + 1) % 3 + 1);
+					Vector3 e2b = second.getPoint((j + 2) % 3 + 1);
 
 					if(intersectSegmentSegment(a, e1a, e1b, e2b, tol, tmpIntersection1) == POINT
 							&& tmpIntersection1.epsilonEquals(a, tol)) {
@@ -312,19 +312,14 @@ public class IntersectorPlus {
 		|| !intersectTriangleRay(second, tmpIntersectRay, tol, tmpSegment2))
 			return TriangleIntersectionResult.NONE;
 
-		boolean firstIsEdge = (tmpSegment1.a.epsilonEquals(first.p1, tol)
-				|| tmpSegment1.a.epsilonEquals(first.p2, tol)
-				|| tmpSegment1.a.epsilonEquals(first.p3, tol))
-				&& (tmpSegment1.b.epsilonEquals(first.p1, tol)
-				|| tmpSegment1.b.epsilonEquals(first.p2, tol)
-				|| tmpSegment1.b.epsilonEquals(first.p3, tol));
-
-		boolean secondIsEdge = (tmpSegment2.a.epsilonEquals(first.p1, tol)
-				|| tmpSegment2.a.epsilonEquals(first.p2, tol)
-				|| tmpSegment2.a.epsilonEquals(first.p3, tol))
-				&& (tmpSegment2.b.epsilonEquals(first.p1, tol)
-				|| tmpSegment2.b.epsilonEquals(first.p2, tol)
-				|| tmpSegment2.b.epsilonEquals(first.p3, tol));
+		boolean firstIsEdge = !tmpSegment1.a.epsilonEquals(tmpSegment1.b, tol)
+				&& (intersectSegmentSegment(tmpSegment1.a, tmpSegment1.b, first.p1, first.p2, tol, tmpIntersection1) == COLLINEAR
+				|| intersectSegmentSegment(tmpSegment1.a, tmpSegment1.b, first.p2, first.p3, tol, tmpIntersection1) == COLLINEAR
+				|| intersectSegmentSegment(tmpSegment1.a, tmpSegment1.b, first.p3, first.p1, tol, tmpIntersection1) == COLLINEAR);
+		boolean secondIsEdge = !tmpSegment2.a.epsilonEquals(tmpSegment2.b, tol)
+				&& (intersectSegmentSegment(tmpSegment2.a, tmpSegment2.b, second.p1, second.p2, tol, tmpIntersection2) == COLLINEAR
+				|| intersectSegmentSegment(tmpSegment2.a, tmpSegment2.b, second.p2, second.p3, tol, tmpIntersection2) == COLLINEAR
+				|| intersectSegmentSegment(tmpSegment2.a, tmpSegment2.b, second.p3, second.p1, tol, tmpIntersection2) == COLLINEAR);
 
 		float dist1A = tmpIntersectRay.direction.dot(
 				tmpSegment1.a.x - tmpIntersectRay.origin.x,
@@ -373,6 +368,16 @@ public class IntersectorPlus {
 			return TriangleIntersectionResult.EDGE_FACE;
 
 		return TriangleIntersectionResult.NONCOPLANAR_FACE_FACE;
+	}
+
+	private static boolean isBetween(Vector3 first, Vector3 second, Vector3 between) {
+		float lenFirst = first.len();
+		Vector3 middle = tmpIntersection3.set(first).scl(1f / lenFirst).mulAdd(second, 1f / second.len()).nor();
+		float d = middle.dot(first) / lenFirst;
+		float d2 = middle.dot(between) / between.len();
+		if(d2 < 0f)
+			return false;
+		return d2 > d;
 	}
 
 	private static void rayFromIntersection(Triangle first,

@@ -151,8 +151,6 @@ public class CSGMesh implements Serializable {
 		faces.set(faceIndex, toAdd.get(0));
 		faces.addAll(toAdd, 1, toAdd.size - 1);
 
-		//for(MeshFace newFace : toAdd)
-		//	checkForMergeWithNeighbors(newFace);
 		toAdd.clear();
 	}
 
