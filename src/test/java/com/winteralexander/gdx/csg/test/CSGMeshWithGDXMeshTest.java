@@ -258,11 +258,12 @@ public class CSGMeshWithGDXMeshTest {
 		ModelBuilder builder = new ModelBuilder();
 		Model box = builder.createBox(2f, 2f, 2f, new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Model cube = builder.createBox(2f, 1f, 1f, new Material(),
+		box.meshes.get(0).transform(new Matrix4().translate(1f, -1f, 1f));
+		Model pathRight = builder.createBox(2f, 0.2f, 0.75f, new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Mesh cubeMesh = cube.meshes.get(0);
+		Mesh cubeMesh = pathRight.meshes.get(0);
 		cubeMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
-				.translate(0.5f, 1.4f, 0f));
+				.translate(2f - 0.75f / 2f, 0f, 1f));
 
 		Mesh minuend = box.meshes.get(0);
 		CSGMesh minuend2 = CSGMesh.fromMesh(minuend);
@@ -293,11 +294,14 @@ public class CSGMeshWithGDXMeshTest {
 				box.meshes.get(0).getNumIndices(), box.meshParts.get(0).primitiveType);
 		box.meshParts.get(0).update();
 
-		cubeMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
-				.translate(-1f, 0f, 0f));
+		Model path2 = builder.createBox(0.75f, 0.2f, 2f, new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		Mesh cubeMesh2 = path2.meshes.get(0);
+		cubeMesh2.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
+				.translate(1f, 0f, 2f - 0.75f / 2f));
 		Mesh minuend1 = box.meshes.get(0);
 		CSGMesh minuend3 = CSGMesh.fromMesh(minuend1);
-		CSGMesh subtrahend1 = CSGMesh.fromMesh(cubeMesh);
+		CSGMesh subtrahend1 = CSGMesh.fromMesh(cubeMesh2);
 		CSGMesh copy3 = minuend3.cpy();
 		CSGMesh copy4 = subtrahend1.cpy();
 		copy3.setConfig(CSGConfiguration.DEFAULT);
