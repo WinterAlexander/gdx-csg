@@ -71,7 +71,12 @@ public class IntersectorPlus {
 		if(Math.abs(denom1) <= tolerance
 				&& Math.abs(denom2) <= tolerance
 				&& Math.abs(denom3) <= tolerance) {
-			float len2 = (pow2((float)sx) + pow2((float)sy) + pow2((float)sz)) * direction1.len2();
+			float originDst2 = (pow2((float)sx) + pow2((float)sy) + pow2((float)sz));
+
+			if(originDst2 <= tolerance)
+				return LineIntersectionResult.COLLINEAR;
+
+			float len2 = originDst2 * direction1.len2();
 			return Math.abs(pow2(direction1.dot((float)sx, (float)sy, (float)sz)) / len2 - 1f) <= tolerance
 					? LineIntersectionResult.COLLINEAR
 					: LineIntersectionResult.NONE;
@@ -290,7 +295,7 @@ public class IntersectorPlus {
 								: TriangleIntersectionResult.EDGE_EDGE;
 					}
 
-					if(intersectSegmentSegment(e1a, e1a, b, e2b, tol, tmpIntersection1) == POINT
+					if(intersectSegmentSegment(e1a, e2a, b, e2b, tol, tmpIntersection1) == POINT
 							&& tmpIntersection1.epsilonEquals(b, tol)) {
 
 						Vector3 perp = tmpIntersection1.set(e1a).sub(e2a);

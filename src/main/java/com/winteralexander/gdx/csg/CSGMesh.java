@@ -25,8 +25,7 @@ import java.util.UUID;
 
 import static com.badlogic.gdx.graphics.GL20.GL_TRIANGLES;
 import static com.winteralexander.gdx.csg.IntersectorPlus.LineIntersectionResult.COLLINEAR;
-import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.COPLANAR_FACE_FACE;
-import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.NONCOPLANAR_FACE_FACE;
+import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.*;
 import static com.winteralexander.gdx.csg.IntersectorPlus.intersectTriangleRay;
 import static com.winteralexander.gdx.csg.IntersectorPlus.intersectTriangleTriangle;
 import static com.winteralexander.gdx.utils.Validation.ensureNotNull;
@@ -114,6 +113,8 @@ public class CSGMesh implements Serializable {
 					cutEdges.add(intersectSegment.cpy());
 					plane.set(otherFace.getPosition1(), otherFace.getNormal());
 					splitFace(i, plane);
+				} else if(result == EDGE_FACE) {
+					// TODO
 				}
 			}
 		}
