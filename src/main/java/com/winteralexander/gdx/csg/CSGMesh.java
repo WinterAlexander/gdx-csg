@@ -114,7 +114,22 @@ public class CSGMesh implements Serializable {
 					plane.set(otherFace.getPosition1(), otherFace.getNormal());
 					splitFace(i, plane);
 				} else if(result == EDGE_FACE) {
-					// TODO
+					boolean isEdgeFromFace = false;
+					for(int j = 0; j < 3; j++) {
+						Vector3 start = face.getTriangle().getPoint(j + 1);
+						Vector3 end = face.getTriangle().getPoint((j + 1) % 3 + 1);
+						if(IntersectorPlus.intersectSegmentSegment(start, end,
+								intersectSegment.a, intersectSegment.b, config.tolerance, tmpSegmentIntersection) == COLLINEAR) {
+							isEdgeFromFace = true;
+							break;
+						}
+					}
+
+					if(!isEdgeFromFace) {
+						cutEdges.add(intersectSegment.cpy());
+						plane.set(otherFace.getPosition1(), otherFace.getNormal());
+						splitFace(i, plane);
+					}
 				}
 			}
 		}

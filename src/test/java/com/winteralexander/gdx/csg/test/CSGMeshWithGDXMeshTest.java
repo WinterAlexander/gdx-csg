@@ -284,6 +284,7 @@ public class CSGMeshWithGDXMeshTest {
 		copy2.invertTriangles();
 		copy1.mergeWith(copy2);
 		copy1.clearInsideStatus();
+		CSGMeshViewer.start(copy1);
 
 		initGL();
 		box.meshes.set(0, copy1.toMesh());
