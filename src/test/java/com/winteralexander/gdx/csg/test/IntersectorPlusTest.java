@@ -145,6 +145,48 @@ public class IntersectorPlusTest {
 
 		System.out.println("Worst precision: " + worstPrecision);
 	}
+	@Test
+	public void testSegmentSegmentCollinearRandom() {
+		Ray ray = new Ray();
+		SegmentPlus segment1 = new SegmentPlus();
+		SegmentPlus segment2 = new SegmentPlus();
+		Random r = new Random();
+		Vector3 tmpIntersection = new Vector3();
+
+		for(int i = 0; i < 100_0000; i++) {
+			ray.origin.set(r.nextFloat() * 2f - 1f,
+					r.nextFloat() * 2f - 1f,
+					r.nextFloat() * 2f - 1f);
+			do
+				ray.direction.set(r.nextFloat() * 2f - 1f,
+						r.nextFloat() * 2f - 1f,
+						r.nextFloat() * 2f - 1f).nor();
+			while(ray.direction.len2() == 0f);
+
+			boolean shouldIntersect = r.nextBoolean();
+
+			float startRay1 = r.nextFloat() * 2f;
+			float endRay1 = startRay1 + r.nextFloat() * 2f + 1f;
+			float startRay2 = endRay1 + r.nextFloat() * 2f + 0.01f;
+			if(shouldIntersect) {
+				float t = r.nextFloat() * 0.8f + 0.1f;
+				startRay2 = startRay1 * (1f - t) + endRay1 * t;
+			}
+			float endRay2 = startRay2 + r.nextFloat() * 2f + 0.01f;
+			segment1.a.set(ray.getEndPoint(tmpIntersection, startRay1));
+			segment1.b.set(ray.getEndPoint(tmpIntersection, endRay1));
+			segment2.a.set(ray.getEndPoint(tmpIntersection, startRay2));
+			segment2.b.set(ray.getEndPoint(tmpIntersection, endRay2));
+
+			LineIntersectionResult result = intersectSegmentSegment(segment1, segment2, 1e-5f, tmpIntersection);
+			LineIntersectionResult expected = shouldIntersect
+					? COLLINEAR
+					: NONE;
+
+			assertEquals(expected, result);
+		}
+
+	}
 
 	@Test
 	public void testSegmentSegmentIntersection() {

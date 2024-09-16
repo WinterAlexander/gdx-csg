@@ -127,9 +127,11 @@ public class TriangleViewer implements ApplicationListener {
 				r.line(tmpStart, tmpEnd);
 			}
 
-			r.setColor(Color.GRAY);
+			int i = 0;
 			for(Segment segment : segments) {
+				r.setColor(i % 2 == 0 ? Color.GRAY : Color.WHITE);
 				r.line(segment.a, segment.b);
+				i++;
 			}
 
 			r.setColor(Color.BLUE);

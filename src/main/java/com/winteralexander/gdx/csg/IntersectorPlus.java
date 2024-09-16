@@ -72,7 +72,7 @@ public class IntersectorPlus {
 				&& Math.abs(denom2) <= tolerance
 				&& Math.abs(denom3) <= tolerance) {
 			float len2 = (pow2((float)sx) + pow2((float)sy) + pow2((float)sz)) * direction1.len2();
-			return Math.abs(pow2(direction1.dot((float)sx, (float)sy, (float)sz)) - len2) <= tolerance
+			return Math.abs(pow2(direction1.dot((float)sx, (float)sy, (float)sz)) / len2 - 1f) <= tolerance
 					? LineIntersectionResult.COLLINEAR
 					: LineIntersectionResult.NONE;
 		}
