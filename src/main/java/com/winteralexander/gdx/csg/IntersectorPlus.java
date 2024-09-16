@@ -163,8 +163,12 @@ public class IntersectorPlus {
 			return tMin < 1f - tol && tMax > tol ? COLLINEAR : POINT;
 		}
 
-		float t1 = tmpSegmentDir1.dot(out) / tmpSegmentDir1.len2();
-		float t2 = tmpSegmentDir2.dot(out) / tmpSegmentDir2.len2();
+		float t1 = tmpSegmentDir1.dot(out.x - firstStart.x,
+				out.y - firstStart.y,
+				out.z - firstStart.z) / tmpSegmentDir1.len2();
+		float t2 = tmpSegmentDir2.dot(out.x - secondStart.x,
+				out.y - secondStart.y,
+				out.z - secondStart.z) / tmpSegmentDir2.len2();
 
 		if(t1 < -tol || t1 > 1f + tol || t2 < -tol || t2 > 1f + tol)
 			return NONE;

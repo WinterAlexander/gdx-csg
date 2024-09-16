@@ -190,6 +190,14 @@ public class IntersectorPlusTest {
 		segment2.b.set(-0.5f, 0.45f, -0.4f);
 
 		assertEquals(COLLINEAR, intersectSegmentSegment(segment1, segment2, 1e-5f, intersection));
+
+		segment1.a.set(-0.5f, -0.19999999f, 0.4f);
+		segment1.b.set(-1.0f, 0.8f, 0.4f);
+
+		segment2.a.set(0.5f, -0.19999999f, 0.4f);
+		segment2.b.set(0.0f, -0.19999999f, 0.4f);
+
+		assertEquals(NONE, intersectSegmentSegment(segment1, segment2, 1e-5f, intersection));
 	}
 
 	@Test
@@ -299,6 +307,11 @@ public class IntersectorPlusTest {
 
 		tri1.set(-1.0f, -0.19999999f, -0.4f, -1.0f, 0.8f, -0.4f, 0.0f, 0.8f, -0.4f);
 		tri2.set(0.5f, -0.19999999f, -0.4f, 0.5f, 0.5f, -0.4f, 0.0f, -0.19999999f, -0.4f);
+
+		assertFalse(intersectCoplanarTriangles(tri1, tri2, 1e-5f));
+
+		tri1.set(-1.0f, 0.8f, 0.4f, -1.0f, -0.19999999f, 0.4f, -0.5f, -0.19999999f, 0.4f);
+		tri2.set(0.0f, 0.5f, 0.4f, 0.5f, -0.19999999f, 0.4f, 0.0f, -0.19999999f, 0.4f);
 
 		assertFalse(intersectCoplanarTriangles(tri1, tri2, 1e-5f));
 	}
