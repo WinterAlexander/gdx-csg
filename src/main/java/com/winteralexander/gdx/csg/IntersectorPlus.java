@@ -284,9 +284,8 @@ public class IntersectorPlus {
 
 						Vector3 perp = tmpIntersection1.set(e1b).sub(e2b);
 						perp.crs(first.getNormal());
-						tmpIntersection1.setZero().mulAdd(e1a, 0.5f).mulAdd(e2a, 0.5f);
 
-						boolean sameDir = Math.signum(perp.dot(tmpIntersection1)) == Math.signum(perp.dot(b));
+						boolean sameDir = Math.signum(perp.dot(e1a)) == Math.signum(perp.dot(b));
 						return sameDir ? TriangleIntersectionResult.COPLANAR_FACE_FACE
 								: TriangleIntersectionResult.EDGE_EDGE;
 					}
@@ -294,11 +293,10 @@ public class IntersectorPlus {
 					if(intersectSegmentSegment(e1a, e1a, b, e2b, tol, tmpIntersection1) == POINT
 							&& tmpIntersection1.epsilonEquals(b, tol)) {
 
-						Vector3 perp = tmpIntersection1.set(e1a).sub(e1a);
+						Vector3 perp = tmpIntersection1.set(e1a).sub(e2a);
 						perp.crs(first.getNormal());
-						tmpIntersection1.setZero().mulAdd(e1b, 0.5f).mulAdd(e2b, 0.5f);
 
-						boolean sameDir = Math.signum(perp.dot(tmpIntersection1)) == Math.signum(perp.dot(a));
+						boolean sameDir = Math.signum(perp.dot(e2b)) == Math.signum(perp.dot(a));
 						return sameDir ? TriangleIntersectionResult.COPLANAR_FACE_FACE
 								: TriangleIntersectionResult.EDGE_EDGE;
 					}
