@@ -253,31 +253,21 @@ public class CSGMeshWithGDXMeshTest {
 		CSGMeshViewer.start(copy1);
 	}
 
-	@Test
-	public void testCubeCubeDoubleSubtraction() throws Exception {
-		ModelBuilder builder = new ModelBuilder();
-		Model box = builder.createBox(2f, 2f, 2f, new Material(),
-				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		box.meshes.get(0).transform(new Matrix4().translate(1f, -1f, 1f));
-		Model pathRight = builder.createBox(2f, 0.2f, 0.75f, new Material(),
-				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Mesh cubeMesh = pathRight.meshes.get(0);
-		cubeMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
-				.translate(2f - 0.75f / 2f, 0f, 1f));
+	private CSGMesh substractDebug(CSGMesh first, CSGMesh second, CSGConfiguration config) {
+		CSGMesh copy1 = first.cpy();
+		CSGMesh copy2 = second.cpy();
+		copy1.setConfig(config);
+		copy2.setConfig(config);
 
-		Mesh minuend = box.meshes.get(0);
-		CSGMesh minuend2 = CSGMesh.fromMesh(minuend);
-		CSGMesh subtrahend = CSGMesh.fromMesh(cubeMesh);
-		CSGMesh copy1 = minuend2.cpy();
-		CSGMesh copy2 = subtrahend.cpy();
-		copy1.setConfig(CSGConfiguration.DEFAULT);
-		copy2.setConfig(CSGConfiguration.DEFAULT);
+		CSGMeshViewer.start(copy1, copy2);
 
-		copy1.splitTriangles(subtrahend);
-		copy2.splitTriangles(minuend2);
+		copy1.splitTriangles(second);
+		copy2.splitTriangles(first);
 
-		copy1.classifyFaces(subtrahend);
-		copy2.classifyFaces(minuend2);
+		copy1.classifyFaces(second);
+		copy2.classifyFaces(first);
+
+		CSGMeshViewer.start(copy1, copy2);
 
 		copy1.removeFaces(true, true);
 		copy2.removeFaces(false, true);
@@ -285,79 +275,78 @@ public class CSGMeshWithGDXMeshTest {
 		copy2.invertTriangles();
 		copy1.mergeWith(copy2);
 		copy1.clearInsideStatus();
+
 		CSGMeshViewer.start(copy1);
 
+		return copy1;
+	}
+
+	@Test
+	public void testCubeCubeDoubleSubtraction() throws Exception {
 		initGL();
-		box.meshes.set(0, copy1.toMesh());
-		box.meshParts.get(0).set(box.meshParts.get(0).id,
-				box.meshes.get(0), 0,
-				box.meshes.get(0).getNumIndices(), box.meshParts.get(0).primitiveType);
-		box.meshParts.get(0).update();
+		CSGMesh defaultTop, rightPath, leftPath, backPath, frontPath, stopPath;
+		Matrix4 tmpMat4 = new Matrix4();
+		float TILE_SIZE = 2f;
+		float PATH_DEPTH = 0.1f;
+		float PATH_WIDTH = 0.75f;
+		float STOP_WIDTH = 1.5f;
+		ModelBuilder builder = new ModelBuilder();
 
-		Model path2 = builder.createBox(0.75f, 0.2f, 2f, new Material(),
-				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Mesh cubeMesh2 = path2.meshes.get(0);
-		cubeMesh2.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
-				.translate(1f, 0f, 2f - 0.75f / 2f));
-		Mesh minuend1 = box.meshes.get(0);
-		CSGMesh minuend3 = CSGMesh.fromMesh(minuend1);
-		CSGMesh subtrahend1 = CSGMesh.fromMesh(cubeMesh2);
-		CSGMesh copy3 = minuend3.cpy();
-		CSGMesh copy4 = subtrahend1.cpy();
-		copy3.setConfig(CSGConfiguration.DEFAULT);
-		copy4.setConfig(CSGConfiguration.DEFAULT);
+		Model flat = builder.createBox(TILE_SIZE, TILE_SIZE, TILE_SIZE,
+				new Material(), DEFAULT_ATTRIBUTES);
+		flat.meshes.get(0).transform(tmpMat4.idt().translate(TILE_SIZE / 2f,
+				-TILE_SIZE / 2f,
+				TILE_SIZE / 2f));
 
-		copy3.splitTriangles(subtrahend1);
-		copy4.splitTriangles(minuend3);
+		defaultTop = CSGMesh.fromMesh(flat.meshes.get(0));
 
-		copy3.classifyFaces(subtrahend1);
-		copy4.classifyFaces(minuend3);
+		Model pathBox = builder.createBox(TILE_SIZE, PATH_DEPTH * 2f, PATH_WIDTH,
+				new Material(), DEFAULT_ATTRIBUTES);
 
-		CSGMeshViewer.start(copy3, copy4);
-		CSGMeshViewer.start(copy3);
-		CSGMeshViewer.start(copy4);
+		pathBox.meshes.get(0).transform(tmpMat4.idt().translate(TILE_SIZE - PATH_WIDTH / 2f, 0f, TILE_SIZE / 2f));
+		rightPath = CSGMesh.fromMesh(pathBox.meshes.get(0));
 
-		copy3.removeFaces(true, true);
-		copy4.removeFaces(false, true);
+		pathBox.meshes.get(0).transform(tmpMat4.idt().translate(PATH_WIDTH - TILE_SIZE, 0f, 0f));
+		leftPath = CSGMesh.fromMesh(pathBox.meshes.get(0));
 
-		copy4.invertTriangles();
-		copy3.mergeWith(copy4);
-		copy3.clearInsideStatus();
+		pathBox.dispose();
+		pathBox = builder.createBox(PATH_WIDTH, PATH_DEPTH * 2f, TILE_SIZE,
+				new Material(), DEFAULT_ATTRIBUTES);
 
-		initGL();
-		Model cyl = builder.createCylinder(1.5f, 0.1f * 2f, 1.5f, 10, new Material(),
-				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		cyl.meshes.get(0).transform(new Matrix4().translate(1f, 0f, 1f));
+		pathBox.meshes.get(0).transform(tmpMat4.idt().translate(TILE_SIZE / 2f, 0f, TILE_SIZE - PATH_WIDTH / 2f));
+		frontPath = CSGMesh.fromMesh(pathBox.meshes.get(0));
 
-		Mesh subtrahend2 = cyl.meshes.get(0);
-		CSGMesh minuend5 = copy3;
-		CSGMesh subtrahend3 = CSGMesh.fromMesh(subtrahend2);
-		CSGMesh copy5 = minuend5.cpy();
-		CSGMesh copy6 = subtrahend3.cpy();
-		copy5.setConfig(CSGConfiguration.DEFAULT);
-		copy6.setConfig(CSGConfiguration.DEFAULT);
+		pathBox.meshes.get(0).transform(tmpMat4.idt().translate(0f, 0f, PATH_WIDTH - TILE_SIZE));
+		backPath = CSGMesh.fromMesh(pathBox.meshes.get(0));
+		pathBox.dispose();
 
-		copy5.splitTriangles(subtrahend3);
-		copy6.splitTriangles(minuend5);
+		pathBox = builder.createCylinder(STOP_WIDTH, PATH_DEPTH * 2f, STOP_WIDTH, 10,
+				new Material(), DEFAULT_ATTRIBUTES);
+		pathBox.meshes.get(0).transform(tmpMat4.idt().translate(TILE_SIZE / 2f, 0f, TILE_SIZE / 2f));
 
-		copy5.classifyFaces(subtrahend3);
-		copy6.classifyFaces(minuend5);
+		stopPath = CSGMesh.fromMesh(pathBox.meshes.get(0));
+		pathBox.dispose();
+		CSGMesh current = defaultTop;
+		CSGConfiguration config = CSGConfiguration.DEFAULT;
 
-		copy5.removeFaces(true, true);
-		copy6.removeFaces(false, true);
+		boolean pathRight = false;
+		boolean pathLeft = true;
+		boolean pathFront = false;
+		boolean pathBack = true;
+		boolean isStop = true;
 
-		copy6.invertTriangles();
-		copy5.mergeWith(copy6);
-		copy5.clearInsideStatus();
+		if(pathRight)
+			current = CSGUtil.subtraction(current, rightPath, config);
+		if(pathLeft)
+			current = CSGUtil.subtraction(current, leftPath, config);
+		if(pathFront)
+			current = CSGUtil.subtraction(current, frontPath, config);
+		if(pathBack)
+			current = CSGUtil.subtraction(current, backPath, config);
+		if(isStop)
+			current = substractDebug(current, stopPath, config);
 
-
-		box.meshes.set(0, copy5.toMesh());
-		box.meshParts.get(0).set(box.meshParts.get(0).id,
-				box.meshes.get(0), 0,
-				box.meshes.get(0).getNumIndices(), box.meshParts.get(0).primitiveType);
-		box.meshParts.get(0).update();
-
-		ModelViewer.start(box);
+		CSGMeshViewer.start(current);
 	}
 
 	@Test
