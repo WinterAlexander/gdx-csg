@@ -398,7 +398,15 @@ public class CSGMesh implements Serializable {
 			}
 
 			if(allPointsBoundary) {
-
+				// TODO better check than this
+				InsideStatus status = other.computeInsideStatus(tmpV1.set(face.getV1().getPosition())
+						.add(face.getV2().getPosition())
+						.add(face.getV3().getPosition())
+						.scl(1f / 3f));
+				if(status == InsideStatus.BOUNDARY)
+					status = InsideStatus.INSIDE;
+				faceStatus.put(face, status);
+				continue;
 			}
 
 			boolean anyInside = status1 == CSGMesh.InsideStatus.INSIDE
