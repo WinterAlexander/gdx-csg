@@ -434,6 +434,13 @@ public class IntersectorPlusTest {
 		//				new Vector3(0.0f, -0.99999994f, 0.0f)) });
 
 		assertEquals(EDGE_FACE, intersectTriangleTriangle(tri1, tri2, 1e-5f, segment));
+
+		tri1.set(new Vector3(1.08245f, 0.0f,1.7132657f), new Vector3(1.1869159f, 0.0f, 1.7459112f), new Vector3(1.231845f, 0.0f, 1.7132657f));
+		tri2.set(new Vector3(1.6067458f, 0.1f, 1.4408622f), new Vector3(1.2318448f, 0.1f, 1.7132657f), new Vector3(1.2318448f, -0.1f, 1.7132657f));
+
+		TriangleViewer.start(tri1, tri2);
+
+		assertEquals(POINT, intersectTriangleTriangle(tri1, tri2, 1e-5f, segment));
 	}
 
 	@Test
