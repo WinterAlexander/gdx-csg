@@ -347,6 +347,11 @@ public class CSGMeshWithGDXMeshTest {
 			current = substractDebug(current, stopPath, config);
 
 		CSGMeshViewer.start(current);
+		initGL();
+		flat.meshes.set(0, current.toMesh());
+		flat.meshParts.get(0).set("id", flat.meshes.get(0), 0, flat.meshes.get(0).getNumIndices(), GL_TRIANGLES);
+		flat.meshParts.get(0).update();
+		ModelViewer.start(flat);
 	}
 
 	@Test
