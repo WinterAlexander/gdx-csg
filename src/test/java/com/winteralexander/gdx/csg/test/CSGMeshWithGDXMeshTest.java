@@ -325,7 +325,33 @@ public class CSGMeshWithGDXMeshTest {
 		copy3.clearInsideStatus();
 
 		initGL();
-		box.meshes.set(0, copy3.toMesh());
+		Model cyl = builder.createCylinder(1.5f, 0.1f * 2f, 1.5f, 10, new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
+		cyl.meshes.get(0).transform(new Matrix4().translate(1f, 0f, 1f));
+
+		Mesh subtrahend2 = cyl.meshes.get(0);
+		CSGMesh minuend5 = copy3;
+		CSGMesh subtrahend3 = CSGMesh.fromMesh(subtrahend2);
+		CSGMesh copy5 = minuend5.cpy();
+		CSGMesh copy6 = subtrahend3.cpy();
+		copy5.setConfig(CSGConfiguration.DEFAULT);
+		copy6.setConfig(CSGConfiguration.DEFAULT);
+
+		copy5.splitTriangles(subtrahend3);
+		copy6.splitTriangles(minuend5);
+
+		copy5.classifyFaces(subtrahend3);
+		copy6.classifyFaces(minuend5);
+
+		copy5.removeFaces(true, true);
+		copy6.removeFaces(false, true);
+
+		copy6.invertTriangles();
+		copy5.mergeWith(copy6);
+		copy5.clearInsideStatus();
+
+
+		box.meshes.set(0, copy5.toMesh());
 		box.meshParts.get(0).set(box.meshParts.get(0).id,
 				box.meshes.get(0), 0,
 				box.meshes.get(0).getNumIndices(), box.meshParts.get(0).primitiveType);

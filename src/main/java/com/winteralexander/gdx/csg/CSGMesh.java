@@ -163,11 +163,17 @@ public class CSGMesh implements Serializable {
 		face.getTriangle().toArray(tmpArray);
 		Intersector.splitTriangle(tmpArray, plane, splitTriangle);
 
+		if(splitTriangle.numBack == 0 && splitTriangle.numFront == 0)
+			throw new IllegalStateException("Split face has no split result");
+
 		for(int i = 0; i < splitTriangle.numBack; i++)
 			processSplitTriangle(face, splitTriangle.back, i * 9);
 
 		for(int i = 0; i < splitTriangle.numFront; i++)
 			processSplitTriangle(face, splitTriangle.front, i * 9);
+		if(toAdd.size == 0)
+			return;
+
 		faces.set(faceIndex, toAdd.get(0));
 		faces.addAll(toAdd, 1, toAdd.size - 1);
 
