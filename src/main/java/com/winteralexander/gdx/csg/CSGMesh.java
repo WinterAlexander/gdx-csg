@@ -49,6 +49,7 @@ public class CSGMesh implements Serializable {
 
 	private final ObjectIntMap<MeshVertex> vertexIndices = new ObjectIntMap<>();
 	private final ObjectMap<MeshVertex, InsideStatus> vertexStatus = new ObjectMap<>();
+	private final ObjectMap<MeshFace, InsideStatus> faceStatus = new ObjectMap<>();
 	private final ObjectSet<MeshVertex> usedVertices = new ObjectSet<>();
 	// list of faces which intersect in a coplanar way
 	private final HashSet<MeshFace> boundaryFaces = new HashSet<>();
@@ -374,6 +375,46 @@ public class CSGMesh implements Serializable {
 		vertexStatus.clear();
 		for(MeshVertex vertex : vertices)
 			vertexStatus.put(vertex, other.computeInsideStatus(vertex.getPosition()));
+		faceStatus.clear();
+		for(MeshFace face : faces) {
+			boolean boundaryFace = getBoundaryFaces().contains(face);
+			CSGMesh.InsideStatus status1 = getInsideStatus(face.getV1());
+			CSGMesh.InsideStatus status2 = getInsideStatus(face.getV2());
+			CSGMesh.InsideStatus status3 = getInsideStatus(face.getV3());
+
+			if(status1 == null || status2 == null || status3 == null)
+				throw new IllegalStateException("Some vertices are not classified");
+
+			boolean allPointsBoundary = status1 == CSGMesh.InsideStatus.BOUNDARY
+					&& status2 == CSGMesh.InsideStatus.BOUNDARY
+					&& status3 == CSGMesh.InsideStatus.BOUNDARY;
+
+			if(boundaryFace) {
+				if(!allPointsBoundary)
+					throw new IllegalStateException("Boundary face has points not on the boundary");
+
+				faceStatus.put(face, InsideStatus.BOUNDARY);
+				continue;
+			}
+
+			if(allPointsBoundary) {
+
+			}
+
+			boolean anyInside = status1 == CSGMesh.InsideStatus.INSIDE
+					|| status2 == CSGMesh.InsideStatus.INSIDE
+					|| status3 == CSGMesh.InsideStatus.INSIDE;
+
+			boolean anyOutside = status1 == CSGMesh.InsideStatus.OUTSIDE
+					|| status2 == CSGMesh.InsideStatus.OUTSIDE
+					|| status3 == CSGMesh.InsideStatus.OUTSIDE;
+
+			if(anyInside && anyOutside)
+				throw new IllegalStateException("Failure to split face, some vertices are " +
+						"in and some are out");
+
+			faceStatus.put(face, anyInside ? InsideStatus.INSIDE : InsideStatus.OUTSIDE);
+		}
 	}
 
 	/**
@@ -428,38 +469,13 @@ public class CSGMesh implements Serializable {
 
 	public void removeFaces(boolean inside, boolean boundary) {
 		for(MeshFace face : faces) {
-			InsideStatus status1 = vertexStatus.get(face.getV1());
-			InsideStatus status2 = vertexStatus.get(face.getV2());
-			InsideStatus status3 = vertexStatus.get(face.getV3());
+			InsideStatus faceS = faceStatus.get(face);
 
-			if(status1 == null || status2 == null || status3 == null)
-				throw new IllegalStateException("Some vertices are not classified");
-
-			boolean isBoundaryFace = boundaryFaces.contains(face)
-					&& status1 == InsideStatus.BOUNDARY
-					&& status2 == InsideStatus.BOUNDARY
-					&& status3 == InsideStatus.BOUNDARY;
-
-			boolean isFaceInside = status1 == InsideStatus.INSIDE
-					|| status2 == InsideStatus.INSIDE
-					|| status3 == InsideStatus.INSIDE
-					|| status1 == InsideStatus.BOUNDARY
-					&& status2 == InsideStatus.BOUNDARY
-					&& status3 == InsideStatus.BOUNDARY
-					&& !isBoundaryFace;
-
-			boolean isFaceOutside = status1 == InsideStatus.OUTSIDE
-					|| status2 == InsideStatus.OUTSIDE
-					|| status3 == InsideStatus.OUTSIDE;
-
-			if(isFaceInside && isFaceOutside)
-				throw new IllegalStateException("Failure to split face");
-
-			if(isBoundaryFace && boundary)
+			if(faceS == InsideStatus.BOUNDARY && boundary)
 				toRemove.add(face);
-			else if(isFaceInside && inside)
+			else if(faceS == InsideStatus.INSIDE && inside)
 				toRemove.add(face);
-			else if(isFaceOutside && !inside)
+			else if(faceS == InsideStatus.OUTSIDE && !inside)
 				toRemove.add(face);
 		}
 		faces.removeAll(toRemove, true);
@@ -747,8 +763,13 @@ public class CSGMesh implements Serializable {
 		return vertexStatus.get(vertex);
 	}
 
+	public InsideStatus getInsideStatus(MeshFace face) {
+		return faceStatus.get(face);
+	}
+
 	public void clearInsideStatus() {
 		vertexStatus.clear();
+		faceStatus.clear();
 		boundaryFaces.clear();
 	}
 
