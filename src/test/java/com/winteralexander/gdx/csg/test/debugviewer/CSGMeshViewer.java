@@ -40,7 +40,8 @@ public class CSGMeshViewer implements ApplicationListener {
 	private Viewport viewport;
 
 	private final Array<CSGMesh> meshes = new Array<>();
-	private final Array<Ray> rays = new Array<Ray>();
+	private final Array<Ray> rays = new Array<>();
+	private final Array<Triangle> tris = new Array<>();
 
 	private final Array<MeshFace> highlighted = new Array<>();
 
@@ -52,13 +53,12 @@ public class CSGMeshViewer implements ApplicationListener {
 			tmpVec3 = new Vector3(),
 			tmpVec4 = new Vector3();
 
-	public CSGMeshViewer(CSGMesh... meshes) {
-		this.meshes.addAll(meshes);
-	}
-
 	public CSGMeshViewer(CSGMesh[] meshes, Ray[] rays) {
 		this.meshes.addAll(meshes);
 		this.rays.addAll(rays);
+		tris.add(new Triangle(new Vector3(1.375f, 0.0f, 0.625f),
+				new Vector3(1.6973898f, 0.0f, 0.625f),
+				new Vector3(1.0526102f, 0.0f, 0.15650219f)));
 	}
 
 	@Override
@@ -228,6 +228,13 @@ public class CSGMeshViewer implements ApplicationListener {
 			for(Ray ray : rays) {
 				tmpVec3.set(ray.origin).add(ray.direction);
 				r.line(ray.origin, tmpVec3);
+			}
+
+			r.setColor(Color.YELLOW);
+			for(Triangle triangle : tris) {
+				r.line(triangle.p1, triangle.p2);
+				r.line(triangle.p2, triangle.p3);
+				r.line(triangle.p3, triangle.p1);
 			}
 		});
 	}

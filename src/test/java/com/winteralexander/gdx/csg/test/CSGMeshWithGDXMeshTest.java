@@ -259,7 +259,8 @@ public class CSGMeshWithGDXMeshTest {
 		copy1.setConfig(config);
 		copy2.setConfig(config);
 
-		CSGMeshViewer.start(copy1, copy2);
+		CSGMeshViewer.start(copy1);
+		CSGMeshViewer.start(copy2);
 
 		copy1.splitTriangles(second);
 		copy2.splitTriangles(first);
@@ -342,7 +343,7 @@ public class CSGMeshWithGDXMeshTest {
 		if(pathFront)
 			current = CSGUtil.subtraction(current, frontPath, config);
 		if(pathBack)
-			current = CSGUtil.subtraction(current, backPath, config);
+			current = substractDebug(current, backPath, config);
 		if(isStop)
 			current = substractDebug(current, stopPath, config);
 
@@ -516,7 +517,7 @@ public class CSGMeshWithGDXMeshTest {
 	}
 
 	@Test
-	public void testCylinderUnions() {
+	public void testCylinderUnions() throws Exception {
 		ModelBuilder builder = new ModelBuilder();
 		Model cylinder = builder.createCylinder(0.5f, 2f, 0.5f, 10, new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
@@ -554,6 +555,7 @@ public class CSGMeshWithGDXMeshTest {
 
 		CSGMesh cylinders = copy1;//CSGUtil.union(firstUnion, cylinder3);
 
+		initGL();
 		cylinder.meshes.set(0, cylinders.toMesh());
 		cylinder.meshParts.get(0).set("box",
 				cylinder.meshes.get(0), 0, cylinder.meshes.get(0).getNumIndices(), GL_TRIANGLES);
