@@ -9,6 +9,7 @@ import com.badlogic.gdx.utils.Array;
 import com.winteralexander.gdx.csg.IntersectorPlus;
 import com.winteralexander.gdx.csg.SegmentPlus;
 import com.winteralexander.gdx.csg.Triangle;
+import com.winteralexander.gdx.csg.test.debugviewer.TriangleViewer;
 import org.junit.Test;
 
 import java.util.Random;
