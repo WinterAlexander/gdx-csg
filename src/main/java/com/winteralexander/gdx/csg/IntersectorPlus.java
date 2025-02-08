@@ -365,7 +365,7 @@ public class IntersectorPlus {
 				.scl(min(endDist1, endDist2))
 				.add(tmpIntersectRay.origin);
 
-		if(out.a.epsilonEquals(out.b, 0f))
+		if(out.a.epsilonEquals(out.b, tol))
 			return TriangleIntersectionResult.POINT;
 
 		if(firstIsEdge && secondIsEdge)

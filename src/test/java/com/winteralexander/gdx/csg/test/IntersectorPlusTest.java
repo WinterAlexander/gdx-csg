@@ -1,8 +1,11 @@
 package com.winteralexander.gdx.csg.test;
 
+import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.math.collision.Segment;
+import com.badlogic.gdx.utils.Array;
 import com.winteralexander.gdx.csg.IntersectorPlus;
 import com.winteralexander.gdx.csg.SegmentPlus;
 import com.winteralexander.gdx.csg.Triangle;
@@ -417,7 +420,6 @@ public class IntersectorPlusTest {
 
 	@Test
 	public void testTriangleTriangleEdgeCase() throws InterruptedException {
-
 		Triangle tri1 = new Triangle(), tri2 = new Triangle();
 		tri1.set(new Vector3(-0.3f,0.3f,0.5f),
 				new Vector3(-0.20710671f,0.3f,0.5f),
@@ -428,11 +430,13 @@ public class IntersectorPlusTest {
 
 		SegmentPlus segment = new SegmentPlus();
 
-		//TriangleViewer.start(new Triangle[]{ tri1, tri2 },
-		//		new Ray[]{ new Ray(new Vector3(-0.20710672f, 0.0f, 0.5f),
-		//				new Vector3(0.0f, -0.99999994f, 0.0f)) });
-
 		assertEquals(EDGE_FACE, intersectTriangleTriangle(tri1, tri2, 1e-5f, segment));
+
+		tri1.set(new Vector3(1.08245f, 0.0f,1.7132657f), new Vector3(1.1869159f, 0.0f, 1.7459112f), new Vector3(1.231845f, 0.0f, 1.7132657f));
+		tri2.set(new Vector3(1.6067458f, 0.1f, 1.4408622f), new Vector3(1.2318448f, 0.1f, 1.7132657f), new Vector3(1.2318448f, -0.1f, 1.7132657f));
+
+		assertEquals(TriangleIntersectionResult.POINT,
+				intersectTriangleTriangle(tri1, tri2, 1e-5f, segment));
 	}
 
 	@Test
@@ -505,5 +509,40 @@ public class IntersectorPlusTest {
 
 		assertEquals(TriangleIntersectionResult.POINT,
 				intersectTriangleTriangle(tri1, tri2, 1e-5f, out));
+	}
+
+	@Test
+	public void testBadSplit() {
+		Triangle tri = new Triangle(1.375f, 0.0f, 0.625f, 2.0f, 0.0f, 0.625f, 1.375f, 0.0f, 0.0f);
+		Plane plane = new Plane();
+		plane.normal.set(0.58781636f, -0.0f, -0.8089944f);
+		plane.d = -0.49213207f;
+		float[] arr = new float[9];
+		tri.toArray(arr);
+
+		Intersector.SplitTriangle splitTriangle = new Intersector.SplitTriangle(3);
+
+		Intersector.splitTriangle(arr, plane, splitTriangle);
+
+		Array<Triangle> tris = new Array<>();
+
+		for(int i = 0; i < splitTriangle.numBack; i++) {
+			Triangle newTri = new Triangle();
+			newTri.set(splitTriangle.back, i * 9);
+			tris.add(newTri);
+		}
+
+		for(int i = 0; i < splitTriangle.numFront; i++) {
+			Triangle newTri = new Triangle();
+			newTri.set(splitTriangle.front, i * 9);
+			tris.add(newTri);
+		}
+
+		TriangleViewer.start(tri,
+				tris.get(0),
+				tris.get(1),
+				tris.get(2),
+				new Ray(plane.getNormal().cpy().scl(-plane.getD()), plane.getNormal().cpy().crs(0f, 1f, 0f)),
+				new Ray(plane.getNormal().cpy().scl(-plane.getD()), plane.getNormal().cpy().crs(plane.getNormal().cpy().crs(0f, 1f, 0f))));
 	}
 }
