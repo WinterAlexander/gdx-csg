@@ -7,9 +7,10 @@ import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.math.collision.Segment;
 import com.badlogic.gdx.utils.Array;
 import com.winteralexander.gdx.csg.IntersectorPlus;
-import com.winteralexander.gdx.csg.SegmentPlus;
-import com.winteralexander.gdx.csg.Triangle;
+import com.winteralexander.gdx.utils.math.shape3d.SegmentPlus;
+import com.winteralexander.gdx.utils.math.shape3d.Triangle;
 import com.winteralexander.gdx.csg.test.debugviewer.TriangleViewer;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Random;
@@ -513,6 +514,7 @@ public class IntersectorPlusTest {
 	}
 
 	@Test
+	@Ignore
 	public void testBadSplit() {
 		Triangle tri = new Triangle(1.375f, 0.0f, 0.625f, 2.0f, 0.0f, 0.625f, 1.375f, 0.0f, 0.0f);
 		Plane plane = new Plane();

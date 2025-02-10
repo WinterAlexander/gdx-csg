@@ -12,7 +12,8 @@ import com.badlogic.gdx.math.collision.Segment;
 import com.badlogic.gdx.utils.*;
 import com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult;
 import com.winteralexander.gdx.utils.io.Serializable;
-import com.winteralexander.gdx.utils.math.VectorUtil;
+import com.winteralexander.gdx.utils.math.vector.VectorUtil;
+import com.winteralexander.gdx.utils.math.shape3d.SegmentPlus;
 
 import java.io.IOException;
 import java.io.InputStream;

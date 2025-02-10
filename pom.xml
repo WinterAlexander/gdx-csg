@@ -22,7 +22,7 @@
         <dependency>
             <groupId>com.github.WinterAlexander</groupId>
             <artifactId>gdx-utils</artifactId>
-            <version>icosphere-SNAPSHOT</version>
+            <version>11.0.0</version>
         </dependency>
         <!-- Test dependencies -->
         <dependency>

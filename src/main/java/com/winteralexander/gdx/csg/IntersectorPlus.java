@@ -4,6 +4,8 @@ import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.math.collision.Segment;
+import com.winteralexander.gdx.utils.math.shape3d.SegmentPlus;
+import com.winteralexander.gdx.utils.math.shape3d.Triangle;
 
 import static com.winteralexander.gdx.csg.IntersectorPlus.LineIntersectionResult.*;
 import static com.winteralexander.gdx.utils.math.MathUtil.pow2;

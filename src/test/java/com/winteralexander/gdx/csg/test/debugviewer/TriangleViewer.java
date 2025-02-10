@@ -23,10 +23,10 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.winteralexander.gdx.csg.IntersectorPlus;
 import com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult;
-import com.winteralexander.gdx.csg.SegmentPlus;
-import com.winteralexander.gdx.csg.Triangle;
 import com.winteralexander.gdx.utils.input.InputUtil;
 import com.winteralexander.gdx.utils.math.MathUtil;
+import com.winteralexander.gdx.utils.math.shape3d.SegmentPlus;
+import com.winteralexander.gdx.utils.math.shape3d.Triangle;
 import org.lwjgl.opengl.Display;
 
 import java.util.function.Consumer;

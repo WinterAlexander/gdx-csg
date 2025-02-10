@@ -1,6 +1,7 @@
 package com.winteralexander.gdx.csg;
 
 import com.badlogic.gdx.math.Vector3;
+import com.winteralexander.gdx.utils.math.shape3d.Triangle;
 
 import static com.winteralexander.gdx.utils.Validation.ensureNotNull;
 
