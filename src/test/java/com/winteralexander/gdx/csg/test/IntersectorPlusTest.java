@@ -548,4 +548,18 @@ public class IntersectorPlusTest {
 				new Ray(plane.getNormal().cpy().scl(-plane.getD()), plane.getNormal().cpy().crs(0f, 1f, 0f)),
 				new Ray(plane.getNormal().cpy().scl(-plane.getD()), plane.getNormal().cpy().crs(plane.getNormal().cpy().crs(0f, 1f, 0f))));
 	}
+
+	@Test
+	public void testTrianglePointIntersection() {
+		Triangle tri1 = new Triangle(-0.5f, 0.5f, -0.4209333f, -0.5f, 0.5f, -0.5f, -0.5f, -0.5f, -0.5f);
+		Triangle tri2 = new Triangle(-0.49999997f, -0.19087355f, -0.45090222f,
+				-0.5f, -0.34360337f, -0.48763424f,
+				-0.5f, -0.49999994f, 0.5f);
+
+		Segment out = new SegmentPlus();
+		//TriangleViewer.start(tri1, tri2);
+
+		assertEquals(TriangleIntersectionResult.POINT,
+				intersectTriangleTriangle(tri1, tri2, 1e-5f, out));
+	}
 }

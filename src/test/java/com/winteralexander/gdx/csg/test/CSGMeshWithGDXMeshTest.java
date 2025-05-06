@@ -843,7 +843,7 @@ public class CSGMeshWithGDXMeshTest {
 		result.splitTriangles(second);
 		copy2.splitTriangles(first);
 
-		CSGMeshViewer.start(result, copy2);
+		//CSGMeshViewer.start(result, copy2);
 
 		result.classifyFaces(second);
 		copy2.classifyFaces(first);

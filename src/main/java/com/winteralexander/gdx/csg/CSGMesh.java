@@ -400,7 +400,7 @@ public class CSGMesh implements Serializable {
 			if(boundaryFace) {
 				if(!allPointsBoundary)
 					throw new IllegalStateException("Boundary face has points not on the boundary");
-
+					// CSGMeshViewer.start(new CSGMesh[]{ this, other }, new Ray[0], new Triangle[]{ face.getTriangle() });
 				faceStatus.put(face, InsideStatus.BOUNDARY);
 				continue;
 			}

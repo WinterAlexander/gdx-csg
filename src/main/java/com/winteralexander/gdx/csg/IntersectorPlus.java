@@ -231,6 +231,7 @@ public class IntersectorPlus {
 			if(signFace1Vert1 != 0 || ignoreCoplanar)
 				return TriangleIntersectionResult.NONE;
 
+			// for each side of each triangle, try to find collinear sides
 			for(int i = 0; i < 3; i++) {
 				Vector3 start = first.getPoint(i + 1);
 				Vector3 end = first.getPoint((i + 1) % 3 + 1);
@@ -249,13 +250,17 @@ public class IntersectorPlus {
 
 						Vector3 perp = tmpIntersection1.set(end).sub(start);
 						perp.crs(first.getNormal());
-						boolean sameDir = Math.signum(perp.dot(otherPointA)) == Math.signum(perp.dot(otherPointB));
+						tmpIntersection2.set(otherPointA).sub(start);
+						tmpIntersection3.set(otherPointB).sub(second.getPoint(j + 1));
+						boolean sameDir = Math.signum(perp.dot(tmpIntersection2))
+								== Math.signum(perp.dot(tmpIntersection3));
 						return sameDir ? TriangleIntersectionResult.COPLANAR_FACE_FACE
 								: TriangleIntersectionResult.EDGE_EDGE;
 					}
 				}
 			}
 
+			// check for triangle corners matching other corners
 			for(int i = 0; i < 3; i++) {
 				Vector3 a = first.getPoint(i + 1);
 				Vector3 a1 = tmpIntersection1.set(first.getPoint((i + 1) % 3 + 1)).sub(a);
@@ -277,6 +282,7 @@ public class IntersectorPlus {
 				}
 			}
 
+			// look for corners of a triangle being on the edge of another
 			for(int i = 0; i < 3; i++) {
 				Vector3 a = first.getPoint(i + 1);
 				Vector3 e1a = first.getPoint((i + 1) % 3 + 1);
@@ -292,9 +298,13 @@ public class IntersectorPlus {
 						Vector3 perp = tmpIntersection1.set(e1b).sub(e2b);
 						perp.crs(first.getNormal());
 
-						boolean sameDir = Math.signum(perp.dot(e1a)) == Math.signum(perp.dot(b));
+						tmpIntersection2.set(e1a).sub(a);
+						tmpIntersection3.set(b).sub(a);
+
+						boolean sameDir = Math.signum(perp.dot(tmpIntersection2))
+								== Math.signum(perp.dot(tmpIntersection3));
 						return sameDir ? TriangleIntersectionResult.COPLANAR_FACE_FACE
-								: TriangleIntersectionResult.EDGE_EDGE;
+								: TriangleIntersectionResult.POINT;
 					}
 
 					if(intersectSegmentSegment(e1a, e2a, b, e2b, tol, tmpIntersection1) == POINT
@@ -303,9 +313,13 @@ public class IntersectorPlus {
 						Vector3 perp = tmpIntersection1.set(e1a).sub(e2a);
 						perp.crs(first.getNormal());
 
-						boolean sameDir = Math.signum(perp.dot(e2b)) == Math.signum(perp.dot(a));
+						tmpIntersection2.set(e2b).sub(b);
+						tmpIntersection3.set(a).sub(b);
+
+						boolean sameDir = Math.signum(perp.dot(tmpIntersection2))
+								== Math.signum(perp.dot(tmpIntersection3));
 						return sameDir ? TriangleIntersectionResult.COPLANAR_FACE_FACE
-								: TriangleIntersectionResult.EDGE_EDGE;
+								: TriangleIntersectionResult.POINT;
 					}
 				}
 			}
