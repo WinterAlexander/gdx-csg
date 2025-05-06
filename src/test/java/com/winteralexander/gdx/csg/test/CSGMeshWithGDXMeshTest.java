@@ -22,7 +22,6 @@ import com.winteralexander.gdx.csg.CSGMesh;
 import com.winteralexander.gdx.csg.CSGUtil;
 import com.winteralexander.gdx.csg.test.debugviewer.CSGMeshViewer;
 import com.winteralexander.gdx.csg.test.debugviewer.ModelViewer;
-import com.winteralexander.gdx.utils.g3d.IcoSphereShapeBuilder;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -833,8 +832,30 @@ public class CSGMeshWithGDXMeshTest {
 				new Matrix4().setToTranslation(-WATERFALL_WIDTH / 2f, 0f, WATERFALL_WIDTH / 2f));
 		cylHoriz.meshes.get(0).transform(new Matrix4().setToRotation(0f, 0f, 1f, 90f));
 
-		ModelViewer.start(cylVert, cylHoriz);
-		CSGUtil.union(cylVert, cylHoriz);
-		ModelViewer.start(cylVert);
+		CSGMesh first = CSGMesh.fromMesh(cylVert.meshes.get(0));
+		CSGMesh second = CSGMesh.fromMesh(cylHoriz.meshes.get(0));
+
+		CSGMesh result = first.cpy();
+		CSGMesh copy2 = second.cpy();
+		result.setConfig(CSGConfiguration.DEFAULT);
+		copy2.setConfig(CSGConfiguration.DEFAULT);
+
+		result.splitTriangles(second);
+		copy2.splitTriangles(first);
+
+		CSGMeshViewer.start(result, copy2);
+
+		result.classifyFaces(second);
+		copy2.classifyFaces(first);
+
+		CSGMeshViewer.start(result, copy2);
+
+		result.removeFaces(true, false);
+		copy2.removeFaces(true, true);
+
+		result.mergeWith(copy2);
+		result.clearInsideStatus();
+
+		CSGMeshViewer.start(result);
 	}
 }

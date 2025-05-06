@@ -60,9 +60,6 @@ public class CSGMeshViewer implements ApplicationListener {
 	public CSGMeshViewer(CSGMesh[] meshes, Ray[] rays) {
 		this.meshes.addAll(meshes);
 		this.rays.addAll(rays);
-		tris.add(new Triangle(new Vector3(1.375f, 0.0f, 0.625f),
-				new Vector3(1.6973898f, 0.0f, 0.625f),
-				new Vector3(1.0526102f, 0.0f, 0.15650219f)));
 	}
 
 	@Override
@@ -277,10 +274,14 @@ public class CSGMeshViewer implements ApplicationListener {
 	public void dispose() {}
 
 	public static void start(CSGMesh... meshes) {
-		start(meshes, new Ray[0]);
+		start(meshes, new Ray[0], new Triangle[0]);
 	}
 
 	public static void start(CSGMesh[] meshes, Ray[] rays) {
+		start(meshes, rays, new Triangle[0]);
+	}
+
+	public static void start(CSGMesh[] meshes, Ray[] rays, Triangle[] triangles) {
 		if(Gdx.gl != null) {
 			Display.destroy();
 			Gdx.gl = null;
