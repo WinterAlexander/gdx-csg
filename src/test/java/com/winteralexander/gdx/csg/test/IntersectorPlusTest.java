@@ -572,6 +572,24 @@ public class IntersectorPlusTest {
 		//TriangleViewer.start(tri1, tri2);
 
 		assertEquals(EDGE_EDGE,
+				intersectTriangleTriangle(tri1, tri2, 1e-4f, out));
+
+		tri1 = new Triangle(-0.34360343f,-0.49999994f,-0.48763424f, 0.42672676f,-0.5f,-0.4267268f, 0.3264776f,-0.5f,-0.32647762f);
+		tri2 = new Triangle(-0.3436038f,-0.5f,-0.48769438f, -0.19087377f,-0.5f,-0.45102096f, -0.5f,-0.5f,0.5f);
+		//TriangleViewer.start(tri1, tri2);
+
+		assertEquals(EDGE_EDGE,
 				intersectTriangleTriangle(tri1, tri2, 1e-5f, out));
+
+	}
+
+	@Test
+	public void testFailingCollinearSegmentIntersection() {
+		Segment segment1 = new SegmentPlus(0.42672676f, -0.5f, -0.4267268f, -0.5f,-0.49999994f,-0.5f);
+		Segment segment2 = new SegmentPlus(-0.5f, -0.5f, -0.5f, -0.3436038f, -0.5f, -0.48769438f);
+
+		Vector3 out = new Vector3();
+
+		assertEquals(COLLINEAR, intersectSegmentSegment(segment1, segment2, 1e-4f, out));
 	}
 }
