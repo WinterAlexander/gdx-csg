@@ -569,7 +569,7 @@ public class IntersectorPlusTest {
 		Triangle tri2 = new Triangle(-0.5f,-0.5f,-0.5f, -0.3436038f,-0.5f,-0.48769438f, -0.5f,-0.5f,0.5f);
 
 		Segment out = new SegmentPlus();
-		TriangleViewer.start(tri1, tri2);
+		//TriangleViewer.start(tri1, tri2);
 
 		assertEquals(EDGE_EDGE,
 				intersectTriangleTriangle(tri1, tri2, 1e-5f, out));

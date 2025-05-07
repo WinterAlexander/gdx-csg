@@ -271,11 +271,10 @@ public class IntersectorPlus {
 					Vector3 b2 = tmpSegmentDir2.set(second.getPoint((j + 2) % 3 + 1)).sub(b);
 
 					if(a.epsilonEquals(b, tol)) {
-						// TODO this is wrong, having a vertex in between does not mean COPLANAR_FACE_FACE
-						boolean overlap = isBetween(a1, a2, b1)
-								|| isBetween(a1, a2, b2)
-								|| isBetween(b1, b2, a1)
-								|| isBetween(b1, b2, a2);
+						boolean overlap = isBetween(a1, a2, b1, tol)
+								|| isBetween(a1, a2, b2, tol)
+								|| isBetween(b1, b2, a1, tol)
+								|| isBetween(b1, b2, a2, tol);
 						return overlap
 								? TriangleIntersectionResult.COPLANAR_FACE_FACE
 								: TriangleIntersectionResult.POINT;
@@ -394,14 +393,8 @@ public class IntersectorPlus {
 		return TriangleIntersectionResult.NONCOPLANAR_FACE_FACE;
 	}
 
-	private static boolean isBetween(Vector3 first, Vector3 second, Vector3 between) {
-		float lenFirst = first.len();
-		Vector3 middle = tmpIntersection3.set(first).scl(1f / lenFirst).mulAdd(second, 1f / second.len()).nor();
-		float d = middle.dot(first) / lenFirst;
-		float d2 = middle.dot(between) / between.len();
-		if(d2 < 0f)
-			return false;
-		return d2 > d;
+	private static boolean isBetween(Vector3 first, Vector3 second, Vector3 between, float tol) {
+		return Math.abs(first.dst(second) - first.dst(between) - second.dst(between)) < tol;
 	}
 
 	private static void rayFromIntersection(Triangle first,
