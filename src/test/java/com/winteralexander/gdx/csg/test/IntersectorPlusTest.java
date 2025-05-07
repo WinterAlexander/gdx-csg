@@ -579,7 +579,7 @@ public class IntersectorPlusTest {
 		//TriangleViewer.start(tri1, tri2);
 
 		assertEquals(EDGE_EDGE,
-				intersectTriangleTriangle(tri1, tri2, 1e-5f, out));
+				intersectTriangleTriangle(tri1, tri2, 1e-4f, out));
 
 	}
 

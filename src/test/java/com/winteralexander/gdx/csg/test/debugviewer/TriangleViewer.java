@@ -91,12 +91,14 @@ public class TriangleViewer implements ApplicationListener {
 		cam = new PerspectiveCamera(67f, 16f, 9f);
 		cam.position.set(10f, 0f, 0f);
 		cam.lookAt(0f, 0f, 0f);
-		cam.near = 0.01f;
+		cam.near = 0.001f;
 
 		debugRenderer = new ShapeRenderer();
 		debugRenderer.setAutoShapeType(true);
 
-		InputUtil.registerInput(new CameraInputController(cam));
+		InputUtil.registerInput(new CameraInputController(cam) {{
+			scrollFactor /= 4f;
+		}});
 
 		__debugOnlyRenderables.clear();
 		__debugOnlyRenderables.addFirst(r -> {

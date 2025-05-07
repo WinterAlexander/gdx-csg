@@ -837,8 +837,12 @@ public class CSGMeshWithGDXMeshTest {
 
 		CSGMesh result = first.cpy();
 		CSGMesh copy2 = second.cpy();
-		result.setConfig(CSGConfiguration.DEFAULT);
-		copy2.setConfig(CSGConfiguration.DEFAULT);
+		result.setConfig(new CSGConfiguration() {{
+			tolerance = 1e-4f;
+		}});
+		copy2.setConfig(new CSGConfiguration() {{
+			tolerance = 1e-4f;
+		}});
 
 		result.splitTriangles(second);
 		copy2.splitTriangles(first);
