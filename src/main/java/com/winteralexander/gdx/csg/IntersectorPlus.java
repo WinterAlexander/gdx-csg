@@ -251,7 +251,7 @@ public class IntersectorPlus {
 						Vector3 perp = tmpIntersection1.set(end).sub(start);
 						perp.crs(first.getNormal());
 						tmpIntersection2.set(otherPointA).sub(start);
-						tmpIntersection3.set(otherPointB).sub(second.getPoint(j + 1));
+						tmpIntersection3.set(otherPointB).sub(start);
 						boolean sameDir = Math.signum(perp.dot(tmpIntersection2))
 								== Math.signum(perp.dot(tmpIntersection3));
 						return sameDir ? TriangleIntersectionResult.COPLANAR_FACE_FACE
@@ -271,6 +271,7 @@ public class IntersectorPlus {
 					Vector3 b2 = tmpSegmentDir2.set(second.getPoint((j + 2) % 3 + 1)).sub(b);
 
 					if(a.epsilonEquals(b, tol)) {
+						// TODO this is wrong, having a vertex in between does not mean COPLANAR_FACE_FACE
 						boolean overlap = isBetween(a1, a2, b1)
 								|| isBetween(a1, a2, b2)
 								|| isBetween(b1, b2, a1)

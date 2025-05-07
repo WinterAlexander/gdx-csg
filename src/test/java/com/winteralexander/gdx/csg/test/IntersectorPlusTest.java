@@ -562,4 +562,16 @@ public class IntersectorPlusTest {
 		assertEquals(TriangleIntersectionResult.POINT,
 				intersectTriangleTriangle(tri1, tri2, 1e-5f, out));
 	}
+
+	@Test
+	public void testTriangleEdgeIntersection() {
+		Triangle tri1 = new Triangle(0.49999994f,-0.5f,-0.5f, 0.42672676f,-0.5f,-0.4267268f, -0.5f,-0.49999994f,-0.5f);
+		Triangle tri2 = new Triangle(-0.5f,-0.5f,-0.5f, -0.3436038f,-0.5f,-0.48769438f, -0.5f,-0.5f,0.5f);
+
+		Segment out = new SegmentPlus();
+		TriangleViewer.start(tri1, tri2);
+
+		assertEquals(EDGE_EDGE,
+				intersectTriangleTriangle(tri1, tri2, 1e-5f, out));
+	}
 }
