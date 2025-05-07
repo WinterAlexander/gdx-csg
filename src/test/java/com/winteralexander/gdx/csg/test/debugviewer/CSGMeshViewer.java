@@ -153,7 +153,7 @@ public class CSGMeshViewer implements ApplicationListener {
 							.add(face.getPosition2())
 							.add(face.getPosition3())
 							.scl(1f / 3f);
-					for(int k = 0; k < 1;/*(boundaryFace ? 3 : 2);*/ k++) {
+					for(int k = 0; k < (boundaryFace ? 3 : 2); k++) {
 						tmpVec.set(face.getPosition1()).mulAdd(tmpVec3, k * 0.1f * (i + 1)).scl(1f / (1f + k * 0.1f * (i + 1)));
 						tmpVec2.set(face.getPosition2()).mulAdd(tmpVec3, k * 0.1f * (i + 1)).scl(1f / (1f + k * 0.1f * (i + 1)));
 						tmpVec4.set(face.getPosition3()).mulAdd(tmpVec3, k * 0.1f * (i + 1)).scl(1f / (1f + k * 0.1f * (i + 1)));
