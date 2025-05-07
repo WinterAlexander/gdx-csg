@@ -11,7 +11,9 @@ import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
+import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.CylinderShapeBuilder;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
@@ -20,7 +22,6 @@ import com.winteralexander.gdx.csg.CSGMesh;
 import com.winteralexander.gdx.csg.CSGUtil;
 import com.winteralexander.gdx.csg.test.debugviewer.CSGMeshViewer;
 import com.winteralexander.gdx.csg.test.debugviewer.ModelViewer;
-import com.winteralexander.gdx.utils.g3d.IcoSphereShapeBuilder;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -774,7 +775,45 @@ public class CSGMeshWithGDXMeshTest {
 		Array<CSGMesh> csgMeshes = new Array<>();
 		for(MeshPart meshPart : box.meshParts)
 			csgMeshes.add(CSGMesh.fromMeshPart(meshPart));
+	}
 
+	@Test
+	public void testDoubleCylinderQuarter() {
+		ModelBuilder builder = new ModelBuilder();
 
+		float WATERFALL_WIDTH = 1f;
+		int WATERFALL_SMOOTHNESS = 4;
+
+		builder.begin();
+
+		MeshPartBuilder vertCylBuilder = builder.part("vert_cyl",
+				GL_TRIANGLES, DEFAULT_ATTRIBUTES, new Material());
+
+		CylinderShapeBuilder.build(vertCylBuilder,
+				WATERFALL_WIDTH * 2f, WATERFALL_WIDTH, WATERFALL_WIDTH * 2f,
+				WATERFALL_SMOOTHNESS, -90f, 0f, false);
+
+		Model cylVert = builder.end();
+		cylVert.meshes.get(0).transform(
+				new Matrix4().setToTranslation(-WATERFALL_WIDTH / 2f, 0f, WATERFALL_WIDTH / 2f));
+		builder.begin();
+		MeshPartBuilder horizCylBuilder = builder.part("horiz_cyl",
+				GL_TRIANGLES, DEFAULT_ATTRIBUTES, new Material());
+
+		CylinderShapeBuilder.build(horizCylBuilder,
+				WATERFALL_WIDTH * 2f, WATERFALL_WIDTH, WATERFALL_WIDTH * 2f,
+				WATERFALL_SMOOTHNESS, -90f, 0f, false);
+
+		Model cylHoriz = builder.end();
+
+		cylHoriz.meshes.get(0).transform(
+				new Matrix4().setToTranslation(-WATERFALL_WIDTH / 2f, 0f, WATERFALL_WIDTH / 2f));
+		cylHoriz.meshes.get(0).transform(new Matrix4().setToRotation(0f, 0f, 1f, 90f));
+
+		CSGUtil.union(cylVert, cylHoriz, new CSGConfiguration() {{
+			insideTestDirection.set(0f, 0f, -1f);
+		}});
+
+		ModelViewer.start(cylVert);
 	}
 }

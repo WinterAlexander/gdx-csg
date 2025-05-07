@@ -231,6 +231,7 @@ public class IntersectorPlus {
 			if(signFace1Vert1 != 0 || ignoreCoplanar)
 				return TriangleIntersectionResult.NONE;
 
+			// for each side of each triangle, try to find collinear sides
 			for(int i = 0; i < 3; i++) {
 				Vector3 start = first.getPoint(i + 1);
 				Vector3 end = first.getPoint((i + 1) % 3 + 1);
@@ -249,13 +250,17 @@ public class IntersectorPlus {
 
 						Vector3 perp = tmpIntersection1.set(end).sub(start);
 						perp.crs(first.getNormal());
-						boolean sameDir = Math.signum(perp.dot(otherPointA)) == Math.signum(perp.dot(otherPointB));
+						tmpIntersection2.set(otherPointA).sub(start);
+						tmpIntersection3.set(otherPointB).sub(start);
+						boolean sameDir = Math.signum(perp.dot(tmpIntersection2))
+								== Math.signum(perp.dot(tmpIntersection3));
 						return sameDir ? TriangleIntersectionResult.COPLANAR_FACE_FACE
 								: TriangleIntersectionResult.EDGE_EDGE;
 					}
 				}
 			}
 
+			// check for triangle corners matching other corners
 			for(int i = 0; i < 3; i++) {
 				Vector3 a = first.getPoint(i + 1);
 				Vector3 a1 = tmpIntersection1.set(first.getPoint((i + 1) % 3 + 1)).sub(a);
@@ -266,10 +271,10 @@ public class IntersectorPlus {
 					Vector3 b2 = tmpSegmentDir2.set(second.getPoint((j + 2) % 3 + 1)).sub(b);
 
 					if(a.epsilonEquals(b, tol)) {
-						boolean overlap = isBetween(a1, a2, b1)
-								|| isBetween(a1, a2, b2)
-								|| isBetween(b1, b2, a1)
-								|| isBetween(b1, b2, a2);
+						boolean overlap = isBetween(a1, a2, b1, tol)
+								|| isBetween(a1, a2, b2, tol)
+								|| isBetween(b1, b2, a1, tol)
+								|| isBetween(b1, b2, a2, tol);
 						return overlap
 								? TriangleIntersectionResult.COPLANAR_FACE_FACE
 								: TriangleIntersectionResult.POINT;
@@ -277,6 +282,7 @@ public class IntersectorPlus {
 				}
 			}
 
+			// look for corners of a triangle being on the edge of another
 			for(int i = 0; i < 3; i++) {
 				Vector3 a = first.getPoint(i + 1);
 				Vector3 e1a = first.getPoint((i + 1) % 3 + 1);
@@ -292,9 +298,13 @@ public class IntersectorPlus {
 						Vector3 perp = tmpIntersection1.set(e1b).sub(e2b);
 						perp.crs(first.getNormal());
 
-						boolean sameDir = Math.signum(perp.dot(e1a)) == Math.signum(perp.dot(b));
+						tmpIntersection2.set(e1a).sub(a);
+						tmpIntersection3.set(b).sub(a);
+
+						boolean sameDir = Math.signum(perp.dot(tmpIntersection2))
+								== Math.signum(perp.dot(tmpIntersection3));
 						return sameDir ? TriangleIntersectionResult.COPLANAR_FACE_FACE
-								: TriangleIntersectionResult.EDGE_EDGE;
+								: TriangleIntersectionResult.POINT;
 					}
 
 					if(intersectSegmentSegment(e1a, e2a, b, e2b, tol, tmpIntersection1) == POINT
@@ -303,9 +313,13 @@ public class IntersectorPlus {
 						Vector3 perp = tmpIntersection1.set(e1a).sub(e2a);
 						perp.crs(first.getNormal());
 
-						boolean sameDir = Math.signum(perp.dot(e2b)) == Math.signum(perp.dot(a));
+						tmpIntersection2.set(e2b).sub(b);
+						tmpIntersection3.set(a).sub(b);
+
+						boolean sameDir = Math.signum(perp.dot(tmpIntersection2))
+								== Math.signum(perp.dot(tmpIntersection3));
 						return sameDir ? TriangleIntersectionResult.COPLANAR_FACE_FACE
-								: TriangleIntersectionResult.EDGE_EDGE;
+								: TriangleIntersectionResult.POINT;
 					}
 				}
 			}
@@ -379,14 +393,8 @@ public class IntersectorPlus {
 		return TriangleIntersectionResult.NONCOPLANAR_FACE_FACE;
 	}
 
-	private static boolean isBetween(Vector3 first, Vector3 second, Vector3 between) {
-		float lenFirst = first.len();
-		Vector3 middle = tmpIntersection3.set(first).scl(1f / lenFirst).mulAdd(second, 1f / second.len()).nor();
-		float d = middle.dot(first) / lenFirst;
-		float d2 = middle.dot(between) / between.len();
-		if(d2 < 0f)
-			return false;
-		return d2 > d;
+	private static boolean isBetween(Vector3 first, Vector3 second, Vector3 between, float tol) {
+		return Math.abs(first.dst(second) - first.dst(between) - second.dst(between)) < tol;
 	}
 
 	private static void rayFromIntersection(Triangle first,

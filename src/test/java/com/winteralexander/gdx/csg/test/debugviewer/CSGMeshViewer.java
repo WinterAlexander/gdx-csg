@@ -57,12 +57,10 @@ public class CSGMeshViewer implements ApplicationListener {
 			tmpVec3 = new Vector3(),
 			tmpVec4 = new Vector3();
 
-	public CSGMeshViewer(CSGMesh[] meshes, Ray[] rays) {
+	public CSGMeshViewer(CSGMesh[] meshes, Ray[] rays, Triangle[] triangles) {
 		this.meshes.addAll(meshes);
 		this.rays.addAll(rays);
-		tris.add(new Triangle(new Vector3(1.375f, 0.0f, 0.625f),
-				new Vector3(1.6973898f, 0.0f, 0.625f),
-				new Vector3(1.0526102f, 0.0f, 0.15650219f)));
+		this.tris.addAll(triangles);
 	}
 
 	@Override
@@ -276,11 +274,28 @@ public class CSGMeshViewer implements ApplicationListener {
 	@Override
 	public void dispose() {}
 
-	public static void start(CSGMesh... meshes) {
-		start(meshes, new Ray[0]);
+	public static void start(Object... objects) {
+		Array<CSGMesh> meshes = new Array<>(CSGMesh.class);
+		Array<Ray> rays = new Array<>(Ray.class);
+		Array<Triangle> tris = new Array<>(Triangle.class);
+		for(Object object : objects) {
+			if(object instanceof CSGMesh)
+				meshes.add((CSGMesh)object);
+			else if(object instanceof Ray)
+				rays.add((Ray)object);
+			else if(object instanceof Triangle)
+				tris.add((Triangle)object);
+			else
+				throw new IllegalArgumentException("Unrecognized object: " + object);
+		}
+		start(meshes.toArray(), rays.toArray(), tris.toArray());
 	}
 
 	public static void start(CSGMesh[] meshes, Ray[] rays) {
+		start(meshes, rays, new Triangle[0]);
+	}
+
+	public static void start(CSGMesh[] meshes, Ray[] rays, Triangle[] triangles) {
 		if(Gdx.gl != null) {
 			Display.destroy();
 			Gdx.gl = null;
@@ -292,7 +307,7 @@ public class CSGMeshViewer implements ApplicationListener {
 		}
 
 		try {
-			new LwjglApplication(new CSGMeshViewer(meshes, rays),
+			new LwjglApplication(new CSGMeshViewer(meshes, rays, triangles),
 					new LwjglApplicationConfiguration() {{
 						width = 1600;
 						height = 900;

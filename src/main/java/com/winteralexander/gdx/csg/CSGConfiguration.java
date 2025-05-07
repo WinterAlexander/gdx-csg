@@ -1,5 +1,7 @@
 package com.winteralexander.gdx.csg;
 
+import com.badlogic.gdx.math.Vector3;
+
 /**
  * Configuration for CSG operations
  * <p>
@@ -13,4 +15,5 @@ public class CSGConfiguration {
 	public float tolerance = 1e-5f;
 	public boolean enableMerging = true;
 	public boolean enableBoundaryFaces = true;
+	public final Vector3 insideTestDirection = new Vector3(0f, 1f, 0f);
 }
