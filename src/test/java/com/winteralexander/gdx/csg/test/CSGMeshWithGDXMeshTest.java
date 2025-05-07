@@ -782,7 +782,7 @@ public class CSGMeshWithGDXMeshTest {
 		ModelBuilder builder = new ModelBuilder();
 
 		float WATERFALL_WIDTH = 1f;
-		int WATERFALL_SMOOTHNESS = 10;
+		int WATERFALL_SMOOTHNESS = 4;
 
 		builder.begin();
 
@@ -791,18 +791,7 @@ public class CSGMeshWithGDXMeshTest {
 
 		CylinderShapeBuilder.build(vertCylBuilder,
 				WATERFALL_WIDTH * 2f, WATERFALL_WIDTH, WATERFALL_WIDTH * 2f,
-				WATERFALL_SMOOTHNESS, -90f, 0f, true);
-
-		vertCylBuilder.rect(0f, -WATERFALL_WIDTH / 2f, -WATERFALL_WIDTH,
-				0f, -WATERFALL_WIDTH / 2f, 0f,
-				0f, WATERFALL_WIDTH / 2f, 0f,
-				0f, WATERFALL_WIDTH / 2f, -WATERFALL_WIDTH,
-				-1f, 0f, 0f);
-		vertCylBuilder.rect(0f, -WATERFALL_WIDTH / 2f, 0f,
-				WATERFALL_WIDTH, -WATERFALL_WIDTH / 2f, 0f,
-				WATERFALL_WIDTH, WATERFALL_WIDTH / 2f, 0f,
-				0f, WATERFALL_WIDTH / 2f, 0f,
-				0f, 0f, 1f);
+				WATERFALL_SMOOTHNESS, -90f, 0f, false);
 
 		Model cylVert = builder.end();
 		cylVert.meshes.get(0).transform(
@@ -813,18 +802,7 @@ public class CSGMeshWithGDXMeshTest {
 
 		CylinderShapeBuilder.build(horizCylBuilder,
 				WATERFALL_WIDTH * 2f, WATERFALL_WIDTH, WATERFALL_WIDTH * 2f,
-				WATERFALL_SMOOTHNESS, -90f, 0f, true);
-
-		horizCylBuilder.rect(0f, -WATERFALL_WIDTH / 2f, -WATERFALL_WIDTH,
-				0f, -WATERFALL_WIDTH / 2f, 0f,
-				0f, WATERFALL_WIDTH / 2f, 0f,
-				0f, WATERFALL_WIDTH / 2f, -WATERFALL_WIDTH,
-				-1f, 0f, 0f);
-		horizCylBuilder.rect(0f, -WATERFALL_WIDTH / 2f, 0f,
-				WATERFALL_WIDTH, -WATERFALL_WIDTH / 2f, 0f,
-				WATERFALL_WIDTH, WATERFALL_WIDTH / 2f, 0f,
-				0f, WATERFALL_WIDTH / 2f, 0f,
-				0f, 0f, 1f);
+				WATERFALL_SMOOTHNESS, -90f, 0f, false);
 
 		Model cylHoriz = builder.end();
 
@@ -832,34 +810,10 @@ public class CSGMeshWithGDXMeshTest {
 				new Matrix4().setToTranslation(-WATERFALL_WIDTH / 2f, 0f, WATERFALL_WIDTH / 2f));
 		cylHoriz.meshes.get(0).transform(new Matrix4().setToRotation(0f, 0f, 1f, 90f));
 
-		CSGMesh first = CSGMesh.fromMesh(cylVert.meshes.get(0));
-		CSGMesh second = CSGMesh.fromMesh(cylHoriz.meshes.get(0));
-
-		CSGMesh result = first.cpy();
-		CSGMesh copy2 = second.cpy();
-		result.setConfig(new CSGConfiguration() {{
-			tolerance = 1e-4f;
-		}});
-		copy2.setConfig(new CSGConfiguration() {{
-			tolerance = 1e-4f;
+		CSGUtil.union(cylVert, cylHoriz, new CSGConfiguration() {{
+			insideTestDirection.set(0f, 0f, -1f);
 		}});
 
-		result.splitTriangles(second);
-		copy2.splitTriangles(first);
-
-		//CSGMeshViewer.start(result, copy2);
-
-		result.classifyFaces(second);
-		copy2.classifyFaces(first);
-
-		CSGMeshViewer.start(result, copy2);
-
-		result.removeFaces(true, false);
-		copy2.removeFaces(true, true);
-
-		result.mergeWith(copy2);
-		result.clearInsideStatus();
-
-		CSGMeshViewer.start(result);
+		ModelViewer.start(cylVert);
 	}
 }

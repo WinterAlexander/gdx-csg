@@ -382,7 +382,7 @@ public class CSGMesh implements Serializable {
 	public void classifyFaces(CSGMesh other) {
 		vertexStatus.clear();
 		for(MeshVertex vertex : vertices)
-			vertexStatus.put(vertex, other.computeInsideStatus(vertex.getPosition()));
+			vertexStatus.put(vertex, other.computeInsideStatus(vertex.getPosition(), config));
 		faceStatus.clear();
 		for(MeshFace face : faces) {
 			boolean boundaryFace = getBoundaryFaces().contains(face);
@@ -409,7 +409,7 @@ public class CSGMesh implements Serializable {
 				InsideStatus status = other.computeInsideStatus(tmpV1.set(face.getV1().getPosition())
 						.add(face.getV2().getPosition())
 						.add(face.getV3().getPosition())
-						.scl(1f / 3f));
+						.scl(1f / 3f), config);
 				if(status == InsideStatus.BOUNDARY)
 					status = InsideStatus.INSIDE;
 				faceStatus.put(face, status);
@@ -439,8 +439,11 @@ public class CSGMesh implements Serializable {
 	 * @param position position to check
 	 * @return inside, outside or on the boundary
 	 */
-	public InsideStatus computeInsideStatus(Vector3 position) {
-		tmpRay.set(position.x, position.y, position.z, 0f, 1f, 0f);
+	public InsideStatus computeInsideStatus(Vector3 position, CSGConfiguration config) {
+		tmpRay.set(position.x, position.y, position.z,
+				config.insideTestDirection.x,
+				config.insideTestDirection.y,
+				config.insideTestDirection.z);
 		float minT = Float.POSITIVE_INFINITY;
 		boolean upFacing = false;
 
