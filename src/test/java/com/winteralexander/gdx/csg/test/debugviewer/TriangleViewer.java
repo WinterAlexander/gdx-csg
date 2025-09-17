@@ -21,10 +21,10 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Queue;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.winteralexander.gdx.csg.IntersectorPlus;
-import com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult;
 import com.winteralexander.gdx.utils.input.InputUtil;
 import com.winteralexander.gdx.utils.math.MathUtil;
+import com.winteralexander.gdx.utils.math.shape3d.Intersector3D;
+import com.winteralexander.gdx.utils.math.shape3d.Intersector3D.TriangleIntersectionResult;
 import com.winteralexander.gdx.utils.math.shape3d.SegmentPlus;
 import com.winteralexander.gdx.utils.math.shape3d.Triangle;
 import org.lwjgl.opengl.Display;
@@ -33,7 +33,8 @@ import java.util.function.Consumer;
 
 import static com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT;
 import static com.badlogic.gdx.graphics.GL20.GL_DEPTH_BUFFER_BIT;
-import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.NONE;
+import static com.winteralexander.gdx.utils.math.shape3d.Intersector3D.TriangleIntersectionResult.NONE;
+import static com.winteralexander.gdx.utils.math.shape3d.Intersector3D.intersectTriangleTriangle;
 
 /**
  * Debug viewer to visualize triangle intersections
@@ -231,7 +232,7 @@ public class TriangleViewer implements ApplicationListener {
 	public void render() {
 
 		try {
-			intersection = IntersectorPlus.intersectTriangleTriangle(triangles.get(0),
+			intersection = intersectTriangleTriangle(triangles.get(0),
 					triangles.get(1), 1e-5f, intersectionSegment);
 		} catch(Exception ex) {
 			intersection = null;
@@ -253,19 +254,13 @@ public class TriangleViewer implements ApplicationListener {
 	}
 
 	@Override
-	public void pause() {
-
-	}
+	public void pause() {}
 
 	@Override
-	public void resume() {
-
-	}
+	public void resume() {}
 
 	@Override
-	public void dispose() {
-
-	}
+	public void dispose() {}
 
 	public static void main(String[] args) {
 		new LwjglApplication(new TriangleViewer(new Triangle(0f, 0f, 0f,

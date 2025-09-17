@@ -10,10 +10,10 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.math.collision.Segment;
 import com.badlogic.gdx.utils.*;
-import com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult;
 import com.winteralexander.gdx.utils.io.Serializable;
-import com.winteralexander.gdx.utils.math.vector.VectorUtil;
+import com.winteralexander.gdx.utils.math.shape3d.Intersector3D.TriangleIntersectionResult;
 import com.winteralexander.gdx.utils.math.shape3d.SegmentPlus;
+import com.winteralexander.gdx.utils.math.vector.VectorUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,14 +25,13 @@ import java.util.HashSet;
 import java.util.UUID;
 
 import static com.badlogic.gdx.graphics.GL20.GL_TRIANGLES;
-import static com.winteralexander.gdx.csg.IntersectorPlus.LineIntersectionResult.COLLINEAR;
-import static com.winteralexander.gdx.csg.IntersectorPlus.TriangleIntersectionResult.*;
-import static com.winteralexander.gdx.csg.IntersectorPlus.intersectTriangleRay;
-import static com.winteralexander.gdx.csg.IntersectorPlus.intersectTriangleTriangle;
 import static com.winteralexander.gdx.utils.Validation.ensureNotNull;
 import static com.winteralexander.gdx.utils.io.SerializationUtil.readVec3;
 import static com.winteralexander.gdx.utils.io.SerializationUtil.writeVec3;
 import static com.winteralexander.gdx.utils.io.StreamUtil.*;
+import static com.winteralexander.gdx.utils.math.shape3d.Intersector3D.*;
+import static com.winteralexander.gdx.utils.math.shape3d.Intersector3D.LineIntersectionResult.COLLINEAR;
+import static com.winteralexander.gdx.utils.math.shape3d.Intersector3D.TriangleIntersectionResult.*;
 
 /**
  * A mesh for CSG operation. A {@link CSGMesh} can be built from a {@link Mesh} and then can
@@ -121,7 +120,7 @@ public class CSGMesh implements Serializable {
 					for(int j = 0; j < 3; j++) {
 						Vector3 start = face.getTriangle().getPoint(j + 1);
 						Vector3 end = face.getTriangle().getPoint((j + 1) % 3 + 1);
-						if(IntersectorPlus.intersectSegmentSegment(start, end,
+						if(intersectSegmentSegment(start, end,
 								intersectSegment.a, intersectSegment.b, config.tolerance, tmpSegmentIntersection) == COLLINEAR) {
 							isEdgeFromFace = true;
 							break;
@@ -241,12 +240,12 @@ public class CSGMesh implements Serializable {
 			else if(current.getV3() != firstMatch && current.getV3() != secondMatch)
 				nonMatchingB = current.getV3();
 
-			boolean collinearWithFirst = IntersectorPlus.intersectSegmentSegment(
+			boolean collinearWithFirst = intersectSegmentSegment(
 					nonMatchingA.getPosition(), nonMatchingB.getPosition(),
 					nonMatchingA.getPosition(), firstMatch.getPosition(),
 					config.tolerance, tmpSegmentIntersection) == COLLINEAR;
 
-			boolean collinearWithSecond = IntersectorPlus.intersectSegmentSegment(
+			boolean collinearWithSecond = intersectSegmentSegment(
 					nonMatchingA.getPosition(), nonMatchingB.getPosition(),
 					nonMatchingA.getPosition(), secondMatch.getPosition(),
 					config.tolerance, tmpSegmentIntersection) == COLLINEAR;
@@ -259,7 +258,7 @@ public class CSGMesh implements Serializable {
 				//throw new IllegalStateException("Invalid 2 faces");
 
 			for(Segment segment : cutEdges)
-				if(IntersectorPlus.intersectSegmentSegment(segment.a, segment.b,
+				if(intersectSegmentSegment(segment.a, segment.b,
 						firstMatch.getPosition(), secondMatch.getPosition(),
 						config.tolerance, tmpSegmentIntersection) == COLLINEAR) {
 					continue faceLoop;

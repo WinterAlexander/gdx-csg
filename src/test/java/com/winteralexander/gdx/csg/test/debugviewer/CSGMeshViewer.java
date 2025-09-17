@@ -17,7 +17,6 @@ import com.badlogic.gdx.utils.Queue;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.winteralexander.gdx.csg.CSGMesh;
-import com.winteralexander.gdx.csg.IntersectorPlus;
 import com.winteralexander.gdx.csg.MeshFace;
 import com.winteralexander.gdx.csg.MeshVertex;
 import com.winteralexander.gdx.utils.input.InputUtil;
@@ -30,6 +29,7 @@ import java.util.function.Consumer;
 
 import static com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT;
 import static com.badlogic.gdx.graphics.GL20.GL_DEPTH_BUFFER_BIT;
+import static com.winteralexander.gdx.utils.math.shape3d.Intersector3D.intersectTriangleRay;
 
 /**
  * Debug viewer to visualize CSGMeshes
@@ -98,7 +98,7 @@ public class CSGMeshViewer implements ApplicationListener {
 				int i = 0;
 				for(CSGMesh mesh : meshes) {
 					for(MeshFace face : mesh.getFaces()) {
-						if(IntersectorPlus.intersectTriangleRay(face.getTriangle(), ray, 1e-6f, segment)) {
+						if(intersectTriangleRay(face.getTriangle(), ray, 1e-6f, segment)) {
 							highlighted.add(face);
 						}
 					}
