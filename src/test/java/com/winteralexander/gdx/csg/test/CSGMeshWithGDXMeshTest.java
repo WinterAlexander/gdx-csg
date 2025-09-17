@@ -8,11 +8,15 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttributes;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
+import com.badlogic.gdx.graphics.g3d.utils.MeshBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.CylinderShapeBuilder;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
@@ -815,5 +819,143 @@ public class CSGMeshWithGDXMeshTest {
 		}});
 
 		ModelViewer.start(cylVert);
+	}
+
+	@Test
+	public void testHouseBuilding() throws Exception {
+		Vector3 tmpV0 = new Vector3();
+		Vector3 tmpV1 = new Vector3();
+		Vector3 tmpV2 = new Vector3();
+		Vector3 tmpV3 = new Vector3();
+		Vector3 tmpV4 = new Vector3();
+		Matrix4 matTmp1 = new Matrix4();
+		TextureRegion region = new TextureRegion();
+
+		float BODY_HEIGHT = 0.8f;
+		float BOTTOM_WIDTH = 1.1f;
+		float TOP_WIDTH = 1f;
+		float ROOF_WIDTH = 1.3f;
+		float ROOF_HEIGHT = 0.5f;
+
+		float DOOR_WIDTH = 0.3f;
+		float DOOR_HEIGHT = 0.5f;
+		float WINDOW_WIDTH = 0.25f;
+
+		ModelBuilder builder = new ModelBuilder();
+
+		builder.begin();
+
+		MeshBuilder partBuilder = (MeshBuilder)builder.part("house", GL20.GL_TRIANGLES,
+				DEFAULT_ATTRIBUTES,
+				new Material());
+
+		tmpV0.set(0f, 0f, 1f);
+		tmpV1.set(-BOTTOM_WIDTH / 2f, 0f, BOTTOM_WIDTH / 2f);
+		tmpV2.set(BOTTOM_WIDTH / 2f, 0f, BOTTOM_WIDTH / 2f);
+		tmpV3.set(-TOP_WIDTH / 2f, BODY_HEIGHT, TOP_WIDTH / 2f);
+		tmpV4.set(TOP_WIDTH / 2f, BODY_HEIGHT, TOP_WIDTH / 2f);
+		matTmp1.idt().setToRotation(0f, 1f, 0f, 90f);
+
+		for(int i = 0; i < 4; i++) {
+			MeshBuilderUtil.rect(partBuilder, tmpV1, tmpV2, tmpV4, tmpV3, tmpV0, region);
+
+			tmpV0.mul(matTmp1);
+			tmpV1.mul(matTmp1);
+			tmpV2.mul(matTmp1);
+			tmpV3.mul(matTmp1);
+			tmpV4.mul(matTmp1);
+		}
+
+		tmpV1.set(-ROOF_WIDTH / 2f, BODY_HEIGHT, -ROOF_WIDTH / 2f);
+		tmpV2.set(-ROOF_WIDTH / 2f, BODY_HEIGHT, ROOF_WIDTH / 2f);
+		tmpV3.set(0f, BODY_HEIGHT + ROOF_HEIGHT, -ROOF_WIDTH / 2f);
+		tmpV4.set(0f, BODY_HEIGHT + ROOF_HEIGHT, ROOF_WIDTH / 2f);
+		tmpV0.set(tmpV1).sub(tmpV2).crs(tmpV3.cpy().sub(tmpV2)).scl(-1f).nor();
+		matTmp1.idt().setToRotation(0f, 1f, 0f, 180f);
+
+		MeshBuilderUtil.rect(partBuilder, tmpV1, tmpV2, tmpV4, tmpV3, tmpV0, region);
+		tmpV0.mul(matTmp1);
+		tmpV1.mul(matTmp1);
+		tmpV2.mul(matTmp1);
+		tmpV3.mul(matTmp1);
+		tmpV4.mul(matTmp1);
+		MeshBuilderUtil.rect(partBuilder, tmpV1, tmpV2, tmpV4, tmpV3, tmpV0, region);
+
+		tmpV1.set(-ROOF_WIDTH / 2f, BODY_HEIGHT, ROOF_WIDTH / 2f);
+		tmpV2.set(ROOF_WIDTH / 2f, BODY_HEIGHT, ROOF_WIDTH / 2f);
+		tmpV3.set(0f, BODY_HEIGHT + ROOF_HEIGHT, ROOF_WIDTH / 2f);
+		matTmp1.idt().setToRotation(0f, 1f, 0f, 180f);
+
+		partBuilder.triangle(tmpV1, tmpV2, tmpV3);
+		tmpV1.mul(matTmp1);
+		tmpV2.mul(matTmp1);
+		tmpV3.mul(matTmp1);
+		partBuilder.triangle(tmpV1, tmpV2, tmpV3);
+
+		Model base = builder.end();
+
+		builder.begin();
+
+		MeshBuilder subtrahendPart = (MeshBuilder)builder.part("subtrahend", GL20.GL_TRIANGLES,
+				DEFAULT_ATTRIBUTES,
+				new Material(ColorAttribute.createDiffuse(Color.BLUE)));
+
+		BoxShapeBuilder.build(subtrahendPart, DOOR_WIDTH, DOOR_HEIGHT, DOOR_WIDTH / 2f);
+		MeshBuilderUtil.transform(subtrahendPart, matTmp1.idt().translate(0f, DOOR_HEIGHT / 2f, BOTTOM_WIDTH / 2f));
+
+		int windowStartIdx = subtrahendPart.getNumVertices();
+		BoxShapeBuilder.build(subtrahendPart, WINDOW_WIDTH, WINDOW_WIDTH, WINDOW_WIDTH / 2f);
+		int windowEndIdx = subtrahendPart.getNumVertices();
+		MeshBuilderUtil.transform(subtrahendPart,
+				windowStartIdx, windowEndIdx,
+				matTmp1.idt().translate(0.35f, DOOR_HEIGHT - WINDOW_WIDTH / 4f, BOTTOM_WIDTH / 2f));
+
+		int window2StartIdx = subtrahendPart.getNumVertices();
+		BoxShapeBuilder.build(subtrahendPart, WINDOW_WIDTH, WINDOW_WIDTH, WINDOW_WIDTH / 2f);
+		int window2EndIdx = subtrahendPart.getNumVertices();
+		MeshBuilderUtil.transform(subtrahendPart,
+				window2StartIdx, window2EndIdx,
+				matTmp1.idt().translate(-0.35f, DOOR_HEIGHT - WINDOW_WIDTH / 4f, BOTTOM_WIDTH / 2f));
+
+
+		Model subtrahend = builder.end();
+
+		CSGMesh subtrahend1 = CSGMesh.fromMesh(subtrahend.meshes.get(0));
+		Mesh oldMesh = base.meshes.get(0);
+		CSGMesh minuend = CSGMesh.fromMesh(base.meshes.get(0));
+		CSGMesh copy1 = minuend.cpy();
+		CSGMesh copy2 = subtrahend1.cpy();
+		copy1.setConfig(new CSGConfiguration() {{
+			insideTestDirection.set(1f, 0f, 0f);
+		}});
+		copy2.setConfig(new CSGConfiguration() {{
+			insideTestDirection.set(1f, 0f, 0f);
+		}});
+
+		copy1.splitTriangles(subtrahend1);
+		copy2.splitTriangles(minuend);
+
+		copy1.classifyFaces(subtrahend1);
+		copy2.classifyFaces(minuend);
+
+		CSGMeshViewer.start(copy1, copy2);
+		initGL();
+
+		copy1.removeFaces(true, true);
+		copy2.removeFaces(false, true);
+
+		copy2.invertTriangles();
+		copy1.mergeWith(copy2);
+		copy1.clearInsideStatus();
+
+		Mesh newMesh = copy1.toMesh();
+		base.meshes.set(0, newMesh);
+		for(MeshPart part : base.meshParts) {
+			if(part.mesh == oldMesh) {
+				part.set(part.id, newMesh, 0, newMesh.getNumIndices(), part.primitiveType);
+				part.update();
+			}
+		}
+		ModelViewer.start(base);
 	}
 }
