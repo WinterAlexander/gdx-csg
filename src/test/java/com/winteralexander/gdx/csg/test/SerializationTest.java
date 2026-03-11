@@ -30,9 +30,18 @@ public class SerializationTest {
 
 		mesh.setAttributes(new VertexAttributes(VertexAttribute.Position()));
 
-		mesh.getVertices().add(new MeshVertex(new Vector3(0f, 0f, 0f), new Vector3(0f, 1f, 0f), new Vector3(1f, 0f, 0f), new float[0]));
-		mesh.getVertices().add(new MeshVertex(new Vector3(1f, 0f, 0f), new Vector3(0f, 1f, 0f), new Vector3(1f, 0f, 0f), new float[0]));
-		mesh.getVertices().add(new MeshVertex(new Vector3(0f, 0f, 1f), new Vector3(0f, 1f, 0f), new Vector3(1f, 0f, 0f), new float[0]));
+		mesh.getVertices().add(new MeshVertex(new Vector3(0f, 0f, 0f),
+				new Vector3(0f, 1f, 0f),
+				new Vector3(1f, 0f, 0f),
+				new float[0]));
+		mesh.getVertices().add(new MeshVertex(new Vector3(1f, 0f, 0f),
+				new Vector3(0f, 1f, 0f),
+				new Vector3(1f, 0f, 0f),
+				new float[0]));
+		mesh.getVertices().add(new MeshVertex(new Vector3(0f, 0f, 1f),
+				new Vector3(0f, 1f, 0f),
+				new Vector3(1f, 0f, 0f),
+				new float[0]));
 
 		mesh.getFaces().add(new MeshFace(mesh.getVertices().get(0),
 				mesh.getVertices().get(1),
@@ -58,7 +67,8 @@ public class SerializationTest {
 		CSGMesh minuend = new CSGMesh();
 		minuend.readFrom(new LwjglFileHandle("minuend.csgmesh", Files.FileType.Internal).read());
 		CSGMesh subtrahend = new CSGMesh();
-		subtrahend.readFrom(new LwjglFileHandle("subtrahend.csgmesh", Files.FileType.Internal).read());
+		subtrahend.readFrom(
+				new LwjglFileHandle("subtrahend.csgmesh", Files.FileType.Internal).read());
 
 		CSGMesh copy1 = minuend.cpy();
 		CSGMesh copy2 = subtrahend.cpy();
@@ -82,5 +92,4 @@ public class SerializationTest {
 
 		CSGMeshViewer.start(copy1);
 	}
-
 }

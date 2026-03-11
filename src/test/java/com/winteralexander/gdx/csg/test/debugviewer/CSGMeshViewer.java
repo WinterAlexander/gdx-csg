@@ -52,10 +52,8 @@ public class CSGMeshViewer implements ApplicationListener {
 	private PerspectiveCamera cam;
 	private ShapeRenderer debugRenderer;
 
-	private final Vector3 tmpVec = new Vector3(),
-			tmpVec2 = new Vector3(),
-			tmpVec3 = new Vector3(),
-			tmpVec4 = new Vector3();
+	private final Vector3 tmpVec = new Vector3(), tmpVec2 = new Vector3(), tmpVec3 = new Vector3(),
+						  tmpVec4 = new Vector3();
 
 	public CSGMeshViewer(CSGMesh[] meshes, Ray[] rays, Triangle[] triangles) {
 		this.meshes.addAll(meshes);
@@ -127,20 +125,17 @@ public class CSGMeshViewer implements ApplicationListener {
 							|| status2 == CSGMesh.InsideStatus.INSIDE
 							|| status3 == CSGMesh.InsideStatus.INSIDE
 							|| status1 == CSGMesh.InsideStatus.BOUNDARY
-							&& status2 == CSGMesh.InsideStatus.BOUNDARY
-							&& status3 == CSGMesh.InsideStatus.BOUNDARY;
+									&& status2 == CSGMesh.InsideStatus.BOUNDARY
+									&& status3 == CSGMesh.InsideStatus.BOUNDARY;
 
 					boolean isFaceOutside = status1 == CSGMesh.InsideStatus.OUTSIDE
 							|| status2 == CSGMesh.InsideStatus.OUTSIDE
 							|| status3 == CSGMesh.InsideStatus.OUTSIDE;
 
-					r.setColor(isFaceInside && isFaceOutside
-							? Color.RED
-							: !isFaceInside && !isFaceOutside
-								? Color.YELLOW
-								: isFaceInside
-									? Color.BLUE
-									: Color.GREEN);
+					r.setColor(isFaceInside && isFaceOutside		  ? Color.RED
+									: !isFaceInside && !isFaceOutside ? Color.YELLOW
+									: isFaceInside					  ? Color.BLUE
+																	  : Color.GREEN);
 
 					if(status1 == null || status2 == null || status3 == null) {
 						r.setColor(Color.GRAY);
@@ -154,9 +149,15 @@ public class CSGMeshViewer implements ApplicationListener {
 							.add(face.getPosition3())
 							.scl(1f / 3f);
 					for(int k = 0; k < (boundaryFace ? 3 : 2); k++) {
-						tmpVec.set(face.getPosition1()).mulAdd(tmpVec3, k * 0.1f * (i + 1)).scl(1f / (1f + k * 0.1f * (i + 1)));
-						tmpVec2.set(face.getPosition2()).mulAdd(tmpVec3, k * 0.1f * (i + 1)).scl(1f / (1f + k * 0.1f * (i + 1)));
-						tmpVec4.set(face.getPosition3()).mulAdd(tmpVec3, k * 0.1f * (i + 1)).scl(1f / (1f + k * 0.1f * (i + 1)));
+						tmpVec.set(face.getPosition1())
+								.mulAdd(tmpVec3, k * 0.1f * (i + 1))
+								.scl(1f / (1f + k * 0.1f * (i + 1)));
+						tmpVec2.set(face.getPosition2())
+								.mulAdd(tmpVec3, k * 0.1f * (i + 1))
+								.scl(1f / (1f + k * 0.1f * (i + 1)));
+						tmpVec4.set(face.getPosition3())
+								.mulAdd(tmpVec3, k * 0.1f * (i + 1))
+								.scl(1f / (1f + k * 0.1f * (i + 1)));
 						r.line(tmpVec, tmpVec2);
 						r.line(tmpVec2, tmpVec4);
 						r.line(tmpVec4, tmpVec);
@@ -164,7 +165,9 @@ public class CSGMeshViewer implements ApplicationListener {
 
 					r.setColor(Color.WHITE);
 					Vector3 normal = face.getNormal();
-					r.line(tmpVec3.x, tmpVec3.y, tmpVec3.z,
+					r.line(tmpVec3.x,
+							tmpVec3.y,
+							tmpVec3.z,
 							tmpVec3.x + normal.x / 10f,
 							tmpVec3.y + normal.y / 10f,
 							tmpVec3.z + normal.z / 10f);
@@ -179,8 +182,8 @@ public class CSGMeshViewer implements ApplicationListener {
 							|| status2 == CSGMesh.InsideStatus.INSIDE
 							|| status3 == CSGMesh.InsideStatus.INSIDE
 							|| status1 == CSGMesh.InsideStatus.BOUNDARY
-							&& status2 == CSGMesh.InsideStatus.BOUNDARY
-							&& status3 == CSGMesh.InsideStatus.BOUNDARY;
+									&& status2 == CSGMesh.InsideStatus.BOUNDARY
+									&& status3 == CSGMesh.InsideStatus.BOUNDARY;
 
 					boolean isFaceOutside = status1 == CSGMesh.InsideStatus.OUTSIDE
 							|| status2 == CSGMesh.InsideStatus.OUTSIDE
@@ -210,20 +213,20 @@ public class CSGMeshViewer implements ApplicationListener {
 				for(MeshVertex vertex : mesh.getVertices()) {
 					CSGMesh.InsideStatus status = mesh.getInsideStatus(vertex);
 
-					r.setColor(status == CSGMesh.InsideStatus.INSIDE
-							? Color.BLUE
-							: status == CSGMesh.InsideStatus.BOUNDARY
-								? Color.YELLOW
-								: Color.GREEN);
+					r.setColor(status == CSGMesh.InsideStatus.INSIDE ? Color.BLUE
+									: status == CSGMesh.InsideStatus.BOUNDARY
+									? Color.YELLOW
+									: Color.GREEN);
 					r.set(ShapeRenderer.ShapeType.Filled);
 					float vSize = 0.05f * MathUtil.sigmoid(cam.position.dst2(vertex.getPosition()));
 					r.box(vertex.getPosition().x - vSize / 2f,
 							vertex.getPosition().y - vSize / 2f,
 							vertex.getPosition().z + vSize / 2f,
-							vSize, vSize, vSize);
+							vSize,
+							vSize,
+							vSize);
 				}
 			}
-
 
 			r.set(ShapeRenderer.ShapeType.Line);
 			r.setColor(Color.MAGENTA);
@@ -262,7 +265,6 @@ public class CSGMeshViewer implements ApplicationListener {
 			renderable.accept(debugRenderer);
 
 		debugRenderer.end();
-
 	}
 
 	@Override
@@ -308,15 +310,18 @@ public class CSGMeshViewer implements ApplicationListener {
 
 		try {
 			new LwjglApplication(new CSGMeshViewer(meshes, rays, triangles),
-					new LwjglApplicationConfiguration() {{
-						width = 1600;
-						height = 900;
-						forceExit = false;
-					}}) {
+					new LwjglApplicationConfiguration() {
+						{
+							width = 1_600;
+							height = 900;
+							forceExit = false;
+						}
+					}) {
 				public Thread getMainThread() {
 					return mainLoopThread;
 				}
-			}.getMainThread().join();
+			}.getMainThread()
+					.join();
 		} catch(InterruptedException ex) {
 			throw new RuntimeException(ex);
 		}

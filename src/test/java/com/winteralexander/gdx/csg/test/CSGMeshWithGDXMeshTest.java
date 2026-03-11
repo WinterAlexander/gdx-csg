@@ -48,9 +48,7 @@ import static org.junit.Assert.assertNotSame;
 public class CSGMeshWithGDXMeshTest {
 
 	private final static int DEFAULT_ATTRIBUTES = VertexAttributes.Usage.Position
-			| VertexAttributes.Usage.Normal
-			| VertexAttributes.Usage.Tangent
-			| TextureCoordinates;
+			| VertexAttributes.Usage.Normal | VertexAttributes.Usage.Tangent | TextureCoordinates;
 
 	@BeforeClass
 	public static void initGL() throws Exception {
@@ -63,10 +61,11 @@ public class CSGMeshWithGDXMeshTest {
 			Gdx.gl31 = null;
 			Gdx.gl32 = null;
 		}
-		
+
 		LwjglNativesLoader.load();
 		Class<LwjglGraphics> gfx = LwjglGraphics.class;
-		Constructor<LwjglGraphics> cons = gfx.getDeclaredConstructor(LwjglApplicationConfiguration.class);
+		Constructor<LwjglGraphics>
+				cons = gfx.getDeclaredConstructor(LwjglApplicationConfiguration.class);
 		cons.setAccessible(true);
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
 		config.undecorated = true;
@@ -83,60 +82,18 @@ public class CSGMeshWithGDXMeshTest {
 	private static Model generateSixFacedCube(ModelBuilder builder) {
 		float s = 0.5f;
 		builder.begin();
-		builder.part("front",
-				GL20.GL_TRIANGLES,
-				DEFAULT_ATTRIBUTES,
-				new Material()).rect(
-				s, -s, -s,
-				-s, -s, -s,
-				-s, s, -s,
-				s, s, -s,
-				0f, 0f, -1f);
-		builder.part("back",
-				GL20.GL_TRIANGLES,
-				DEFAULT_ATTRIBUTES,
-				new Material()).rect(
-				-s, -s, s,
-				s, -s, s,
-				s, s, s,
-				-s, s, s,
-				0f, 0f, 1f);
-		builder.part("bottom",
-				GL20.GL_TRIANGLES,
-				DEFAULT_ATTRIBUTES,
-				new Material()).rect(
-				-s, -s, s,
-				-s, -s, -s,
-				s, -s, -s,
-				s, -s, s,
-				0f, -1f, 0f);
-		builder.part("top",
-				GL20.GL_TRIANGLES,
-				DEFAULT_ATTRIBUTES,
-				new Material()).rect(
-				-s, s, -s,
-				-s, s, s,
-				s, s, s,
-				s, s, -s,
-				0f, 1f, 0f);
-		builder.part("left",
-				GL20.GL_TRIANGLES,
-				DEFAULT_ATTRIBUTES,
-				new Material()).rect(
-				-s, -s, -s,
-				-s, -s, s,
-				-s, s, s,
-				-s, s, -s,
-				-1f, 0f, 0f);
-		builder.part("right",
-				GL20.GL_TRIANGLES,
-				DEFAULT_ATTRIBUTES,
-				new Material()).rect(
-				s, -s, s,
-				s, -s, -s,
-				s, s, -s,
-				s, s, s,
-				1f, 0f, 0f);
+		builder.part("front", GL20.GL_TRIANGLES, DEFAULT_ATTRIBUTES, new Material())
+				.rect(s, -s, -s, -s, -s, -s, -s, s, -s, s, s, -s, 0f, 0f, -1f);
+		builder.part("back", GL20.GL_TRIANGLES, DEFAULT_ATTRIBUTES, new Material())
+				.rect(-s, -s, s, s, -s, s, s, s, s, -s, s, s, 0f, 0f, 1f);
+		builder.part("bottom", GL20.GL_TRIANGLES, DEFAULT_ATTRIBUTES, new Material())
+				.rect(-s, -s, s, -s, -s, -s, s, -s, -s, s, -s, s, 0f, -1f, 0f);
+		builder.part("top", GL20.GL_TRIANGLES, DEFAULT_ATTRIBUTES, new Material())
+				.rect(-s, s, -s, -s, s, s, s, s, s, s, s, -s, 0f, 1f, 0f);
+		builder.part("left", GL20.GL_TRIANGLES, DEFAULT_ATTRIBUTES, new Material())
+				.rect(-s, -s, -s, -s, -s, s, -s, s, s, -s, s, -s, -1f, 0f, 0f);
+		builder.part("right", GL20.GL_TRIANGLES, DEFAULT_ATTRIBUTES, new Material())
+				.rect(s, -s, s, s, -s, -s, s, s, -s, s, s, s, 1f, 0f, 0f);
 		return builder.end();
 	}
 
@@ -154,15 +111,24 @@ public class CSGMeshWithGDXMeshTest {
 	@Test
 	public void ensureNotDupVertices() {
 		ModelBuilder builder = new ModelBuilder();
-		Model box = builder.createBox(1f, 1f, 1f, new Material(),
+		Model box = builder.createBox(1f,
+				1f,
+				1f,
+				new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Model second = builder.createSphere(1f, 1f, 1f, 10, 10, new Material(),
+		Model second = builder.createSphere(1f,
+				1f,
+				1f,
+				10,
+				10,
+				new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh mesh = box.meshes.get(0);
 		Mesh other = second.meshes.get(0);
-		other.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
-				//.scale(1.1f, 1f, 0.8f)
-				.translate(0f, 0.8f, 0f));
+		other.transform(new Matrix4()
+						.setToRotation(new Vector3(0f, 1f, 0f), 0f)
+						//.scale(1.1f, 1f, 0.8f)
+						.translate(0f, 0.8f, 0f));
 		CSGMesh csg = CSGMesh.fromMesh(mesh);
 		CSGMesh otherCsg = CSGMesh.fromMesh(other);
 
@@ -199,30 +165,41 @@ public class CSGMeshWithGDXMeshTest {
 	@Test
 	public void testCubeCubeSubtraction() {
 		ModelBuilder builder = new ModelBuilder();
-		Model box = builder.createBox(1f, 1f, 1f, new Material(),
+		Model box = builder.createBox(1f,
+				1f,
+				1f,
+				new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Model cube = builder.createBox(1f, 1f, 1f, new Material(),
+		Model cube = builder.createBox(1f,
+				1f,
+				1f,
+				new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh cubeMesh = cube.meshes.get(0);
-		cubeMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
-				.translate(0f, 0.3f, 0f));
+		cubeMesh.transform(
+				new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f).translate(0f, 0.3f, 0f));
 
 		CSGUtil.subtraction(box, cubeMesh);
 
 		ModelViewer.start(box);
 	}
 
-
 	@Test
 	public void testCubeSubtractionCoplanar() {
 		ModelBuilder builder = new ModelBuilder();
-		Model box = builder.createBox(1f, 1f, 1f, new Material(),
+		Model box = builder.createBox(1f,
+				1f,
+				1f,
+				new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Model cube = builder.createBox(1f, 1f, 1f, new Material(),
+		Model cube = builder.createBox(1f,
+				1f,
+				1f,
+				new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh cubeMesh = cube.meshes.get(0);
-		cubeMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
-				.translate(0.5f, 0.3f, 0f));
+		cubeMesh.transform(
+				new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f).translate(0.5f, 0.3f, 0f));
 
 		CSGMesh minuend = CSGMesh.fromMesh(box.meshes.get(0));
 		CSGMesh subtrahend = CSGMesh.fromMesh(cubeMesh);
@@ -237,7 +214,7 @@ public class CSGMeshWithGDXMeshTest {
 		copy1.classifyFaces(subtrahend);
 		copy2.classifyFaces(minuend);
 
-		//CSGMeshViewer.start(copy1, copy2);
+		// CSGMeshViewer.start(copy1, copy2);
 
 		CSGMeshViewer.start(copy1);
 		CSGMeshViewer.start(copy2);
@@ -295,37 +272,56 @@ public class CSGMeshWithGDXMeshTest {
 		float STOP_WIDTH = 1.5f;
 		ModelBuilder builder = new ModelBuilder();
 
-		Model flat = builder.createBox(TILE_SIZE, TILE_SIZE, TILE_SIZE,
-				new Material(), DEFAULT_ATTRIBUTES);
+		Model flat = builder.createBox(TILE_SIZE,
+				TILE_SIZE,
+				TILE_SIZE,
+				new Material(),
+				DEFAULT_ATTRIBUTES);
 		flat.meshes.get(0).transform(tmpMat4.idt().translate(TILE_SIZE / 2f,
 				-TILE_SIZE / 2f,
 				TILE_SIZE / 2f));
 
 		defaultTop = CSGMesh.fromMesh(flat.meshes.get(0));
 
-		Model pathBox = builder.createBox(TILE_SIZE, PATH_DEPTH * 2f, PATH_WIDTH,
-				new Material(), DEFAULT_ATTRIBUTES);
+		Model pathBox = builder.createBox(TILE_SIZE,
+				PATH_DEPTH * 2f,
+				PATH_WIDTH,
+				new Material(),
+				DEFAULT_ATTRIBUTES);
 
-		pathBox.meshes.get(0).transform(tmpMat4.idt().translate(TILE_SIZE - PATH_WIDTH / 2f, 0f, TILE_SIZE / 2f));
+		pathBox.meshes.get(0).transform(tmpMat4.idt().translate(TILE_SIZE - PATH_WIDTH / 2f,
+				0f,
+				TILE_SIZE / 2f));
 		rightPath = CSGMesh.fromMesh(pathBox.meshes.get(0));
 
 		pathBox.meshes.get(0).transform(tmpMat4.idt().translate(PATH_WIDTH - TILE_SIZE, 0f, 0f));
 		leftPath = CSGMesh.fromMesh(pathBox.meshes.get(0));
 
 		pathBox.dispose();
-		pathBox = builder.createBox(PATH_WIDTH, PATH_DEPTH * 2f, TILE_SIZE,
-				new Material(), DEFAULT_ATTRIBUTES);
+		pathBox = builder.createBox(PATH_WIDTH,
+				PATH_DEPTH * 2f,
+				TILE_SIZE,
+				new Material(),
+				DEFAULT_ATTRIBUTES);
 
-		pathBox.meshes.get(0).transform(tmpMat4.idt().translate(TILE_SIZE / 2f, 0f, TILE_SIZE - PATH_WIDTH / 2f));
+		pathBox.meshes.get(0).transform(tmpMat4.idt().translate(TILE_SIZE / 2f,
+				0f,
+				TILE_SIZE - PATH_WIDTH / 2f));
 		frontPath = CSGMesh.fromMesh(pathBox.meshes.get(0));
 
 		pathBox.meshes.get(0).transform(tmpMat4.idt().translate(0f, 0f, PATH_WIDTH - TILE_SIZE));
 		backPath = CSGMesh.fromMesh(pathBox.meshes.get(0));
 		pathBox.dispose();
 
-		pathBox = builder.createCylinder(STOP_WIDTH, PATH_DEPTH * 2f, STOP_WIDTH, 10,
-				new Material(), DEFAULT_ATTRIBUTES);
-		pathBox.meshes.get(0).transform(tmpMat4.idt().translate(TILE_SIZE / 2f, 0f, TILE_SIZE / 2f));
+		pathBox = builder.createCylinder(STOP_WIDTH,
+				PATH_DEPTH * 2f,
+				STOP_WIDTH,
+				10,
+				new Material(),
+				DEFAULT_ATTRIBUTES);
+		pathBox.meshes.get(0).transform(tmpMat4.idt().translate(TILE_SIZE / 2f,
+				0f,
+				TILE_SIZE / 2f));
 
 		stopPath = CSGMesh.fromMesh(pathBox.meshes.get(0));
 		pathBox.dispose();
@@ -352,7 +348,11 @@ public class CSGMeshWithGDXMeshTest {
 		CSGMeshViewer.start(current);
 		initGL();
 		flat.meshes.set(0, current.toMesh());
-		flat.meshParts.get(0).set("id", flat.meshes.get(0), 0, flat.meshes.get(0).getNumIndices(), GL_TRIANGLES);
+		flat.meshParts.get(0).set("id",
+				flat.meshes.get(0),
+				0,
+				flat.meshes.get(0).getNumIndices(),
+				GL_TRIANGLES);
 		flat.meshParts.get(0).update();
 		ModelViewer.start(flat);
 	}
@@ -360,13 +360,22 @@ public class CSGMeshWithGDXMeshTest {
 	@Test
 	public void testCubeSphereSubtraction() {
 		ModelBuilder builder = new ModelBuilder();
-		Model box = builder.createBox(1f, 1f, 1f, new Material(),
+		Model box = builder.createBox(1f,
+				1f,
+				1f,
+				new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Model sphere = builder.createSphere(1f, 1f, 1f, 50, 50, new Material(),
+		Model sphere = builder.createSphere(1f,
+				1f,
+				1f,
+				50,
+				50,
+				new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh sphereMesh = sphere.meshes.get(0);
-		sphereMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
-				.translate(0.3f, 0.3f, 0.3f));
+		sphereMesh.transform(new Matrix4()
+						.setToRotation(new Vector3(0f, 1f, 0f), 0f)
+						.translate(0.3f, 0.3f, 0.3f));
 
 		CSGUtil.subtraction(box, sphereMesh);
 
@@ -377,13 +386,20 @@ public class CSGMeshWithGDXMeshTest {
 	@Test
 	public void testCubeCylinderSubtraction() {
 		ModelBuilder builder = new ModelBuilder();
-		Model box = builder.createBox(1f, 1f, 1f, new Material(),
+		Model box = builder.createBox(1f,
+				1f,
+				1f,
+				new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Model second = builder.createCylinder(0.8f, 1f, 0.8f, 25, new Material(),
+		Model second = builder.createCylinder(0.8f,
+				1f,
+				0.8f,
+				25,
+				new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh other = second.meshes.get(0);
-		other.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
-				.translate(0f, 0.8f, 0f));
+		other.transform(
+				new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f).translate(0f, 0.8f, 0f));
 
 		CSGUtil.subtraction(box, other);
 
@@ -402,15 +418,22 @@ public class CSGMeshWithGDXMeshTest {
 	@Test
 	public void testCubePrismSubtraction() {
 		ModelBuilder builder = new ModelBuilder();
-		Model box = builder.createBox(1f, 1f, 1f, new Material(),
+		Model box = builder.createBox(1f,
+				1f,
+				1f,
+				new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Model second = builder.createBox(1f, 1f, 1f, new Material(),
+		Model second = builder.createBox(1f,
+				1f,
+				1f,
+				new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh mesh = box.meshes.get(0);
 		Mesh other = second.meshes.get(0);
-		other.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
-				.scale(1.1f, 1f, 0.8f)
-				.translate(0f, 0.95f, 0f));
+		other.transform(new Matrix4()
+						.setToRotation(new Vector3(0f, 1f, 0f), 0f)
+						.scale(1.1f, 1f, 0.8f)
+						.translate(0f, 0.95f, 0f));
 		CSGMesh csg = CSGMesh.fromMesh(mesh);
 		CSGMesh otherCsg = CSGMesh.fromMesh(other);
 
@@ -423,7 +446,7 @@ public class CSGMeshWithGDXMeshTest {
 		csg.classifyFaces(copy2);
 		otherCsg.classifyFaces(copy1);
 
-		//CSGMeshViewer.start(csg, otherCsg);
+		// CSGMeshViewer.start(csg, otherCsg);
 
 		csg.removeFaces(true, true);
 		otherCsg.removeFaces(false, true);
@@ -432,8 +455,8 @@ public class CSGMeshWithGDXMeshTest {
 
 		Mesh newMesh = csg.toMesh();
 
-		//assertEquals(mesh.getNumVertices(), newMesh.getNumVertices());
-		//assertEquals(mesh.getNumIndices(), newMesh.getNumIndices());
+		// assertEquals(mesh.getNumVertices(), newMesh.getNumVertices());
+		// assertEquals(mesh.getNumIndices(), newMesh.getNumIndices());
 
 		box.meshes.set(0, newMesh);
 		box.meshParts.get(0).set("box", newMesh, 0, newMesh.getNumIndices(), GL_TRIANGLES);
@@ -442,23 +465,36 @@ public class CSGMeshWithGDXMeshTest {
 		Mesh secondNewMesh = otherCsg.toMesh();
 
 		second.meshes.set(0, secondNewMesh);
-		second.meshParts.get(0).set("box", secondNewMesh, 0, secondNewMesh.getNumIndices(), GL_TRIANGLES);
+		second.meshParts.get(0).set("box",
+				secondNewMesh,
+				0,
+				secondNewMesh.getNumIndices(),
+				GL_TRIANGLES);
 		second.meshParts.get(0).update();
 
 		ModelViewer.start(box, second);
-		//CSGMeshViewer.start(new CSGMesh[] { csg, otherCsg }, new Ray[0]);
+		// CSGMeshViewer.start(new CSGMesh[] { csg, otherCsg }, new Ray[0]);
 	}
 
 	@Test
 	public void testCubeSphereIntersection() {
 		ModelBuilder builder = new ModelBuilder();
-		Model box = builder.createBox(1f, 1f, 1f, new Material(),
+		Model box = builder.createBox(1f,
+				1f,
+				1f,
+				new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Model sphere = builder.createSphere(1f, 1f, 1f, 50, 50, new Material(),
+		Model sphere = builder.createSphere(1f,
+				1f,
+				1f,
+				50,
+				50,
+				new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh sphereMesh = sphere.meshes.get(0);
-		sphereMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
-				.translate(0.3f, 0.3f, 0.3f));
+		sphereMesh.transform(new Matrix4()
+						.setToRotation(new Vector3(0f, 1f, 0f), 0f)
+						.translate(0.3f, 0.3f, 0.3f));
 
 		CSGUtil.intersection(box, sphereMesh);
 
@@ -468,13 +504,22 @@ public class CSGMeshWithGDXMeshTest {
 	@Test
 	public void testCubeSphereUnion() {
 		ModelBuilder builder = new ModelBuilder();
-		Model box = builder.createBox(1f, 1f, 1f, new Material(),
+		Model box = builder.createBox(1f,
+				1f,
+				1f,
+				new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Model sphere = builder.createSphere(1f, 1f, 1f, 50, 50, new Material(),
+		Model sphere = builder.createSphere(1f,
+				1f,
+				1f,
+				50,
+				50,
+				new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh sphereMesh = sphere.meshes.get(0);
-		sphereMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
-				.translate(0.3f, 0.3f, 0.3f));
+		sphereMesh.transform(new Matrix4()
+						.setToRotation(new Vector3(0f, 1f, 0f), 0f)
+						.translate(0.3f, 0.3f, 0.3f));
 
 		CSGUtil.union(box, sphereMesh);
 
@@ -485,9 +530,15 @@ public class CSGMeshWithGDXMeshTest {
 	public void testSameUnion() {
 
 		ModelBuilder builder = new ModelBuilder();
-		Model box = builder.createBox(1f, 1f, 1f, new Material(),
+		Model box = builder.createBox(1f,
+				1f,
+				1f,
+				new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
-		Model second = builder.createBox(1f, 1f, 1f, new Material(),
+		Model second = builder.createBox(1f,
+				1f,
+				1f,
+				new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh other = second.meshes.get(0);
 		other.transform(new Matrix4().translate(0f, 0.1f, 0f));
@@ -521,7 +572,11 @@ public class CSGMeshWithGDXMeshTest {
 	@Test
 	public void testCylinderUnions() throws Exception {
 		ModelBuilder builder = new ModelBuilder();
-		Model cylinder = builder.createCylinder(0.5f, 2f, 0.5f, 10, new Material(),
+		Model cylinder = builder.createCylinder(0.5f,
+				2f,
+				0.5f,
+				10,
+				new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh cylMesh = cylinder.meshes.get(0);
 		CSGMesh cylinder1 = CSGMesh.fromMesh(cylMesh);
@@ -536,7 +591,7 @@ public class CSGMeshWithGDXMeshTest {
 
 		CSGMesh firstUnion = CSGUtil.union(cylinder1, cylinder2);
 
-		//CSGMeshViewer.start(firstUnion);
+		// CSGMeshViewer.start(firstUnion);
 
 		CSGMesh copy1 = firstUnion.cpy();
 		CSGMesh copy2 = cylinder3.cpy();
@@ -555,61 +610,73 @@ public class CSGMeshWithGDXMeshTest {
 		copy1.mergeWith(copy2);
 		copy1.clearInsideStatus();
 
-		CSGMesh cylinders = copy1;//CSGUtil.union(firstUnion, cylinder3);
+		CSGMesh cylinders = copy1; // CSGUtil.union(firstUnion, cylinder3);
 
 		initGL();
 		cylinder.meshes.set(0, cylinders.toMesh());
 		cylinder.meshParts.get(0).set("box",
-				cylinder.meshes.get(0), 0, cylinder.meshes.get(0).getNumIndices(), GL_TRIANGLES);
+				cylinder.meshes.get(0),
+				0,
+				cylinder.meshes.get(0).getNumIndices(),
+				GL_TRIANGLES);
 		cylinder.meshParts.get(0).update();
 
 		ModelViewer.start(cylinder);
-		//CSGMeshViewer.start(cylinders);
+		// CSGMeshViewer.start(cylinders);
 	}
 
 	@Test
 	public void testClassicExample() {
 		ModelBuilder builder = new ModelBuilder();
-		Model box = builder.createBox(1f, 1f, 1f, new Material(),
-				VertexAttributes.Usage.Position
-						| VertexAttributes.Usage.Normal
+		Model box = builder.createBox(1f,
+				1f,
+				1f,
+				new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal
 						| VertexAttributes.Usage.ColorPacked);
 
 		for(Mesh mesh : box.meshes) {
 			FloatBuffer buffer = mesh.getVerticesBuffer(true);
 			for(int i = 0; i < mesh.getNumVertices(); i++) {
-				buffer.position(i * mesh.getVertexSize() / 4 +
-						mesh.getVertexAttribute(VertexAttributes.Usage.ColorPacked).offset / 4);
+				buffer.position(i * mesh.getVertexSize() / 4
+						+ mesh.getVertexAttribute(VertexAttributes.Usage.ColorPacked).offset / 4);
 
 				buffer.put(Color.RED.toFloatBits());
 			}
 		}
 
-		Model sphere = builder.createSphere(1.35f, 1.35f, 1.35f, 10, 10, new Material(),
-				VertexAttributes.Usage.Position
-						| VertexAttributes.Usage.Normal
+		Model sphere = builder.createSphere(1.35f,
+				1.35f,
+				1.35f,
+				10,
+				10,
+				new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal
 						| VertexAttributes.Usage.ColorPacked);
 
 		for(Mesh mesh : sphere.meshes) {
 			FloatBuffer buffer = mesh.getVerticesBuffer(true);
 			for(int i = 0; i < mesh.getNumVertices(); i++) {
-				buffer.position(i * mesh.getVertexSize() / 4 +
-						mesh.getVertexAttribute(VertexAttributes.Usage.ColorPacked).offset / 4);
+				buffer.position(i * mesh.getVertexSize() / 4
+						+ mesh.getVertexAttribute(VertexAttributes.Usage.ColorPacked).offset / 4);
 
 				buffer.put(Color.BLUE.toFloatBits());
 			}
 		}
 
-		Model cylinder = builder.createCylinder(0.6f, 2f, 0.6f, 10, new Material(),
-				VertexAttributes.Usage.Position
-						| VertexAttributes.Usage.Normal
+		Model cylinder = builder.createCylinder(0.6f,
+				2f,
+				0.6f,
+				10,
+				new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal
 						| VertexAttributes.Usage.ColorPacked);
 
 		for(Mesh mesh : cylinder.meshes) {
 			FloatBuffer buffer = mesh.getVerticesBuffer(true);
 			for(int i = 0; i < mesh.getNumVertices(); i++) {
-				buffer.position(i * mesh.getVertexSize() / 4 +
-						mesh.getVertexAttribute(VertexAttributes.Usage.ColorPacked).offset / 4);
+				buffer.position(i * mesh.getVertexSize() / 4
+						+ mesh.getVertexAttribute(VertexAttributes.Usage.ColorPacked).offset / 4);
 
 				buffer.put(Color.GREEN.toFloatBits());
 			}
@@ -629,41 +696,44 @@ public class CSGMeshWithGDXMeshTest {
 
 		CSGMesh cylinder3 = CSGMesh.fromMesh(cylMesh);
 
-		//CSGMesh cylinders = CSGUtil.union(CSGUtil.union(cylinder1, cylinder2), cylinder3);
+		// CSGMesh cylinders = CSGUtil.union(CSGUtil.union(cylinder1, cylinder2), cylinder3);
 
 		CSGMesh roundedBox = CSGUtil.intersection(boxCSG, sphereCSG);
 
 		CSGMesh last = CSGUtil.subtraction(roundedBox, cylinder1);
 		last = CSGUtil.subtraction(last, cylinder2);
 		last = CSGUtil.subtraction(last, cylinder3);
-/*
-		CSGMesh copy1 = roundedBox.cpy();
-		CSGMesh copy2 = cylinders.cpy();
+		/*
+				CSGMesh copy1 = roundedBox.cpy();
+				CSGMesh copy2 = cylinders.cpy();
 
-		copy1.splitTriangles(cylinders);
-		copy2.splitTriangles(roundedBox);
+				copy1.splitTriangles(cylinders);
+				copy2.splitTriangles(roundedBox);
 
-		copy1.classifyFaces(cylinders);
-		copy2.classifyFaces(roundedBox);
+				copy1.classifyFaces(cylinders);
+				copy2.classifyFaces(roundedBox);
 
-		Ray ray = new Ray();
-		ray.set(0.19290544f, -0.5f, -0.1757075f, 0f, 1f, 0f);
+				Ray ray = new Ray();
+				ray.set(0.19290544f, -0.5f, -0.1757075f, 0f, 1f, 0f);
 
-		// issue with this is missing triangle
-		CSGMeshViewer.start(new CSGMesh[]{ /*copy1,* cylinders }, new Ray[] { ray });
+				// issue with this is missing triangle
+				CSGMeshViewer.start(new CSGMesh[]{ /*copy1,* cylinders }, new Ray[] { ray });
 
-		copy1.removeFaces(true, false);
-		copy2.removeFaces(false, true);
+				copy1.removeFaces(true, false);
+				copy2.removeFaces(false, true);
 
-		copy2.invertTriangles();
-		copy1.mergeWith(copy2);
-		copy1.clearInsideStatus();
+				copy2.invertTriangles();
+				copy1.mergeWith(copy2);
+				copy1.clearInsideStatus();
 
-		CSGMesh last = copy1;*/
+				CSGMesh last = copy1;*/
 
 		box.meshes.set(0, last.toMesh());
 		box.meshParts.get(0).set("box",
-				box.meshes.get(0), 0, box.meshes.get(0).getNumIndices(), GL_TRIANGLES);
+				box.meshes.get(0),
+				0,
+				box.meshes.get(0).getNumIndices(),
+				GL_TRIANGLES);
 		box.meshParts.get(0).update();
 
 		ModelViewer.start(box);
@@ -672,17 +742,22 @@ public class CSGMeshWithGDXMeshTest {
 	@Test
 	public void testWithTexturePrism() {
 		ModelBuilder builder = new ModelBuilder();
-		Model box = builder.createBox(1f, 1f, 1f, new Material(),
-				VertexAttributes.Usage.Position
-						| VertexAttributes.Usage.Normal
+		Model box = builder.createBox(1f,
+				1f,
+				1f,
+				new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal
 						| VertexAttributes.Usage.TextureCoordinates);
-		Model second = builder.createBox(1f, 1f, 1f, new Material(),
-				VertexAttributes.Usage.Position
-						| VertexAttributes.Usage.Normal
+		Model second = builder.createBox(1f,
+				1f,
+				1f,
+				new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal
 						| VertexAttributes.Usage.TextureCoordinates);
 		Mesh mesh = second.meshes.get(0);
-		mesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
-				.translate(0.25f, 0.25f, 0.25f));
+		mesh.transform(new Matrix4()
+						.setToRotation(new Vector3(0f, 1f, 0f), 0f)
+						.translate(0.25f, 0.25f, 0.25f));
 
 		CSGUtil.subtraction(box, mesh);
 
@@ -694,22 +769,32 @@ public class CSGMeshWithGDXMeshTest {
 	@Test
 	public void testWithTextureSphere() {
 		ModelBuilder builder = new ModelBuilder();
-		Model box = builder.createBox(1f, 1f, 1f, new Material(),
-				VertexAttributes.Usage.Position
-						| VertexAttributes.Usage.Normal
+		Model box = builder.createBox(1f,
+				1f,
+				1f,
+				new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal
 						| VertexAttributes.Usage.TextureCoordinates);
 
-		Model sphere = builder.createSphere(1.25f, 1.25f, 1.25f, 20, 20, new Material(),
-				VertexAttributes.Usage.Position
-						| VertexAttributes.Usage.Normal
+		Model sphere = builder.createSphere(1.25f,
+				1.25f,
+				1.25f,
+				20,
+				20,
+				new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal
 						| VertexAttributes.Usage.TextureCoordinates);
 		Mesh sphereMesh = sphere.meshes.get(0);
-		sphereMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
-				.translate(0f, 0f, 0f));
+		sphereMesh.transform(
+				new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f).translate(0f, 0f, 0f));
 
-		Model bigger = builder.createSphere(1.4f, 1.4f, 1.4f, 20, 20, new Material(),
-				VertexAttributes.Usage.Position
-						| VertexAttributes.Usage.Normal
+		Model bigger = builder.createSphere(1.4f,
+				1.4f,
+				1.4f,
+				20,
+				20,
+				new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal
 						| VertexAttributes.Usage.TextureCoordinates);
 
 		CSGUtil.subtraction(box, sphereMesh);
@@ -723,43 +808,54 @@ public class CSGMeshWithGDXMeshTest {
 	@Test
 	public void testCylinder() {
 		ModelBuilder builder = new ModelBuilder();
-		Model cylinder = builder.createCylinder(1f, 0.25f, 1f, 20, new Material(),
-				VertexAttributes.Usage.Position
-						| VertexAttributes.Usage.Normal
+		Model cylinder = builder.createCylinder(1f,
+				0.25f,
+				1f,
+				20,
+				new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal
 						| VertexAttributes.Usage.TextureCoordinates);
-		Model sphere = builder.createSphere(1.25f, 1.25f, 1.25f, 20, 20, new Material(),
-				VertexAttributes.Usage.Position
-						| VertexAttributes.Usage.Normal
+		Model sphere = builder.createSphere(1.25f,
+				1.25f,
+				1.25f,
+				20,
+				20,
+				new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal
 						| VertexAttributes.Usage.TextureCoordinates);
-		Model cylinder2 = builder.createBox(1f, 0.25f, 1f, new Material(),
-				VertexAttributes.Usage.Position
-						| VertexAttributes.Usage.Normal
+		Model cylinder2 = builder.createBox(1f,
+				0.25f,
+				1f,
+				new Material(),
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal
 						| VertexAttributes.Usage.TextureCoordinates);
 		Mesh sphereMesh = sphere.meshes.get(0);
-		sphereMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
-				.translate(0f, -0.55f, 0f));
-		cylinder2.meshes.get(0).transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f)
-				.translate(0f, 0.15f, 0f));
-/*
-		FloatBuffer buffer = sphereMesh.getVerticesBuffer(true);
-		for(int i = 0; i < sphereMesh.getNumVertices(); i++) {
-			buffer.position(i * sphereMesh.getVertexSize() / 4 +
-					sphereMesh.getVertexAttribute(VertexAttributes.Usage.TextureCoordinates).offset / 4);
+		sphereMesh.transform(
+				new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f).translate(0f, -0.55f, 0f));
+		cylinder2.meshes.get(0).transform(
+				new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f).translate(0f, 0.15f, 0f));
+		/*
+				FloatBuffer buffer = sphereMesh.getVerticesBuffer(true);
+				for(int i = 0; i < sphereMesh.getNumVertices(); i++) {
+					buffer.position(i * sphereMesh.getVertexSize() / 4 +
+							sphereMesh.getVertexAttribute(VertexAttributes.Usage.TextureCoordinates).offset
+		   / 4);
 
-			buffer.put(1f);
-			buffer.put(1f);
-		}
+					buffer.put(1f);
+					buffer.put(1f);
+				}
 
 
-		FloatBuffer buffer2 = cylinder2.meshes.get(0).getVerticesBuffer(true);
-		for(int i = 0; i < cylinder2.meshes.get(0).getNumVertices(); i++) {
-			buffer2.position(i * cylinder2.meshes.get(0).getVertexSize() / 4 +
-					cylinder2.meshes.get(0).getVertexAttribute(VertexAttributes.Usage.TextureCoordinates).offset / 4);
+				FloatBuffer buffer2 = cylinder2.meshes.get(0).getVerticesBuffer(true);
+				for(int i = 0; i < cylinder2.meshes.get(0).getNumVertices(); i++) {
+					buffer2.position(i * cylinder2.meshes.get(0).getVertexSize() / 4 +
+							cylinder2.meshes.get(0).getVertexAttribute(VertexAttributes.Usage.TextureCoordinates).offset
+		   / 4);
 
-			buffer2.put(1f);
-			buffer2.put(1f);
-		}
-*/
+					buffer2.put(1f);
+					buffer2.put(1f);
+				}
+		*/
 		CSGUtil.subtraction(sphere, cylinder2.meshes.get(0));
 
 		CSGUtil.subtraction(cylinder, sphere.meshes.get(0));
@@ -787,32 +883,50 @@ public class CSGMeshWithGDXMeshTest {
 		builder.begin();
 
 		MeshPartBuilder vertCylBuilder = builder.part("vert_cyl",
-				GL_TRIANGLES, DEFAULT_ATTRIBUTES, new Material());
+				GL_TRIANGLES,
+				DEFAULT_ATTRIBUTES,
+				new Material());
 
 		CylinderShapeBuilder.build(vertCylBuilder,
-				WATERFALL_WIDTH * 2f, WATERFALL_WIDTH, WATERFALL_WIDTH * 2f,
-				WATERFALL_SMOOTHNESS, -90f, 0f, false);
+				WATERFALL_WIDTH * 2f,
+				WATERFALL_WIDTH,
+				WATERFALL_WIDTH * 2f,
+				WATERFALL_SMOOTHNESS,
+				-90f,
+				0f,
+				false);
 
 		Model cylVert = builder.end();
-		cylVert.meshes.get(0).transform(
-				new Matrix4().setToTranslation(-WATERFALL_WIDTH / 2f, 0f, WATERFALL_WIDTH / 2f));
+		cylVert.meshes.get(0).transform(new Matrix4().setToTranslation(-WATERFALL_WIDTH / 2f,
+				0f,
+				WATERFALL_WIDTH / 2f));
 		builder.begin();
 		MeshPartBuilder horizCylBuilder = builder.part("horiz_cyl",
-				GL_TRIANGLES, DEFAULT_ATTRIBUTES, new Material());
+				GL_TRIANGLES,
+				DEFAULT_ATTRIBUTES,
+				new Material());
 
 		CylinderShapeBuilder.build(horizCylBuilder,
-				WATERFALL_WIDTH * 2f, WATERFALL_WIDTH, WATERFALL_WIDTH * 2f,
-				WATERFALL_SMOOTHNESS, -90f, 0f, false);
+				WATERFALL_WIDTH * 2f,
+				WATERFALL_WIDTH,
+				WATERFALL_WIDTH * 2f,
+				WATERFALL_SMOOTHNESS,
+				-90f,
+				0f,
+				false);
 
 		Model cylHoriz = builder.end();
 
-		cylHoriz.meshes.get(0).transform(
-				new Matrix4().setToTranslation(-WATERFALL_WIDTH / 2f, 0f, WATERFALL_WIDTH / 2f));
+		cylHoriz.meshes.get(0).transform(new Matrix4().setToTranslation(-WATERFALL_WIDTH / 2f,
+				0f,
+				WATERFALL_WIDTH / 2f));
 		cylHoriz.meshes.get(0).transform(new Matrix4().setToRotation(0f, 0f, 1f, 90f));
 
-		CSGUtil.union(cylVert, cylHoriz, new CSGConfiguration() {{
-			insideTestDirection.set(0f, 0f, -1f);
-		}});
+		CSGUtil.union(cylVert, cylHoriz, new CSGConfiguration() {
+			{
+				insideTestDirection.set(0f, 0f, -1f);
+			}
+		});
 
 		ModelViewer.start(cylVert);
 	}
