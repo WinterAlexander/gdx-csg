@@ -61,9 +61,7 @@ public class CSGMesh implements Serializable {
 	private final float[] tmpArray = new float[9];
 	private final Intersector.SplitTriangle splitTriangle = new Intersector.SplitTriangle(3);
 
-	private final Vector3 tmpV1 = new Vector3(),
-			tmpV2 = new Vector3(),
-			tmpV3 = new Vector3();
+	private final Vector3 tmpV1 = new Vector3(), tmpV2 = new Vector3(), tmpV3 = new Vector3();
 	private final Vector3 tmpSegmentIntersection = new Vector3();
 
 	private final Array<MeshFace> toRemove = new Array<>();
@@ -76,14 +74,10 @@ public class CSGMesh implements Serializable {
 	private CSGConfiguration config = CSGConfiguration.DEFAULT;
 
 	public CSGMesh() {
-		this(new Array<>(),
-				new Array<>(),
-				null);
+		this(new Array<>(), new Array<>(), null);
 	}
 
-	public CSGMesh(Array<MeshVertex> vertices,
-	               Array<MeshFace> faces,
-	               VertexAttributes attributes) {
+	public CSGMesh(Array<MeshVertex> vertices, Array<MeshFace> faces, VertexAttributes attributes) {
 		ensureNotNull(vertices, "vertices");
 		ensureNotNull(faces, "faces");
 		this.vertices = vertices;
@@ -110,7 +104,9 @@ public class CSGMesh implements Serializable {
 				// given splitFace may modify the faces array, must not put this at the outer level
 				MeshFace face = faces.get(i);
 				TriangleIntersectionResult result = intersectTriangleTriangle(face.getTriangle(),
-						otherFace.getTriangle(), config.tolerance, intersectSegment);
+						otherFace.getTriangle(),
+						config.tolerance,
+						intersectSegment);
 				if(result == NONCOPLANAR_FACE_FACE) {
 					cutEdges.add(intersectSegment.cpy());
 					plane.set(otherFace.getPosition1(), otherFace.getNormal());
@@ -120,8 +116,13 @@ public class CSGMesh implements Serializable {
 					for(int j = 0; j < 3; j++) {
 						Vector3 start = face.getTriangle().getPoint(j + 1);
 						Vector3 end = face.getTriangle().getPoint((j + 1) % 3 + 1);
-						if(intersectSegmentSegment(start, end,
-								intersectSegment.a, intersectSegment.b, config.tolerance, tmpSegmentIntersection) == COLLINEAR) {
+						if(intersectSegmentSegment(start,
+								   end,
+								   intersectSegment.a,
+								   intersectSegment.b,
+								   config.tolerance,
+								   tmpSegmentIntersection)
+								== COLLINEAR) {
 							isEdgeFromFace = true;
 							break;
 						}
@@ -143,8 +144,11 @@ public class CSGMesh implements Serializable {
 					if(face.getNormal().dot(otherFace.getNormal()) < 0.99f)
 						continue;
 
-					TriangleIntersectionResult result = intersectTriangleTriangle(face.getTriangle(),
-							otherFace.getTriangle(), config.tolerance, intersectSegment);
+					TriangleIntersectionResult result = intersectTriangleTriangle(
+							face.getTriangle(),
+							otherFace.getTriangle(),
+							config.tolerance,
+							intersectSegment);
 					if(result == COPLANAR_FACE_FACE)
 						boundaryFaces.add(face);
 				}
@@ -185,7 +189,7 @@ public class CSGMesh implements Serializable {
 		if(!config.enableMerging)
 			return;
 
-		faceLoop:
+	faceLoop:
 		for(int i = 0; i < faces.size; i++) {
 			MeshFace current = faces.get(i);
 
@@ -196,17 +200,15 @@ public class CSGMesh implements Serializable {
 			MeshVertex firstMatch = null, secondMatch = null;
 			MeshVertex nonMatchingA = null, nonMatchingB = null;
 
-			if(face.getV1() == current.getV1()
-			|| face.getV1() == current.getV2()
-			|| face.getV1() == current.getV3()) {
+			if(face.getV1() == current.getV1() || face.getV1() == current.getV2()
+					|| face.getV1() == current.getV3()) {
 				countMatching++;
 				firstMatch = face.getV1();
 			} else
 				nonMatchingA = face.getV1();
 
-			if(face.getV2() == current.getV1()
-			|| face.getV2() == current.getV2()
-			|| face.getV2() == current.getV3()) {
+			if(face.getV2() == current.getV1() || face.getV2() == current.getV2()
+					|| face.getV2() == current.getV3()) {
 				countMatching++;
 				if(firstMatch == null)
 					firstMatch = face.getV2();
@@ -215,9 +217,8 @@ public class CSGMesh implements Serializable {
 			} else
 				nonMatchingA = face.getV2();
 
-			if(face.getV3() == current.getV1()
-			|| face.getV3() == current.getV2()
-			|| face.getV3() == current.getV3()) {
+			if(face.getV3() == current.getV1() || face.getV3() == current.getV2()
+					|| face.getV3() == current.getV3()) {
 				countMatching++;
 				if(firstMatch == null)
 					firstMatch = face.getV3();
@@ -227,8 +228,7 @@ public class CSGMesh implements Serializable {
 				nonMatchingA = face.getV3();
 
 			if(countMatching == 3)
-				continue;
-				//throw new IllegalStateException("Duplicate triangles in mesh");
+				continue; // Duplicate triangles in mesh
 
 			if(countMatching != 2)
 				continue;
@@ -240,27 +240,36 @@ public class CSGMesh implements Serializable {
 			else if(current.getV3() != firstMatch && current.getV3() != secondMatch)
 				nonMatchingB = current.getV3();
 
-			boolean collinearWithFirst = intersectSegmentSegment(
-					nonMatchingA.getPosition(), nonMatchingB.getPosition(),
-					nonMatchingA.getPosition(), firstMatch.getPosition(),
-					config.tolerance, tmpSegmentIntersection) == COLLINEAR;
+			boolean collinearWithFirst = intersectSegmentSegment(nonMatchingA.getPosition(),
+												 nonMatchingB.getPosition(),
+												 nonMatchingA.getPosition(),
+												 firstMatch.getPosition(),
+												 config.tolerance,
+												 tmpSegmentIntersection)
+					== COLLINEAR;
 
-			boolean collinearWithSecond = intersectSegmentSegment(
-					nonMatchingA.getPosition(), nonMatchingB.getPosition(),
-					nonMatchingA.getPosition(), secondMatch.getPosition(),
-					config.tolerance, tmpSegmentIntersection) == COLLINEAR;
+			boolean collinearWithSecond = intersectSegmentSegment(nonMatchingA.getPosition(),
+												  nonMatchingB.getPosition(),
+												  nonMatchingA.getPosition(),
+												  secondMatch.getPosition(),
+												  config.tolerance,
+												  tmpSegmentIntersection)
+					== COLLINEAR;
 
 			if(!collinearWithFirst && !collinearWithSecond)
 				continue;
 
 			if(collinearWithFirst && collinearWithSecond)
-				continue;
-				//throw new IllegalStateException("Invalid 2 faces");
+				continue; // Invalid 2 faces
 
 			for(Segment segment : cutEdges)
-				if(intersectSegmentSegment(segment.a, segment.b,
-						firstMatch.getPosition(), secondMatch.getPosition(),
-						config.tolerance, tmpSegmentIntersection) == COLLINEAR) {
+				if(intersectSegmentSegment(segment.a,
+						   segment.b,
+						   firstMatch.getPosition(),
+						   secondMatch.getPosition(),
+						   config.tolerance,
+						   tmpSegmentIntersection)
+						== COLLINEAR) {
 					continue faceLoop;
 				}
 
@@ -291,25 +300,29 @@ public class CSGMesh implements Serializable {
 	}
 
 	private void interpolate(MeshVertex out,
-	                         MeshVertex v1, float w1,
-	                         MeshVertex v2, float w2,
-	                         MeshVertex v3, float w3) {
-		out.getNormal().set(0f, 0f, 0f)
+			MeshVertex v1,
+			float w1,
+			MeshVertex v2,
+			float w2,
+			MeshVertex v3,
+			float w3) {
+		out.getNormal()
+				.set(0f, 0f, 0f)
 				.mulAdd(v1.getNormal(), w1)
 				.mulAdd(v2.getNormal(), w2)
 				.mulAdd(v3.getNormal(), w3)
 				.nor();
 
-		out.getTangent().set(0f, 0f, 0f)
+		out.getTangent()
+				.set(0f, 0f, 0f)
 				.mulAdd(v1.getTangent(), w1)
 				.mulAdd(v2.getTangent(), w2)
 				.mulAdd(v3.getTangent(), w3)
 				.nor();
 
 		for(int i = 0; i < out.getOtherAttributes().length; i++)
-			out.getOtherAttributes()[i] = v1.getOtherAttributes()[i] * w1 +
-					v2.getOtherAttributes()[i] * w2 +
-					v3.getOtherAttributes()[i] * w3;
+			out.getOtherAttributes()[i] = v1.getOtherAttributes()[i] * w1
+					+ v2.getOtherAttributes()[i] * w2 + v3.getOtherAttributes()[i] * w3;
 	}
 
 	private void processSplitTriangle(MeshFace face, float[] array, int offset) {
@@ -318,15 +331,14 @@ public class CSGMesh implements Serializable {
 		VectorUtil.setFromArray(tmpV3, array, offset + 6);
 
 		if(tmpV1.epsilonEquals(tmpV2, config.tolerance)
-		|| tmpV1.epsilonEquals(tmpV3, config.tolerance)
-		|| tmpV2.epsilonEquals(tmpV3, config.tolerance))
-			return;
-			//throw new IllegalStateException("Triangle has duplicate points");
+				|| tmpV1.epsilonEquals(tmpV3, config.tolerance)
+				|| tmpV2.epsilonEquals(tmpV3, config.tolerance))
+			return; // Triangle has duplicate points
 
 		MeshVertex vertex1 = null, vertex2 = null, vertex3 = null;
 
 		for(MeshVertex faceVertex : face.getVertices()) {
-			if(faceVertex.getPosition().epsilonEquals(tmpV1,config. tolerance))
+			if(faceVertex.getPosition().epsilonEquals(tmpV1, config.tolerance))
 				vertex1 = faceVertex;
 			if(faceVertex.getPosition().epsilonEquals(tmpV2, config.tolerance))
 				vertex2 = faceVertex;
@@ -335,8 +347,9 @@ public class CSGMesh implements Serializable {
 		}
 
 		for(MeshVertex addedVertex : tmpNewVertices.keySet()) {
-			if(!tmpNewVertices.get(addedVertex).getNormal().epsilonEquals(face.getNormal(),
-					config.tolerance))
+			if(!tmpNewVertices.get(addedVertex)
+							.getNormal()
+							.epsilonEquals(face.getNormal(), config.tolerance))
 				continue;
 
 			if(addedVertex.getPosition().epsilonEquals(tmpV1, config.tolerance))
@@ -404,10 +417,12 @@ public class CSGMesh implements Serializable {
 			}
 
 			if(allPointsBoundary) {
-				InsideStatus status = other.computeInsideStatus(tmpV1.set(face.getV1().getPosition())
-						.add(face.getV2().getPosition())
-						.add(face.getV3().getPosition())
-						.scl(1f / 3f), config);
+				InsideStatus status = other.computeInsideStatus(
+						tmpV1.set(face.getV1().getPosition())
+								.add(face.getV2().getPosition())
+								.add(face.getV3().getPosition())
+								.scl(1f / 3f),
+						config);
 				if(status == InsideStatus.BOUNDARY)
 					status = InsideStatus.INSIDE;
 				faceStatus.put(face, status);
@@ -423,8 +438,8 @@ public class CSGMesh implements Serializable {
 					|| status3 == CSGMesh.InsideStatus.OUTSIDE;
 
 			if(anyInside && anyOutside)
-				throw new IllegalStateException("Failure to split face, some vertices are " +
-						"in and some are out");
+				throw new IllegalStateException("Failure to split face, some vertices are "
+						+ "in and some are out");
 
 			faceStatus.put(face, anyInside ? InsideStatus.INSIDE : InsideStatus.OUTSIDE);
 		}
@@ -438,14 +453,16 @@ public class CSGMesh implements Serializable {
 	 * @return inside, outside or on the boundary
 	 */
 	public InsideStatus computeInsideStatus(Vector3 position, CSGConfiguration config) {
-		tmpRay.set(position.x, position.y, position.z,
+		tmpRay.set(position.x,
+				position.y,
+				position.z,
 				config.insideTestDirection.x,
 				config.insideTestDirection.y,
 				config.insideTestDirection.z);
 		float minT = Float.POSITIVE_INFINITY;
 		boolean upFacing = false;
 
-		faceLoop:
+	faceLoop:
 		for(MeshFace face : faces) {
 			if(!intersectTriangleRay(face.getTriangle(), tmpRay, config.tolerance, tmpSegment))
 				continue;
@@ -472,13 +489,12 @@ public class CSGMesh implements Serializable {
 			if(t < 0f)
 				continue;
 
-			if (Math.abs(t - minT) < config.tolerance) {
+			if(Math.abs(t - minT) < config.tolerance) {
 				upFacing = upFacing && d > 0f;
 			} else if(t < minT) {
 				minT = t;
 				upFacing = d > 0f;
 			}
-
 		}
 		return upFacing ? InsideStatus.INSIDE : InsideStatus.OUTSIDE;
 	}
@@ -686,9 +702,9 @@ public class CSGMesh implements Serializable {
 			int idx3 = vertexIndices.get(face.getV3(), -1);
 
 			if(idx1 == -1 || idx2 == -1 || idx3 == -1)
-				throw new IllegalStateException("CSGMesh has a face refering to a vertex not in " +
-						"the mesh. Face #" + i + " has vertices " +
-						"#" + idx1 + ", #" + idx2 + " and #" + idx3);
+				throw new IllegalStateException("CSGMesh has a face refering to a vertex not in "
+						+ "the mesh. Face #" + i + " has vertices "
+						+ "#" + idx1 + ", #" + idx2 + " and #" + idx3);
 
 			idxBuffer.put((short)idx1);
 			idxBuffer.put((short)idx2);
@@ -697,7 +713,10 @@ public class CSGMesh implements Serializable {
 		vertexIndices.clear();
 
 		return new MeshPart("id" + UUID.randomUUID(),
-				mesh, mesh.getNumIndices() / 3, faces.size, GL_TRIANGLES);
+				mesh,
+				mesh.getNumIndices() / 3,
+				faces.size,
+				GL_TRIANGLES);
 	}
 
 	public Mesh toMesh() {
@@ -741,8 +760,8 @@ public class CSGMesh implements Serializable {
 			int j = 0;
 			for(VertexAttribute attr : attributes) {
 				if(attr.usage == VertexAttributes.Usage.Position
-				|| attr.usage == VertexAttributes.Usage.Normal
-				|| attr.usage == VertexAttributes.Usage.Tangent)
+						|| attr.usage == VertexAttributes.Usage.Normal
+						|| attr.usage == VertexAttributes.Usage.Tangent)
 					continue;
 
 				buffer.position(i * vertexSize + attr.offset / 4);
@@ -762,9 +781,9 @@ public class CSGMesh implements Serializable {
 			int idx3 = vertexIndices.get(face.getV3(), -1);
 
 			if(idx1 == -1 || idx2 == -1 || idx3 == -1)
-				throw new IllegalStateException("CSGMesh has a face refering to a vertex not in " +
-						"the mesh. Face #" + i + " has vertices " +
-						"#" + idx1 + ", #" + idx2 + " and #" + idx3);
+				throw new IllegalStateException("CSGMesh has a face refering to a vertex not in "
+						+ "the mesh. Face #" + i + " has vertices "
+						+ "#" + idx1 + ", #" + idx2 + " and #" + idx3);
 
 			idxBuffer.put((short)idx1);
 			idxBuffer.put((short)idx2);
@@ -817,9 +836,7 @@ public class CSGMesh implements Serializable {
 		return boundaryFaces;
 	}
 
-	public enum InsideStatus {
-		INSIDE, BOUNDARY, OUTSIDE
-	}
+	public enum InsideStatus { INSIDE, BOUNDARY, OUTSIDE }
 
 	public static CSGMesh fromMeshPart(MeshPart meshPart) {
 		Array<MeshVertex> vertices = new Array<>(meshPart.size);
@@ -832,7 +849,8 @@ public class CSGMesh implements Serializable {
 
 		VertexAttribute norAttr = meshPart.mesh.getVertexAttribute(VertexAttributes.Usage.Normal);
 		VertexAttribute tanAttr = meshPart.mesh.getVertexAttribute(VertexAttributes.Usage.Tangent);
-		int otherAttrCount = vertexSize - (3 + (norAttr == null ? 0 : 3) + (tanAttr == null ? 0 : 3));
+		int otherAttrCount = vertexSize
+				- (3 + (norAttr == null ? 0 : 3) + (tanAttr == null ? 0 : 3));
 
 		IntMap<MeshVertex> meshVertices = new IntMap<>();
 
@@ -886,7 +904,8 @@ public class CSGMesh implements Serializable {
 
 		VertexAttribute norAttr = mesh.getVertexAttribute(VertexAttributes.Usage.Normal);
 		VertexAttribute tanAttr = mesh.getVertexAttribute(VertexAttributes.Usage.Tangent);
-		int otherAttrCount = vertexSize - (3 + (norAttr == null ? 0 : 3) + (tanAttr == null ? 0 : 3));
+		int otherAttrCount = vertexSize
+				- (3 + (norAttr == null ? 0 : 3) + (tanAttr == null ? 0 : 3));
 
 		for(int i = 0; i < mesh.getNumVertices(); i++) {
 			MeshVertex vertex = new MeshVertex(otherAttrCount);
@@ -898,15 +917,12 @@ public class CSGMesh implements Serializable {
 			short v1 = idxBuffer.get(i * 3);
 			short v2 = idxBuffer.get(i * 3 + 1);
 			short v3 = idxBuffer.get(i * 3 + 2);
-			MeshFace face = new MeshFace(vertices.get(v1),
-					vertices.get(v2),
-					vertices.get(v3));
+			MeshFace face = new MeshFace(vertices.get(v1), vertices.get(v2), vertices.get(v3));
 			faces.add(face);
 		}
 
 		return new CSGMesh(vertices, faces, mesh.getVertexAttributes());
 	}
-
 
 	private static void readVertex(Mesh mesh, FloatBuffer buffer, int index, MeshVertex out) {
 		int vertexSize = mesh.getVertexSize() / 4;
@@ -936,8 +952,8 @@ public class CSGMesh implements Serializable {
 				continue;
 
 			for(int k = 0; k < attr.getSizeInBytes() / 4; k++)
-				out.getOtherAttributes()[j++] =
-						buffer.get(index * vertexSize + attr.offset / 4 + k);
+				out.getOtherAttributes()[j++] = buffer.get(index * vertexSize + attr.offset / 4
+						+ k);
 		}
 	}
 }

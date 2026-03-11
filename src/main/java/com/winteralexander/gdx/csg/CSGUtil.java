@@ -190,8 +190,8 @@ public class CSGUtil {
 	public static void subtraction(Model minuend, CSGMesh subtrahend, CSGConfiguration config) {
 		for(int i = 0; i < minuend.meshes.size; i++) {
 			Mesh oldMesh = minuend.meshes.get(i);
-			Mesh newMesh = subtraction(CSGMesh.fromMesh(minuend.meshes.get(i)),
-					subtrahend, config).toMesh();
+			Mesh newMesh = subtraction(CSGMesh.fromMesh(minuend.meshes.get(i)), subtrahend, config)
+								   .toMesh();
 			minuend.meshes.set(i, newMesh);
 			for(MeshPart part : minuend.meshParts) {
 				if(part.mesh == oldMesh) {
@@ -204,7 +204,7 @@ public class CSGUtil {
 
 	/**
 	 * Performs union on a given {@link Model} and modifies this model internally. Union combines
-   	 * both meshes and removes the intersection of the 2 meshes (the insides).
+	 * both meshes and removes the intersection of the 2 meshes (the insides).
 	 * Does not support {@link Model} with multiple mesh parts per meshes
 	 *
 	 * @param first model to perform union on
@@ -265,8 +265,8 @@ public class CSGUtil {
 	public static void intersection(Model first, CSGMesh second, CSGConfiguration config) {
 		for(int i = 0; i < first.meshes.size; i++) {
 			Mesh oldMesh = first.meshes.get(i);
-			Mesh newMesh = intersection(CSGMesh.fromMesh(first.meshes.get(i)),
-					second, config).toMesh();
+			Mesh newMesh = intersection(CSGMesh.fromMesh(first.meshes.get(i)), second, config)
+								   .toMesh();
 			first.meshes.set(i, newMesh);
 			for(MeshPart part : first.meshParts) {
 				if(part.mesh == oldMesh) {
@@ -335,8 +335,8 @@ public class CSGUtil {
 	 * @return new mesh which is the result of the subtraction
 	 */
 	public static CSGMesh subtraction(CSGMesh minuend,
-	                                  CSGMesh subtrahend,
-	                                  CSGConfiguration config) {
+			CSGMesh subtrahend,
+			CSGConfiguration config) {
 		CSGMesh copy1 = minuend.cpy();
 		CSGMesh copy2 = subtrahend.cpy();
 		copy1.setConfig(config);

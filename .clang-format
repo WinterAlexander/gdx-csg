@@ -1,0 +1,3 @@
+---
+# Inherited from winterfmt. This files needs to exit so the IntelliJ plugin for clang-format
+# triggers when reformatting from IDE.

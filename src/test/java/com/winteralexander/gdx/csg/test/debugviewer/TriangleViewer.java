@@ -47,8 +47,7 @@ public class TriangleViewer implements ApplicationListener {
 	private static final Queue<Consumer<ShapeRenderer>> __debugOnlyRenderables = new Queue<>();
 
 	private final static int DEFAULT_ATTRIBUTES = VertexAttributes.Usage.Position
-			| VertexAttributes.Usage.Normal
-			| VertexAttributes.Usage.Tangent
+			| VertexAttributes.Usage.Normal | VertexAttributes.Usage.Tangent
 			| VertexAttributes.Usage.TextureCoordinates;
 	private Viewport viewport;
 
@@ -97,13 +96,14 @@ public class TriangleViewer implements ApplicationListener {
 		debugRenderer = new ShapeRenderer();
 		debugRenderer.setAutoShapeType(true);
 
-		InputUtil.registerInput(new CameraInputController(cam) {{
-			scrollFactor /= 4f;
-		}});
+		InputUtil.registerInput(new CameraInputController(cam) {
+			{
+				scrollFactor /= 4f;
+			}
+		});
 
 		__debugOnlyRenderables.clear();
 		__debugOnlyRenderables.addFirst(r -> {
-
 			float scl = 0.05f * MathUtil.sigmoid(cam.position.dst2(0f, 0f, 0f));
 			r.setColor(Color.RED);
 			r.line(0f, 0f, 0f, scl, 0f, 0f);
@@ -112,11 +112,10 @@ public class TriangleViewer implements ApplicationListener {
 			r.setColor(Color.BLUE);
 			r.line(0f, 0f, 0f, 0f, 0f, scl);
 
-			r.setColor(intersection == NONE
-					? Color.RED
-					: intersection == null
-						? Color.PURPLE
-						: Color.GREEN);
+			r.setColor(intersection == NONE ? Color.RED
+							: intersection == null
+							? Color.PURPLE
+							: Color.GREEN);
 			for(Triangle triangle : triangles) {
 				r.line(triangle.p1, triangle.p2);
 				r.line(triangle.p2, triangle.p3);
@@ -139,7 +138,6 @@ public class TriangleViewer implements ApplicationListener {
 
 			r.setColor(Color.BLUE);
 			r.line(intersectionSegment.a, intersectionSegment.b);
-
 		});
 		InputUtil.registerInput(new InputAdapter() {
 			@Override
@@ -160,34 +158,22 @@ public class TriangleViewer implements ApplicationListener {
 						triangles.get(1).p1.add(amount, 0f, 0f);
 						return true;
 					case Input.Keys.P:
-						System.out.println("expected.a.set(" +
-								intersectionSegment.a.x + "f, " +
-								intersectionSegment.a.y + "f, " +
-								intersectionSegment.a.z + "f);");
-						System.out.println("expected.b.set(" +
-								intersectionSegment.b.x + "f, " +
-								intersectionSegment.b.y + "f, " +
-								intersectionSegment.b.z + "f);");
-						System.out.println("tri1.set(" +
-								triangles.get(0).p1.x + "f, " +
-								triangles.get(0).p1.y + "f, " +
-								triangles.get(0).p1.z + "f, " +
-								triangles.get(0).p2.x + "f, " +
-								triangles.get(0).p2.y + "f, " +
-								triangles.get(0).p2.z + "f, " +
-								triangles.get(0).p3.x + "f, " +
-								triangles.get(0).p3.y + "f, " +
-								triangles.get(0).p3.z + "f);");
-						System.out.println("tri2.set(" +
-								triangles.get(1).p1.x + "f, " +
-								triangles.get(1).p1.y + "f, " +
-								triangles.get(1).p1.z + "f, " +
-								triangles.get(1).p2.x + "f, " +
-								triangles.get(1).p2.y + "f, " +
-								triangles.get(1).p2.z + "f, " +
-								triangles.get(1).p3.x + "f, " +
-								triangles.get(1).p3.y + "f, " +
-								triangles.get(1).p3.z + "f);");
+						System.out.println("expected.a.set(" + intersectionSegment.a.x + "f, "
+								+ intersectionSegment.a.y + "f, " + intersectionSegment.a.z
+								+ "f);");
+						System.out.println("expected.b.set(" + intersectionSegment.b.x + "f, "
+								+ intersectionSegment.b.y + "f, " + intersectionSegment.b.z
+								+ "f);");
+						System.out.println("tri1.set(" + triangles.get(0).p1.x + "f, "
+								+ triangles.get(0).p1.y + "f, " + triangles.get(0).p1.z + "f, "
+								+ triangles.get(0).p2.x + "f, " + triangles.get(0).p2.y + "f, "
+								+ triangles.get(0).p2.z + "f, " + triangles.get(0).p3.x + "f, "
+								+ triangles.get(0).p3.y + "f, " + triangles.get(0).p3.z + "f);");
+						System.out.println("tri2.set(" + triangles.get(1).p1.x + "f, "
+								+ triangles.get(1).p1.y + "f, " + triangles.get(1).p1.z + "f, "
+								+ triangles.get(1).p2.x + "f, " + triangles.get(1).p2.y + "f, "
+								+ triangles.get(1).p2.z + "f, " + triangles.get(1).p3.x + "f, "
+								+ triangles.get(1).p3.y + "f, " + triangles.get(1).p3.z + "f);");
 						return true;
 					case Input.Keys.S:
 						if(intersection != NONE) {
@@ -204,7 +190,6 @@ public class TriangleViewer implements ApplicationListener {
 
 							for(int i = 0; i < split.numBack; i++)
 								triangles.add(new Triangle(split.back, i * 9));
-
 
 							tmpPlane.set(triangles.get(0).p1, triangles.get(0).getNormal());
 							Intersector.splitTriangle(tri2, tmpPlane, split);
@@ -233,7 +218,9 @@ public class TriangleViewer implements ApplicationListener {
 
 		try {
 			intersection = intersectTriangleTriangle(triangles.get(0),
-					triangles.get(1), 1e-5f, intersectionSegment);
+					triangles.get(1),
+					1e-5f,
+					intersectionSegment);
 		} catch(Exception ex) {
 			intersection = null;
 		}
@@ -263,11 +250,8 @@ public class TriangleViewer implements ApplicationListener {
 	public void dispose() {}
 
 	public static void main(String[] args) {
-		new LwjglApplication(new TriangleViewer(new Triangle(0f, 0f, 0f,
-				0f, 1f, 0f,
-				0f, 0f, 1f), new Triangle(0f, 1f, 0f,
-				1f, 0f, 0f,
-				1f, 1f, 0f)));
+		new LwjglApplication(new TriangleViewer(new Triangle(0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 1f),
+				new Triangle(0f, 1f, 0f, 1f, 0f, 0f, 1f, 1f, 0f)));
 	}
 
 	public static void start(Object... objs) {
@@ -282,7 +266,9 @@ public class TriangleViewer implements ApplicationListener {
 			if(obj instanceof Segment)
 				segments.add((Segment)obj);
 		}
-		start(tris.toArray(Triangle.class), rays.toArray(Ray.class), segments.toArray(Segment.class));
+		start(tris.toArray(Triangle.class),
+				rays.toArray(Ray.class),
+				segments.toArray(Segment.class));
 	}
 
 	public static void start(Triangle[] triangles, Ray[] rays) {
@@ -302,15 +288,18 @@ public class TriangleViewer implements ApplicationListener {
 
 		try {
 			new LwjglApplication(new TriangleViewer(triangles, rays, segments),
-					new LwjglApplicationConfiguration() {{
-						width = 1600;
-						height = 900;
-						forceExit = false;
-					}}) {
+					new LwjglApplicationConfiguration() {
+						{
+							width = 1_600;
+							height = 900;
+							forceExit = false;
+						}
+					}) {
 				public Thread getMainThread() {
 					return mainLoopThread;
 				}
-			}.getMainThread().join();
+			}.getMainThread()
+					.join();
 		} catch(InterruptedException ex) {
 			throw new RuntimeException(ex);
 		}
