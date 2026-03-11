@@ -1,11 +1,10 @@
 name: Java CI
 
-on: [push]
+on: [ push ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK 11
@@ -15,3 +14,25 @@ jobs:
           distribution: 'temurin'
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots package
+
+  check-format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up Clang
+        uses: egor-tensin/setup-clang@v2.1
+        with:
+          version: 21
+          platform: x64
+      - name: Clone winterfmt
+        uses: actions/checkout@v5
+        with:
+          repository: WinterAlexander/winterfmt
+          path: winterfmt
+          ref: master
+      - name: Check format
+        run: |
+          export WINTERFMT_CLANG_FORMAT="clang-format-21"
+          $WINTERFMT_CLANG_FORMAT --version
+          source winterfmt/init.sh
+          winterfmt check
