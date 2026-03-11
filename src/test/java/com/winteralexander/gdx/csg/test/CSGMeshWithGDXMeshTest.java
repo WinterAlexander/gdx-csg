@@ -214,8 +214,6 @@ public class CSGMeshWithGDXMeshTest {
 		copy1.classifyFaces(subtrahend);
 		copy2.classifyFaces(minuend);
 
-		// CSGMeshViewer.start(copy1, copy2);
-
 		CSGMeshViewer.start(copy1);
 		CSGMeshViewer.start(copy2);
 
@@ -446,17 +444,12 @@ public class CSGMeshWithGDXMeshTest {
 		csg.classifyFaces(copy2);
 		otherCsg.classifyFaces(copy1);
 
-		// CSGMeshViewer.start(csg, otherCsg);
-
 		csg.removeFaces(true, true);
 		otherCsg.removeFaces(false, true);
 
 		otherCsg.invertTriangles();
 
 		Mesh newMesh = csg.toMesh();
-
-		// assertEquals(mesh.getNumVertices(), newMesh.getNumVertices());
-		// assertEquals(mesh.getNumIndices(), newMesh.getNumIndices());
 
 		box.meshes.set(0, newMesh);
 		box.meshParts.get(0).set("box", newMesh, 0, newMesh.getNumIndices(), GL_TRIANGLES);
@@ -473,7 +466,6 @@ public class CSGMeshWithGDXMeshTest {
 		second.meshParts.get(0).update();
 
 		ModelViewer.start(box, second);
-		// CSGMeshViewer.start(new CSGMesh[] { csg, otherCsg }, new Ray[0]);
 	}
 
 	@Test
@@ -591,8 +583,6 @@ public class CSGMeshWithGDXMeshTest {
 
 		CSGMesh firstUnion = CSGUtil.union(cylinder1, cylinder2);
 
-		// CSGMeshViewer.start(firstUnion);
-
 		CSGMesh copy1 = firstUnion.cpy();
 		CSGMesh copy2 = cylinder3.cpy();
 
@@ -610,7 +600,7 @@ public class CSGMeshWithGDXMeshTest {
 		copy1.mergeWith(copy2);
 		copy1.clearInsideStatus();
 
-		CSGMesh cylinders = copy1; // CSGUtil.union(firstUnion, cylinder3);
+		CSGMesh cylinders = CSGUtil.union(firstUnion, cylinder3);
 
 		initGL();
 		cylinder.meshes.set(0, cylinders.toMesh());
@@ -622,7 +612,6 @@ public class CSGMeshWithGDXMeshTest {
 		cylinder.meshParts.get(0).update();
 
 		ModelViewer.start(cylinder);
-		// CSGMeshViewer.start(cylinders);
 	}
 
 	@Test
@@ -695,38 +684,13 @@ public class CSGMeshWithGDXMeshTest {
 		cylMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 90f));
 
 		CSGMesh cylinder3 = CSGMesh.fromMesh(cylMesh);
-
-		// CSGMesh cylinders = CSGUtil.union(CSGUtil.union(cylinder1, cylinder2), cylinder3);
+		;
 
 		CSGMesh roundedBox = CSGUtil.intersection(boxCSG, sphereCSG);
 
 		CSGMesh last = CSGUtil.subtraction(roundedBox, cylinder1);
 		last = CSGUtil.subtraction(last, cylinder2);
 		last = CSGUtil.subtraction(last, cylinder3);
-		/*
-				CSGMesh copy1 = roundedBox.cpy();
-				CSGMesh copy2 = cylinders.cpy();
-
-				copy1.splitTriangles(cylinders);
-				copy2.splitTriangles(roundedBox);
-
-				copy1.classifyFaces(cylinders);
-				copy2.classifyFaces(roundedBox);
-
-				Ray ray = new Ray();
-				ray.set(0.19290544f, -0.5f, -0.1757075f, 0f, 1f, 0f);
-
-				// issue with this is missing triangle
-				CSGMeshViewer.start(new CSGMesh[]{ /*copy1,* cylinders }, new Ray[] { ray });
-
-				copy1.removeFaces(true, false);
-				copy2.removeFaces(false, true);
-
-				copy2.invertTriangles();
-				copy1.mergeWith(copy2);
-				copy1.clearInsideStatus();
-
-				CSGMesh last = copy1;*/
 
 		box.meshes.set(0, last.toMesh());
 		box.meshParts.get(0).set("box",
@@ -834,28 +798,6 @@ public class CSGMeshWithGDXMeshTest {
 				new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f).translate(0f, -0.55f, 0f));
 		cylinder2.meshes.get(0).transform(
 				new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 0f).translate(0f, 0.15f, 0f));
-		/*
-				FloatBuffer buffer = sphereMesh.getVerticesBuffer(true);
-				for(int i = 0; i < sphereMesh.getNumVertices(); i++) {
-					buffer.position(i * sphereMesh.getVertexSize() / 4 +
-							sphereMesh.getVertexAttribute(VertexAttributes.Usage.TextureCoordinates).offset
-		   / 4);
-
-					buffer.put(1f);
-					buffer.put(1f);
-				}
-
-
-				FloatBuffer buffer2 = cylinder2.meshes.get(0).getVerticesBuffer(true);
-				for(int i = 0; i < cylinder2.meshes.get(0).getNumVertices(); i++) {
-					buffer2.position(i * cylinder2.meshes.get(0).getVertexSize() / 4 +
-							cylinder2.meshes.get(0).getVertexAttribute(VertexAttributes.Usage.TextureCoordinates).offset
-		   / 4);
-
-					buffer2.put(1f);
-					buffer2.put(1f);
-				}
-		*/
 		CSGUtil.subtraction(sphere, cylinder2.meshes.get(0));
 
 		CSGUtil.subtraction(cylinder, sphere.meshes.get(0));

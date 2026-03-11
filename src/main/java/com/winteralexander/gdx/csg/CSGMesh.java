@@ -228,8 +228,7 @@ public class CSGMesh implements Serializable {
 				nonMatchingA = face.getV3();
 
 			if(countMatching == 3)
-				continue;
-			// throw new IllegalStateException("Duplicate triangles in mesh");
+				continue; // Duplicate triangles in mesh
 
 			if(countMatching != 2)
 				continue;
@@ -261,8 +260,7 @@ public class CSGMesh implements Serializable {
 				continue;
 
 			if(collinearWithFirst && collinearWithSecond)
-				continue;
-			// throw new IllegalStateException("Invalid 2 faces");
+				continue; // Invalid 2 faces
 
 			for(Segment segment : cutEdges)
 				if(intersectSegmentSegment(segment.a,
@@ -335,8 +333,7 @@ public class CSGMesh implements Serializable {
 		if(tmpV1.epsilonEquals(tmpV2, config.tolerance)
 				|| tmpV1.epsilonEquals(tmpV3, config.tolerance)
 				|| tmpV2.epsilonEquals(tmpV3, config.tolerance))
-			return;
-		// throw new IllegalStateException("Triangle has duplicate points");
+			return; // Triangle has duplicate points
 
 		MeshVertex vertex1 = null, vertex2 = null, vertex3 = null;
 
