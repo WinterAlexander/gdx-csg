@@ -4,12 +4,16 @@ import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
+import com.badlogic.gdx.graphics.g3d.utils.MeshBuilder;
+import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.math.collision.Segment;
 import com.badlogic.gdx.utils.*;
+import com.winteralexander.gdx.utils.BufferUtil;
+import com.winteralexander.gdx.utils.ReflectionUtil;
 import com.winteralexander.gdx.utils.io.Serializable;
 import com.winteralexander.gdx.utils.math.shape3d.Intersector3D.TriangleIntersectionResult;
 import com.winteralexander.gdx.utils.math.shape3d.SegmentPlus;
@@ -144,11 +148,11 @@ public class CSGMesh implements Serializable {
 					if(face.getNormal().dot(otherFace.getNormal()) < 0.99f)
 						continue;
 
-					TriangleIntersectionResult result = intersectTriangleTriangle(
-							face.getTriangle(),
-							otherFace.getTriangle(),
-							config.tolerance,
-							intersectSegment);
+					TriangleIntersectionResult
+							result = intersectTriangleTriangle(face.getTriangle(),
+									otherFace.getTriangle(),
+									config.tolerance,
+									intersectSegment);
 					if(result == COPLANAR_FACE_FACE)
 						boundaryFaces.add(face);
 				}
@@ -954,6 +958,123 @@ public class CSGMesh implements Serializable {
 			for(int k = 0; k < attr.getSizeInBytes() / 4; k++)
 				out.getOtherAttributes()[j++] = buffer.get(index * vertexSize + attr.offset / 4
 						+ k);
+		}
+	}
+
+	public static CSGMesh fromBuilder(MeshPartBuilder builder) {
+		if(!(builder instanceof MeshBuilder))
+			throw new IllegalArgumentException("Unsupported builder: " + builder);
+
+		MeshBuilder mb = (MeshBuilder)builder;
+
+		Array<MeshVertex> vertices = new Array<>(mb.getNumVertices());
+		Array<MeshFace> faces = new Array<>(mb.getNumIndices() / 3);
+		VertexAttributes attrs = mb.getAttributes();
+
+		FloatArray buffer = ReflectionUtil.get(mb, "vertices");
+		ShortArray idxBuffer = ReflectionUtil.get(mb, "indices");
+		int posOffset = ReflectionUtil.get(mb, "posOffset");
+		int norOffset = ReflectionUtil.get(mb, "norOffset");
+		int biNorOffset = ReflectionUtil.get(mb, "biNorOffset");
+		int tanOffset = ReflectionUtil.get(mb, "tangentOffset");
+		int uvOffset = ReflectionUtil.get(mb, "uvOffset");
+		int colOffset = ReflectionUtil.get(mb, "colOffset");
+		int colSize = ReflectionUtil.get(mb, "colSize");
+		int cpOffset = ReflectionUtil.get(mb, "cpOffset");
+
+		int otherAttrCount = mb.getFloatsPerVertex()
+				- (3 + (norOffset == -1 ? 0 : 3) + (tanOffset == -1 ? 0 : 3));
+
+		for(int i = 0; i < mb.getNumVertices(); i++) {
+			MeshVertex vertex = new MeshVertex(otherAttrCount);
+			readVertex(mb,
+					buffer,
+					attrs,
+					posOffset,
+					norOffset,
+					biNorOffset,
+					tanOffset,
+					uvOffset,
+					colOffset,
+					colSize,
+					cpOffset,
+					i,
+					vertex);
+			vertices.add(vertex);
+		}
+
+		for(int i = 0; i < mb.getNumIndices() / 3; i++) {
+			short v1 = idxBuffer.get(i * 3);
+			short v2 = idxBuffer.get(i * 3 + 1);
+			short v3 = idxBuffer.get(i * 3 + 2);
+			MeshFace face = new MeshFace(vertices.get(v1), vertices.get(v2), vertices.get(v3));
+			faces.add(face);
+		}
+
+		return new CSGMesh(vertices, faces, attrs);
+	}
+
+	private static void readVertex(MeshBuilder builder,
+			FloatArray buffer,
+			VertexAttributes attrs,
+			int posOffset,
+			int norOffset,
+			int biNorOffset,
+			int tanOffset,
+			int uvOffset,
+			int colOffset,
+			int colSize,
+			int cpOffset,
+			int vertexIndex,
+			MeshVertex out) {
+
+		BufferUtil.getVector3(buffer,
+				vertexIndex * builder.getFloatsPerVertex() + posOffset,
+				out.getPosition());
+
+		if(norOffset != -1)
+			BufferUtil.getVector3(buffer,
+					vertexIndex * builder.getFloatsPerVertex() + norOffset,
+					out.getNormal());
+
+		if(tanOffset != -1)
+			BufferUtil.getVector3(buffer,
+					vertexIndex * builder.getFloatsPerVertex() + tanOffset,
+					out.getTangent());
+
+		for(VertexAttribute attr : attrs) {
+			if(attr.usage == VertexAttributes.Usage.Position
+					|| attr.usage == VertexAttributes.Usage.Normal
+					|| attr.usage == VertexAttributes.Usage.Tangent)
+				continue;
+
+			int offset;
+			int size;
+			switch(attr.usage) {
+				case VertexAttributes.Usage.BiNormal:
+					offset = biNorOffset;
+					size = 3;
+					break;
+				case VertexAttributes.Usage.TextureCoordinates:
+					offset = uvOffset;
+					size = 2;
+					break;
+				case VertexAttributes.Usage.ColorUnpacked:
+					offset = colOffset;
+					size = colSize;
+					break;
+				case VertexAttributes.Usage.ColorPacked:
+					offset = cpOffset;
+					size = 1;
+					break;
+				default:
+					continue;
+			}
+
+			for(int i = 0; i < size; i++) {
+				int index = vertexIndex * builder.getFloatsPerVertex() + offset + i;
+				out.getOtherAttributes()[i] = buffer.get(index);
+			}
 		}
 	}
 }
