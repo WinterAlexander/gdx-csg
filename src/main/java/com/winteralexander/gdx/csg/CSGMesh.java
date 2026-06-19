@@ -317,6 +317,13 @@ public class CSGMesh implements Serializable {
 				.mulAdd(v3.getNormal(), w3)
 				.nor();
 
+		out.getBinormal()
+				.set(0f, 0f, 0f)
+				.mulAdd(v1.getBinormal(), w1)
+				.mulAdd(v2.getBinormal(), w2)
+				.mulAdd(v3.getBinormal(), w3)
+				.nor();
+
 		out.getTangent()
 				.set(0f, 0f, 0f)
 				.mulAdd(v1.getTangent(), w1)
@@ -573,6 +580,7 @@ public class CSGMesh implements Serializable {
 			MeshVertex meshVertex = new MeshVertex(vertexAttribsSize);
 			readVec3(stream, meshVertex.getPosition());
 			readVec3(stream, meshVertex.getNormal());
+			readVec3(stream, meshVertex.getBinormal());
 			readVec3(stream, meshVertex.getTangent());
 			for(int j = 0; j < vertexAttribsSize; j++)
 				meshVertex.getOtherAttributes()[j] = readFloat(stream);
@@ -606,6 +614,7 @@ public class CSGMesh implements Serializable {
 		for(MeshVertex vertex : vertices) {
 			writeVec3(stream, vertex.getPosition());
 			writeVec3(stream, vertex.getNormal());
+			writeVec3(stream, vertex.getBinormal());
 			writeVec3(stream, vertex.getTangent());
 			for(float f : vertex.getOtherAttributes())
 				writeFloat(stream, f);
@@ -650,8 +659,10 @@ public class CSGMesh implements Serializable {
 
 		int posOffset = mesh.getVertexAttribute(VertexAttributes.Usage.Position).offset / 4;
 		VertexAttribute norAttr = mesh.getVertexAttribute(VertexAttributes.Usage.Normal);
+		VertexAttribute biNorAttr = mesh.getVertexAttribute(VertexAttributes.Usage.BiNormal);
 		VertexAttribute tanAttr = mesh.getVertexAttribute(VertexAttributes.Usage.Tangent);
 		int norOffset = norAttr == null ? -1 : norAttr.offset / 4;
+		int biNorOffset = biNorAttr == null ? -1 : biNorAttr.offset / 4;
 		int tanOffset = tanAttr == null ? -1 : tanAttr.offset / 4;
 
 		buffer.limit((mesh.getNumVertices() + vertices.size) * vertexSize);
@@ -671,6 +682,13 @@ public class CSGMesh implements Serializable {
 				buffer.put(vertex.getNormal().x);
 				buffer.put(vertex.getNormal().y);
 				buffer.put(vertex.getNormal().z);
+			}
+
+			if(biNorOffset != -1) {
+				buffer.position(vOffset + i * vertexSize + biNorOffset);
+				buffer.put(vertex.getBinormal().x);
+				buffer.put(vertex.getBinormal().y);
+				buffer.put(vertex.getBinormal().z);
 			}
 
 			if(tanOffset != -1) {
@@ -733,8 +751,10 @@ public class CSGMesh implements Serializable {
 
 		int posOffset = mesh.getVertexAttribute(VertexAttributes.Usage.Position).offset / 4;
 		VertexAttribute norAttr = mesh.getVertexAttribute(VertexAttributes.Usage.Normal);
+		VertexAttribute biNorAttr = mesh.getVertexAttribute(VertexAttributes.Usage.BiNormal);
 		VertexAttribute tanAttr = mesh.getVertexAttribute(VertexAttributes.Usage.Tangent);
 		int norOffset = norAttr == null ? -1 : norAttr.offset / 4;
+		int biNorOffset = biNorAttr == null ? -1 : biNorAttr.offset / 4;
 		int tanOffset = tanAttr == null ? -1 : tanAttr.offset / 4;
 
 		buffer.limit(vertices.size * vertexSize);
@@ -752,6 +772,13 @@ public class CSGMesh implements Serializable {
 				buffer.put(vertex.getNormal().x);
 				buffer.put(vertex.getNormal().y);
 				buffer.put(vertex.getNormal().z);
+			}
+
+			if(biNorOffset != -1) {
+				buffer.position(i * vertexSize + biNorOffset);
+				buffer.put(vertex.getBinormal().x);
+				buffer.put(vertex.getBinormal().y);
+				buffer.put(vertex.getBinormal().z);
 			}
 
 			if(tanOffset != -1) {
@@ -813,6 +840,7 @@ public class CSGMesh implements Serializable {
 		ShortArray idxBuffer = ReflectionUtil.get(builder, "indices");
 		int posOffset = ReflectionUtil.get(builder, "posOffset");
 		int norOffset = ReflectionUtil.get(builder, "norOffset");
+		int biNorOffset = ReflectionUtil.get(builder, "biNorOffset");
 		int tanOffset = ReflectionUtil.get(builder, "tangentOffset");
 
 		int vertexSize = ((MeshBuilder)partBuilder).getFloatsPerVertex();
@@ -823,13 +851,16 @@ public class CSGMesh implements Serializable {
 			int index = insertIndices == null || i >= insertIndices.size
 					? buffer.size / vertexSize : insertIndices.get(i);
 
-			if(index * (vertexSize + 1) > buffer.size)
-				buffer.setSize(index * (vertexSize + 1));
+			if((index + 1) * vertexSize > buffer.size)
+				buffer.setSize((index + 1) * vertexSize);
 
 			BufferUtil.putVector3(buffer, index * vertexSize + posOffset, vertex.getPosition());
 
 			if(norOffset != -1)
 				BufferUtil.putVector3(buffer, index * vertexSize + norOffset, vertex.getNormal());
+
+			if(biNorOffset != -1)
+				BufferUtil.putVector3(buffer, index * vertexSize + biNorOffset, vertex.getBinormal());
 
 			if(tanOffset != -1)
 				BufferUtil.putVector3(buffer, index * vertexSize + tanOffset, vertex.getTangent());
@@ -838,6 +869,7 @@ public class CSGMesh implements Serializable {
 			for(VertexAttribute attr : attributes) {
 				if(attr.usage == VertexAttributes.Usage.Position
 						|| attr.usage == VertexAttributes.Usage.Normal
+						|| attr.usage == VertexAttributes.Usage.BiNormal
 						|| attr.usage == VertexAttributes.Usage.Tangent)
 					continue;
 
@@ -848,6 +880,7 @@ public class CSGMesh implements Serializable {
 			vertexIndices.put(vertex, i);
 		}
 
+		idxBuffer.setSize(faces.size * 3);
 		for(int i = 0; i < faces.size; i++) {
 			MeshFace face = faces.get(i);
 
@@ -1000,9 +1033,11 @@ public class CSGMesh implements Serializable {
 	private static void readVertex(Mesh mesh, FloatBuffer buffer, int index, MeshVertex out) {
 		int vertexSize = mesh.getVertexSize() / 4;
 		VertexAttribute norAttr = mesh.getVertexAttribute(VertexAttributes.Usage.Normal);
+		VertexAttribute biNorAttr = mesh.getVertexAttribute(VertexAttributes.Usage.BiNormal);
 		VertexAttribute tanAttr = mesh.getVertexAttribute(VertexAttributes.Usage.Tangent);
 		int posOffset = mesh.getVertexAttribute(VertexAttributes.Usage.Position).offset / 4;
 		int norOffset = norAttr == null ? -1 : norAttr.offset / 4;
+		int biNorOffset = biNorAttr == null ? -1 : biNorAttr.offset / 4;
 		int tanOffset = tanAttr == null ? -1 : tanAttr.offset / 4;
 
 		out.getPosition().set(buffer.get(index * vertexSize + posOffset),
@@ -1012,6 +1047,10 @@ public class CSGMesh implements Serializable {
 			out.getNormal().set(buffer.get(index * vertexSize + norOffset),
 					buffer.get(index * vertexSize + norOffset + 1),
 					buffer.get(index * vertexSize + norOffset + 2));
+		if(biNorOffset != -1)
+			out.getBinormal().set(buffer.get(index * vertexSize + biNorOffset),
+					buffer.get(index * vertexSize + biNorOffset + 1),
+					buffer.get(index * vertexSize + biNorOffset + 2));
 		if(tanOffset != -1)
 			out.getTangent().set(buffer.get(index * vertexSize + tanOffset),
 					buffer.get(index * vertexSize + tanOffset + 1),
@@ -1021,6 +1060,7 @@ public class CSGMesh implements Serializable {
 		for(VertexAttribute attr : mesh.getVertexAttributes()) {
 			if(attr.usage == VertexAttributes.Usage.Position
 					|| attr.usage == VertexAttributes.Usage.Normal
+					|| attr.usage == VertexAttributes.Usage.BiNormal
 					|| attr.usage == VertexAttributes.Usage.Tangent)
 				continue;
 
@@ -1056,7 +1096,7 @@ public class CSGMesh implements Serializable {
 		int cpOffset = ReflectionUtil.get(builder, "cpOffset");
 
 		int otherAttrCount = builder.getFloatsPerVertex()
-				- (3 + (norOffset == -1 ? 0 : 3) + (tanOffset == -1 ? 0 : 3));
+				- (3 + (norOffset == -1 ? 0 : 3) + (biNorOffset == -1 ? 0 : 3) + (tanOffset == -1 ? 0 : 3));
 
 		int count = vertexIndices == null ? builder.getNumVertices() : vertexIndices.size;
 		for(int i = 0; i < count; i++) {
@@ -1111,6 +1151,11 @@ public class CSGMesh implements Serializable {
 					vertexIndex * builder.getFloatsPerVertex() + norOffset,
 					out.getNormal());
 
+		if(biNorOffset != -1)
+			BufferUtil.getVector3(buffer,
+					vertexIndex * builder.getFloatsPerVertex() + biNorOffset,
+					out.getBinormal());
+
 		if(tanOffset != -1)
 			BufferUtil.getVector3(buffer,
 					vertexIndex * builder.getFloatsPerVertex() + tanOffset,
@@ -1119,33 +1164,26 @@ public class CSGMesh implements Serializable {
 		for(VertexAttribute attr : attrs) {
 			if(attr.usage == VertexAttributes.Usage.Position
 					|| attr.usage == VertexAttributes.Usage.Normal
+					|| attr.usage == VertexAttributes.Usage.BiNormal
 					|| attr.usage == VertexAttributes.Usage.Tangent)
 				continue;
 
-			int offset;
-			int size;
+			int offset = attr.offset;/* TODO validate this works
 			switch(attr.usage) {
-				case VertexAttributes.Usage.BiNormal:
-					offset = biNorOffset;
-					size = 3;
-					break;
 				case VertexAttributes.Usage.TextureCoordinates:
 					offset = uvOffset;
-					size = 2;
 					break;
 				case VertexAttributes.Usage.ColorUnpacked:
 					offset = colOffset;
-					size = colSize;
 					break;
 				case VertexAttributes.Usage.ColorPacked:
 					offset = cpOffset;
-					size = 1;
 					break;
 				default:
 					continue;
-			}
+			}*/
 
-			for(int i = 0; i < size; i++) {
+			for(int i = 0; i < attr.numComponents; i++) {
 				int index = vertexIndex * builder.getFloatsPerVertex() + offset + i;
 				out.getOtherAttributes()[i] = buffer.get(index);
 			}

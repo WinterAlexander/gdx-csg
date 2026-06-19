@@ -32,14 +32,17 @@ public class SerializationTest {
 
 		mesh.getVertices().add(new MeshVertex(new Vector3(0f, 0f, 0f),
 				new Vector3(0f, 1f, 0f),
+				new Vector3(),
 				new Vector3(1f, 0f, 0f),
 				new float[0]));
 		mesh.getVertices().add(new MeshVertex(new Vector3(1f, 0f, 0f),
 				new Vector3(0f, 1f, 0f),
+				new Vector3(),
 				new Vector3(1f, 0f, 0f),
 				new float[0]));
 		mesh.getVertices().add(new MeshVertex(new Vector3(0f, 0f, 1f),
 				new Vector3(0f, 1f, 0f),
+				new Vector3(),
 				new Vector3(1f, 0f, 0f),
 				new float[0]));
 
