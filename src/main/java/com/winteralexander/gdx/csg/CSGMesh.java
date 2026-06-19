@@ -811,31 +811,28 @@ public class CSGMesh implements Serializable {
 
 		FloatArray buffer = ReflectionUtil.get(builder, "vertices");
 		ShortArray idxBuffer = ReflectionUtil.get(builder, "indices");
+		int posOffset = ReflectionUtil.get(builder, "posOffset");
+		int norOffset = ReflectionUtil.get(builder, "norOffset");
+		int tanOffset = ReflectionUtil.get(builder, "tangentOffset");
 
 		int vertexSize = ((MeshBuilder)partBuilder).getFloatsPerVertex();
 
 		for(int i = 0; i < vertices.size; i++) {
 			MeshVertex vertex = vertices.get(i);
 
-			int index = insertIndices == null ? buffer.size / vertexSize : insertIndices.get(i);
+			int index = insertIndices == null || i >= insertIndices.size
+					? buffer.size / vertexSize : insertIndices.get(i);
 
-			buffer.position(index * vertexSize + posOffset);
-			buffer.put(vertex.getPosition().x);
-			buffer.put(vertex.getPosition().y);
-			buffer.put(vertex.getPosition().z);
-			if(norOffset != -1) {
-				buffer.position(i * vertexSize + norOffset);
-				buffer.put(vertex.getNormal().x);
-				buffer.put(vertex.getNormal().y);
-				buffer.put(vertex.getNormal().z);
-			}
+			if(index * (vertexSize + 1) > buffer.size)
+				buffer.setSize(index * (vertexSize + 1));
 
-			if(tanOffset != -1) {
-				buffer.position(i * vertexSize + tanOffset);
-				buffer.put(vertex.getTangent().x);
-				buffer.put(vertex.getTangent().y);
-				buffer.put(vertex.getTangent().z);
-			}
+			BufferUtil.putVector3(buffer, index * vertexSize + posOffset, vertex.getPosition());
+
+			if(norOffset != -1)
+				BufferUtil.putVector3(buffer, index * vertexSize + norOffset, vertex.getNormal());
+
+			if(tanOffset != -1)
+				BufferUtil.putVector3(buffer, index * vertexSize + tanOffset, vertex.getTangent());
 
 			int j = 0;
 			for(VertexAttribute attr : attributes) {
@@ -844,9 +841,8 @@ public class CSGMesh implements Serializable {
 						|| attr.usage == VertexAttributes.Usage.Tangent)
 					continue;
 
-				buffer.position(i * vertexSize + attr.offset / 4);
 				for(int k = 0; k < attr.getSizeInBytes() / 4; k++)
-					buffer.put(vertex.getOtherAttributes()[j++]);
+					buffer.set(i * vertexSize + attr.offset / 4 + k, vertex.getOtherAttributes()[j++]);
 			}
 
 			vertexIndices.put(vertex, i);
