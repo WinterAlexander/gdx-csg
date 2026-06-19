@@ -798,6 +798,79 @@ public class CSGMesh implements Serializable {
 		return mesh;
 	}
 
+	public void toBuilder(MeshPartBuilder partBuilder) {
+		toBuilder(partBuilder, null);
+	}
+
+	public void toBuilder(MeshPartBuilder partBuilder, IntArray insertIndices) {
+
+		if(!(partBuilder instanceof MeshBuilder))
+			throw new IllegalArgumentException("Unsupported builder: " + partBuilder);
+
+		MeshBuilder builder = (MeshBuilder)partBuilder;
+
+		FloatArray buffer = ReflectionUtil.get(builder, "vertices");
+		ShortArray idxBuffer = ReflectionUtil.get(builder, "indices");
+
+		int vertexSize = ((MeshBuilder)partBuilder).getFloatsPerVertex();
+
+		for(int i = 0; i < vertices.size; i++) {
+			MeshVertex vertex = vertices.get(i);
+
+			int index = insertIndices == null ? buffer.size / vertexSize : insertIndices.get(i);
+
+			buffer.position(index * vertexSize + posOffset);
+			buffer.put(vertex.getPosition().x);
+			buffer.put(vertex.getPosition().y);
+			buffer.put(vertex.getPosition().z);
+			if(norOffset != -1) {
+				buffer.position(i * vertexSize + norOffset);
+				buffer.put(vertex.getNormal().x);
+				buffer.put(vertex.getNormal().y);
+				buffer.put(vertex.getNormal().z);
+			}
+
+			if(tanOffset != -1) {
+				buffer.position(i * vertexSize + tanOffset);
+				buffer.put(vertex.getTangent().x);
+				buffer.put(vertex.getTangent().y);
+				buffer.put(vertex.getTangent().z);
+			}
+
+			int j = 0;
+			for(VertexAttribute attr : attributes) {
+				if(attr.usage == VertexAttributes.Usage.Position
+						|| attr.usage == VertexAttributes.Usage.Normal
+						|| attr.usage == VertexAttributes.Usage.Tangent)
+					continue;
+
+				buffer.position(i * vertexSize + attr.offset / 4);
+				for(int k = 0; k < attr.getSizeInBytes() / 4; k++)
+					buffer.put(vertex.getOtherAttributes()[j++]);
+			}
+
+			vertexIndices.put(vertex, i);
+		}
+
+		for(int i = 0; i < faces.size; i++) {
+			MeshFace face = faces.get(i);
+
+			int idx1 = vertexIndices.get(face.getV1(), -1);
+			int idx2 = vertexIndices.get(face.getV2(), -1);
+			int idx3 = vertexIndices.get(face.getV3(), -1);
+
+			if(idx1 == -1 || idx2 == -1 || idx3 == -1)
+				throw new IllegalStateException("CSGMesh has a face refering to a vertex not in "
+						+ "the mesh. Face #" + i + " has vertices "
+						+ "#" + idx1 + ", #" + idx2 + " and #" + idx3);
+
+			idxBuffer.set(i * 3, (short)idx1);
+			idxBuffer.set(i * 3 + 1, (short)idx2);
+			idxBuffer.set(i * 3 + 2, (short)idx3);
+		}
+		vertexIndices.clear();
+	}
+
 	public InsideStatus getInsideStatus(MeshVertex vertex) {
 		return vertexStatus.get(vertex);
 	}
@@ -961,33 +1034,38 @@ public class CSGMesh implements Serializable {
 		}
 	}
 
-	public static CSGMesh fromBuilder(MeshPartBuilder builder) {
-		if(!(builder instanceof MeshBuilder))
-			throw new IllegalArgumentException("Unsupported builder: " + builder);
+	public static CSGMesh fromBuilder(MeshPartBuilder partBuilder) {
+		return fromBuilder(partBuilder, null);
+	}
 
-		MeshBuilder mb = (MeshBuilder)builder;
+	public static CSGMesh fromBuilder(MeshPartBuilder partBuilder, IntArray vertexIndices) {
+		if(!(partBuilder instanceof MeshBuilder))
+			throw new IllegalArgumentException("Unsupported builder: " + partBuilder);
 
-		Array<MeshVertex> vertices = new Array<>(mb.getNumVertices());
-		Array<MeshFace> faces = new Array<>(mb.getNumIndices() / 3);
-		VertexAttributes attrs = mb.getAttributes();
+		MeshBuilder builder = (MeshBuilder)partBuilder;
 
-		FloatArray buffer = ReflectionUtil.get(mb, "vertices");
-		ShortArray idxBuffer = ReflectionUtil.get(mb, "indices");
-		int posOffset = ReflectionUtil.get(mb, "posOffset");
-		int norOffset = ReflectionUtil.get(mb, "norOffset");
-		int biNorOffset = ReflectionUtil.get(mb, "biNorOffset");
-		int tanOffset = ReflectionUtil.get(mb, "tangentOffset");
-		int uvOffset = ReflectionUtil.get(mb, "uvOffset");
-		int colOffset = ReflectionUtil.get(mb, "colOffset");
-		int colSize = ReflectionUtil.get(mb, "colSize");
-		int cpOffset = ReflectionUtil.get(mb, "cpOffset");
+		Array<MeshVertex> vertices = new Array<>(builder.getNumVertices());
+		Array<MeshFace> faces = new Array<>(builder.getNumIndices() / 3);
+		VertexAttributes attrs = builder.getAttributes();
 
-		int otherAttrCount = mb.getFloatsPerVertex()
+		FloatArray buffer = ReflectionUtil.get(builder, "vertices");
+		ShortArray idxBuffer = ReflectionUtil.get(builder, "indices");
+		int posOffset = ReflectionUtil.get(builder, "posOffset");
+		int norOffset = ReflectionUtil.get(builder, "norOffset");
+		int biNorOffset = ReflectionUtil.get(builder, "biNorOffset");
+		int tanOffset = ReflectionUtil.get(builder, "tangentOffset");
+		int uvOffset = ReflectionUtil.get(builder, "uvOffset");
+		int colOffset = ReflectionUtil.get(builder, "colOffset");
+		int colSize = ReflectionUtil.get(builder, "colSize");
+		int cpOffset = ReflectionUtil.get(builder, "cpOffset");
+
+		int otherAttrCount = builder.getFloatsPerVertex()
 				- (3 + (norOffset == -1 ? 0 : 3) + (tanOffset == -1 ? 0 : 3));
 
-		for(int i = 0; i < mb.getNumVertices(); i++) {
+		int count = vertexIndices == null ? builder.getNumVertices() : vertexIndices.size;
+		for(int i = 0; i < count; i++) {
 			MeshVertex vertex = new MeshVertex(otherAttrCount);
-			readVertex(mb,
+			readVertex(builder,
 					buffer,
 					attrs,
 					posOffset,
@@ -998,12 +1076,12 @@ public class CSGMesh implements Serializable {
 					colOffset,
 					colSize,
 					cpOffset,
-					i,
+					vertexIndices == null ? i : vertexIndices.get(i),
 					vertex);
 			vertices.add(vertex);
 		}
 
-		for(int i = 0; i < mb.getNumIndices() / 3; i++) {
+		for(int i = 0; i < builder.getNumIndices() / 3; i++) {
 			short v1 = idxBuffer.get(i * 3);
 			short v2 = idxBuffer.get(i * 3 + 1);
 			short v3 = idxBuffer.get(i * 3 + 2);
