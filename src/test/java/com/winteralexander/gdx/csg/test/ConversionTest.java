@@ -103,19 +103,17 @@ public class ConversionTest {
 
 		ModelBuilder builder2 = new ModelBuilder();
 		builder2.begin();
-		MeshBuilder partBuilder2 = (MeshBuilder)builder.part("meshPart", GL20.GL_TRIANGLES,
+		MeshBuilder partBuilder2 = (MeshBuilder)builder2.part("meshPart", GL20.GL_TRIANGLES,
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal,
 				new Material());
 
-		BoxShapeBuilder.build(partBuilder2, 0.5f, 0.5f, 0.5f);
+		BoxShapeBuilder.build(partBuilder2, 1.5f, 0.5f, 0.5f);
 		CSGMesh second = CSGMesh.fromBuilder(partBuilder2);
-		CSGMeshViewer.start(csgMesh, second);
 		CSGMesh result = CSGUtil.subtraction(csgMesh, second);
-		CSGMeshViewer.start(result);
 		result.toBuilder(partBuilder, indices);
 
 		// validates it properly deleted the old vertices
-		assertEquals(48, partBuilder.getNumVertices());
+		assertEquals(56, partBuilder.getNumVertices());
 		Model model = builder.end();
 		ModelViewer.start(model);
 	}
