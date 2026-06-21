@@ -19,14 +19,18 @@ public class MeshVertex {
 	private final float[] otherAttributes;
 
 	public MeshVertex(int otherAttributesCount) {
-		this(new Vector3(), new Vector3(), new Vector3(), new Vector3(), new float[otherAttributesCount]);
+		this(new Vector3(),
+				new Vector3(),
+				new Vector3(),
+				new Vector3(),
+				new float[otherAttributesCount]);
 	}
 
 	public MeshVertex(Vector3 position,
-	                  Vector3 normal,
-	                  Vector3 binormal,
-	                  Vector3 tangent,
-	                  float[] otherAttributes) {
+			Vector3 normal,
+			Vector3 binormal,
+			Vector3 tangent,
+			float[] otherAttributes) {
 		ensureNotNull(position, "position");
 		ensureNotNull(normal, "normal");
 		ensureNotNull(binormal, "binormal");

@@ -13,9 +13,10 @@ import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.math.collision.Segment;
 import com.badlogic.gdx.utils.*;
 import com.winteralexander.gdx.utils.BufferUtil;
+import com.winteralexander.gdx.utils.ObjectUtil;
 import com.winteralexander.gdx.utils.ReflectionUtil;
+import com.winteralexander.gdx.utils.collection.CollectionUtil;
 import com.winteralexander.gdx.utils.io.Serializable;
-import com.winteralexander.gdx.utils.math.shape3d.Intersector3D.TriangleIntersectionResult;
 import com.winteralexander.gdx.utils.math.shape3d.SegmentPlus;
 import com.winteralexander.gdx.utils.math.vector.VectorUtil;
 
@@ -33,8 +34,8 @@ import static com.winteralexander.gdx.utils.Validation.ensureNotNull;
 import static com.winteralexander.gdx.utils.io.SerializationUtil.readVec3;
 import static com.winteralexander.gdx.utils.io.SerializationUtil.writeVec3;
 import static com.winteralexander.gdx.utils.io.StreamUtil.*;
-import static com.winteralexander.gdx.utils.math.shape3d.Intersector3D.*;
 import static com.winteralexander.gdx.utils.math.shape3d.Intersector3D.LineIntersectionResult.COLLINEAR;
+import static com.winteralexander.gdx.utils.math.shape3d.Intersector3D.*;
 import static com.winteralexander.gdx.utils.math.shape3d.Intersector3D.TriangleIntersectionResult.*;
 
 /**
@@ -845,14 +846,39 @@ public class CSGMesh implements Serializable {
 
 		int vertexSize = ((MeshBuilder)partBuilder).getFloatsPerVertex();
 
+		IntArray deadTriangles = null;
+		if(insertIndices != null) {
+			int maxInsertVertexId = CollectionUtil.max(insertIndices);
+
+			if(insertIndices.size > vertices.size
+					&& ((MeshBuilder)partBuilder).getNumVertices() - 1 > maxInsertVertexId)
+				throw new IllegalArgumentException("CSGMesh cannot be fully fill the insertion "
+						+ "region without leaving gaps in the vertex array");
+
+			IntSet insertVerticesSet = CollectionUtil.toGdxSet(insertIndices);
+
+			deadTriangles = new IntArray();
+			for(int tri = 0; tri < idxBuffer.size / 3; tri++) {
+				int v1 = idxBuffer.get(tri * 3);
+				int v2 = idxBuffer.get(tri * 3 + 1);
+				int v3 = idxBuffer.get(tri * 3 + 2);
+
+				if(insertVerticesSet.contains(v1) || insertVerticesSet.contains(v2)
+						|| insertVerticesSet.contains(v3))
+					deadTriangles.add(tri);
+			}
+		}
+
 		for(int i = 0; i < vertices.size; i++) {
 			MeshVertex vertex = vertices.get(i);
 
 			int index = insertIndices == null || i >= insertIndices.size
-					? buffer.size / vertexSize : insertIndices.get(i);
+					? buffer.size / vertexSize
+					: insertIndices.get(i);
 
 			if((index + 1) * vertexSize > buffer.size)
-				buffer.setSize((index + 1) * vertexSize);
+				buffer.setSize((index + 1) * vertexSize); // TODO remove bad vertices if not enough
+														  // stuff to replace them
 
 			BufferUtil.putVector3(buffer, index * vertexSize + posOffset, vertex.getPosition());
 
@@ -860,7 +886,9 @@ public class CSGMesh implements Serializable {
 				BufferUtil.putVector3(buffer, index * vertexSize + norOffset, vertex.getNormal());
 
 			if(biNorOffset != -1)
-				BufferUtil.putVector3(buffer, index * vertexSize + biNorOffset, vertex.getBinormal());
+				BufferUtil.putVector3(buffer,
+						index * vertexSize + biNorOffset,
+						vertex.getBinormal());
 
 			if(tanOffset != -1)
 				BufferUtil.putVector3(buffer, index * vertexSize + tanOffset, vertex.getTangent());
@@ -874,14 +902,27 @@ public class CSGMesh implements Serializable {
 					continue;
 
 				for(int k = 0; k < attr.getSizeInBytes() / 4; k++)
-					buffer.set(i * vertexSize + attr.offset / 4 + k, vertex.getOtherAttributes()[j++]);
+					buffer.set(i * vertexSize + attr.offset / 4 + k,
+							vertex.getOtherAttributes()[j++]);
 			}
 
-			vertexIndices.put(vertex, i);
+			vertexIndices.put(vertex, index);
 		}
 
-		idxBuffer.setSize(faces.size * 3);
+		idxBuffer.ensureCapacity(Math.max(0,
+				faces.size * 3
+						- (deadTriangles == null ? 0 : deadTriangles.size))); // TODO remove dead
+																			  // triangles if not
+																			  // enough stuff to
+																			  // replace them
 		for(int i = 0; i < faces.size; i++) {
+			int index = idxBuffer.size / 3 + 1;
+			if(deadTriangles != null && i < deadTriangles.size)
+				index = deadTriangles.get(i);
+
+			if(index * 3 >= idxBuffer.size)
+				idxBuffer.setSize((index + 1) * 3);
+
 			MeshFace face = faces.get(i);
 
 			int idx1 = vertexIndices.get(face.getV1(), -1);
@@ -1081,6 +1122,9 @@ public class CSGMesh implements Serializable {
 		MeshBuilder builder = (MeshBuilder)partBuilder;
 
 		Array<MeshVertex> vertices = new Array<>(builder.getNumVertices());
+		IntIntMap indexMap = null;
+		if(vertexIndices != null)
+			indexMap = new IntIntMap();
 		Array<MeshFace> faces = new Array<>(builder.getNumIndices() / 3);
 		VertexAttributes attrs = builder.getAttributes();
 
@@ -1090,13 +1134,10 @@ public class CSGMesh implements Serializable {
 		int norOffset = ReflectionUtil.get(builder, "norOffset");
 		int biNorOffset = ReflectionUtil.get(builder, "biNorOffset");
 		int tanOffset = ReflectionUtil.get(builder, "tangentOffset");
-		int uvOffset = ReflectionUtil.get(builder, "uvOffset");
-		int colOffset = ReflectionUtil.get(builder, "colOffset");
-		int colSize = ReflectionUtil.get(builder, "colSize");
-		int cpOffset = ReflectionUtil.get(builder, "cpOffset");
 
 		int otherAttrCount = builder.getFloatsPerVertex()
-				- (3 + (norOffset == -1 ? 0 : 3) + (biNorOffset == -1 ? 0 : 3) + (tanOffset == -1 ? 0 : 3));
+				- (3 + (norOffset == -1 ? 0 : 3) + (biNorOffset == -1 ? 0 : 3)
+						+ (tanOffset == -1 ? 0 : 3));
 
 		int count = vertexIndices == null ? builder.getNumVertices() : vertexIndices.size;
 		for(int i = 0; i < count; i++) {
@@ -1108,19 +1149,26 @@ public class CSGMesh implements Serializable {
 					norOffset,
 					biNorOffset,
 					tanOffset,
-					uvOffset,
-					colOffset,
-					colSize,
-					cpOffset,
 					vertexIndices == null ? i : vertexIndices.get(i),
 					vertex);
+			if(vertexIndices != null)
+				indexMap.put(vertexIndices.get(i), i);
 			vertices.add(vertex);
 		}
 
 		for(int i = 0; i < builder.getNumIndices() / 3; i++) {
-			short v1 = idxBuffer.get(i * 3);
-			short v2 = idxBuffer.get(i * 3 + 1);
-			short v3 = idxBuffer.get(i * 3 + 2);
+			int v1 = idxBuffer.get(i * 3);
+			int v2 = idxBuffer.get(i * 3 + 1);
+			int v3 = idxBuffer.get(i * 3 + 2);
+			if(vertexIndices != null) {
+				v1 = indexMap.get(v1, -1);
+				v2 = indexMap.get(v2, -1);
+				v3 = indexMap.get(v3, -1);
+
+				if(ObjectUtil.firstNonNegative(v1, v2, v3) == -1)
+					continue; // ignore triangles not involving selected vertices
+			}
+
 			MeshFace face = new MeshFace(vertices.get(v1), vertices.get(v2), vertices.get(v3));
 			faces.add(face);
 		}
@@ -1135,10 +1183,6 @@ public class CSGMesh implements Serializable {
 			int norOffset,
 			int biNorOffset,
 			int tanOffset,
-			int uvOffset,
-			int colOffset,
-			int colSize,
-			int cpOffset,
 			int vertexIndex,
 			MeshVertex out) {
 
@@ -1168,23 +1212,8 @@ public class CSGMesh implements Serializable {
 					|| attr.usage == VertexAttributes.Usage.Tangent)
 				continue;
 
-			int offset = attr.offset;/* TODO validate this works
-			switch(attr.usage) {
-				case VertexAttributes.Usage.TextureCoordinates:
-					offset = uvOffset;
-					break;
-				case VertexAttributes.Usage.ColorUnpacked:
-					offset = colOffset;
-					break;
-				case VertexAttributes.Usage.ColorPacked:
-					offset = cpOffset;
-					break;
-				default:
-					continue;
-			}*/
-
 			for(int i = 0; i < attr.numComponents; i++) {
-				int index = vertexIndex * builder.getFloatsPerVertex() + offset + i;
+				int index = vertexIndex * builder.getFloatsPerVertex() + attr.offset + i;
 				out.getOtherAttributes()[i] = buffer.get(index);
 			}
 		}
