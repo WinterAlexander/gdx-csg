@@ -71,20 +71,28 @@ public class ConversionTest {
 
 		BoxShapeBuilder.build(partBuilder, 1.5f, 0.5f, 0.5f);
 
+		int secondBox = partBuilder.getNumVertices();
+
+		partBuilder.setVertexTransform(new Matrix4().setToTranslation(-1f, 1f, 0f));
+		SphereShapeBuilder.build(partBuilder, 1f, 1f, 1f, 5, 5);
+		partBuilder.setVertexTransform(null);
+
+		sphereVertexCount += partBuilder.getNumVertices() - secondBox;
+
 		int firstPartSize = indices.size;
 		indices.clear();
-		for(int i = sphereVertexCount + firstPartSize; i < partBuilder.getNumVertices(); i++)
+		for(int i = sphereVertexCount + firstPartSize; i < secondBox; i++)
 			indices.add(i);
 		CSGMesh second = CSGMesh.fromBuilder(partBuilder, indices);
 		CSGMesh result = CSGUtil.subtraction(csgMesh, second);
 
 		indices.clear();
-		for(int i = sphereVertexCount; i < partBuilder.getNumVertices(); i++)
+		for(int i = sphereVertexCount; i < secondBox; i++)
 			indices.add(i);
 		result.toBuilder(partBuilder, indices);
 
 		// validates it properly deleted the old vertices
 		assertEquals(sphereVertexCount + 56, partBuilder.getNumVertices());
-		// ModelViewer.start(builder);
+		ModelViewer.start(builder);
 	}
 }
