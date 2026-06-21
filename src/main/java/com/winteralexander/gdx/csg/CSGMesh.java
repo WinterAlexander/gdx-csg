@@ -31,6 +31,7 @@ import java.util.UUID;
 
 import static com.badlogic.gdx.graphics.GL20.GL_TRIANGLES;
 import static com.winteralexander.gdx.utils.Validation.ensureNotNull;
+import static com.winteralexander.gdx.utils.collection.CollectionUtil.last;
 import static com.winteralexander.gdx.utils.io.SerializationUtil.readVec3;
 import static com.winteralexander.gdx.utils.io.SerializationUtil.writeVec3;
 import static com.winteralexander.gdx.utils.io.StreamUtil.*;
@@ -839,11 +840,6 @@ public class CSGMesh implements Serializable {
 
 		FloatArray buffer = ReflectionUtil.get(builder, "vertices");
 		ShortArray idxBuffer = ReflectionUtil.get(builder, "indices");
-		int posOffset = ReflectionUtil.get(builder, "posOffset");
-		int norOffset = ReflectionUtil.get(builder, "norOffset");
-		int biNorOffset = ReflectionUtil.get(builder, "biNorOffset");
-		int tanOffset = ReflectionUtil.get(builder, "tangentOffset");
-
 		int vertexSize = ((MeshBuilder)partBuilder).getFloatsPerVertex();
 
 		IntArray deadTriangles = null;
@@ -877,44 +873,18 @@ public class CSGMesh implements Serializable {
 					: insertIndices.get(i);
 
 			if((index + 1) * vertexSize > buffer.size)
-				buffer.setSize((index + 1) * vertexSize); // TODO remove bad vertices if not enough
-														  // stuff to replace them
+				buffer.setSize((index + 1) * vertexSize);
 
-			BufferUtil.putVector3(buffer, index * vertexSize + posOffset, vertex.getPosition());
-
-			if(norOffset != -1)
-				BufferUtil.putVector3(buffer, index * vertexSize + norOffset, vertex.getNormal());
-
-			if(biNorOffset != -1)
-				BufferUtil.putVector3(buffer,
-						index * vertexSize + biNorOffset,
-						vertex.getBinormal());
-
-			if(tanOffset != -1)
-				BufferUtil.putVector3(buffer, index * vertexSize + tanOffset, vertex.getTangent());
-
-			int j = 0;
-			for(VertexAttribute attr : attributes) {
-				if(attr.usage == VertexAttributes.Usage.Position
-						|| attr.usage == VertexAttributes.Usage.Normal
-						|| attr.usage == VertexAttributes.Usage.BiNormal
-						|| attr.usage == VertexAttributes.Usage.Tangent)
-					continue;
-
-				for(int k = 0; k < attr.getSizeInBytes() / 4; k++)
-					buffer.set(i * vertexSize + attr.offset / 4 + k,
-							vertex.getOtherAttributes()[j++]);
-			}
+			writeVertex(buffer, vertex, index, vertexSize, builder.getAttributes());
 
 			vertexIndices.put(vertex, index);
 		}
 
+		if(insertIndices != null && vertices.size < insertIndices.size)
+			buffer.setSize((insertIndices.get(vertices.size - 1) + 1) * vertexSize);
+
 		idxBuffer.ensureCapacity(Math.max(0,
-				faces.size * 3
-						- (deadTriangles == null ? 0 : deadTriangles.size))); // TODO remove dead
-																			  // triangles if not
-																			  // enough stuff to
-																			  // replace them
+				faces.size * 3 - (deadTriangles == null ? 0 : deadTriangles.size)));
 		for(int i = 0; i < faces.size; i++) {
 			int index = idxBuffer.size / 3 + 1;
 			if(deadTriangles != null && i < deadTriangles.size)
@@ -934,11 +904,56 @@ public class CSGMesh implements Serializable {
 						+ "the mesh. Face #" + i + " has vertices "
 						+ "#" + idx1 + ", #" + idx2 + " and #" + idx3);
 
-			idxBuffer.set(i * 3, (short)idx1);
-			idxBuffer.set(i * 3 + 1, (short)idx2);
-			idxBuffer.set(i * 3 + 2, (short)idx3);
+			idxBuffer.set(index * 3, (short)idx1);
+			idxBuffer.set(index * 3 + 1, (short)idx2);
+			idxBuffer.set(index * 3 + 2, (short)idx3);
 		}
+
+		if(deadTriangles != null && faces.size < deadTriangles.size) {
+			int maxTriangle = CollectionUtil.max(deadTriangles);
+			if(idxBuffer.size / 3 <= maxTriangle)
+				idxBuffer.setSize((deadTriangles.get(faces.size - 1) + 1) * 3);
+			else
+				idxBuffer.removeRange((deadTriangles.get(faces.size - 1) + 1) * 3,
+						last(deadTriangles) * 3);
+		}
+
 		vertexIndices.clear();
+	}
+
+	private static void writeVertex(FloatArray buffer,
+			MeshVertex vertex,
+			int index,
+			int vertexSize,
+			VertexAttributes attributes) {
+		int posOffset = attributes.getOffset(VertexAttributes.Usage.Position, -1);
+		int norOffset = attributes.getOffset(VertexAttributes.Usage.Normal, -1);
+		int biNorOffset = attributes.getOffset(VertexAttributes.Usage.BiNormal, -1);
+		int tanOffset = attributes.getOffset(VertexAttributes.Usage.Tangent, -1);
+
+		BufferUtil.putVector3(buffer, index * vertexSize + posOffset, vertex.getPosition());
+
+		if(norOffset != -1)
+			BufferUtil.putVector3(buffer, index * vertexSize + norOffset, vertex.getNormal());
+
+		if(biNorOffset != -1)
+			BufferUtil.putVector3(buffer, index * vertexSize + biNorOffset, vertex.getBinormal());
+
+		if(tanOffset != -1)
+			BufferUtil.putVector3(buffer, index * vertexSize + tanOffset, vertex.getTangent());
+
+		int j = 0;
+		for(VertexAttribute attr : attributes) {
+			if(attr.usage == VertexAttributes.Usage.Position
+					|| attr.usage == VertexAttributes.Usage.Normal
+					|| attr.usage == VertexAttributes.Usage.BiNormal
+					|| attr.usage == VertexAttributes.Usage.Tangent)
+				continue;
+
+			for(int k = 0; k < attr.getSizeInBytes() / 4; k++)
+				buffer.set(index * vertexSize + attr.offset / 4 + k,
+						vertex.getOtherAttributes()[j++]);
+		}
 	}
 
 	public InsideStatus getInsideStatus(MeshVertex vertex) {

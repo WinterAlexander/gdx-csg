@@ -77,7 +77,6 @@ public class ConversionTest {
 			indices.add(i);
 		CSGMesh second = CSGMesh.fromBuilder(partBuilder, indices);
 		CSGMesh result = CSGUtil.subtraction(csgMesh, second);
-		CSGMeshViewer.start(result);
 
 		indices.clear();
 		for(int i = sphereVertexCount; i < partBuilder.getNumVertices(); i++)
@@ -86,6 +85,6 @@ public class ConversionTest {
 
 		// validates it properly deleted the old vertices
 		assertEquals(sphereVertexCount + 56, partBuilder.getNumVertices());
-		ModelViewer.start(builder);
+		// ModelViewer.start(builder);
 	}
 }
