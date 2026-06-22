@@ -828,10 +828,53 @@ public class CSGMesh implements Serializable {
 	}
 
 	public void toBuilder(MeshPartBuilder partBuilder) {
-		toBuilder(partBuilder, null);
+		if(!(partBuilder instanceof MeshBuilder))
+			throw new IllegalArgumentException("Unsupported builder: " + partBuilder);
+
+		MeshBuilder builder = (MeshBuilder)partBuilder;
+
+		FloatArray buffer = ReflectionUtil.get(builder, "vertices");
+		ShortArray idxBuffer = ReflectionUtil.get(builder, "indices");
+		int vertexSize = ((MeshBuilder)partBuilder).getFloatsPerVertex();
+
+		buffer.ensureCapacity(vertices.size * vertexSize);
+		for(MeshVertex vertex : vertices) {
+			int index = buffer.size / vertexSize;
+			buffer.setSize((index + 1) * vertexSize);
+
+			writeVertex(buffer, vertex, index, vertexSize, builder.getAttributes());
+
+			vertexIndices.put(vertex, index);
+		}
+
+		idxBuffer.ensureCapacity(faces.size * 3);
+		for(MeshFace face : faces) {
+			int index = idxBuffer.size / 3;
+			idxBuffer.setSize((index + 1) * 3);
+			writeFace(idxBuffer, face, index, vertexIndices);
+		}
+
+		vertexIndices.clear();
+	}
+
+	private static void getTrianglesOfVertices(ShortArray idxBuffer,
+	                                           IntSet indices,
+	                                           IntArray outTriangles) {
+		for(int tri = 0; tri < idxBuffer.size / 3; tri++) {
+			int v1 = idxBuffer.get(tri * 3);
+			int v2 = idxBuffer.get(tri * 3 + 1);
+			int v3 = idxBuffer.get(tri * 3 + 2);
+
+			if(indices.contains(v1) || indices.contains(v2) || indices.contains(v3))
+				outTriangles.add(tri);
+		}
 	}
 
 	public void toBuilder(MeshPartBuilder partBuilder, IntArray insertIndices) {
+		if(insertIndices == null) {
+			toBuilder(partBuilder);
+			return;
+		}
 
 		if(!(partBuilder instanceof MeshBuilder))
 			throw new IllegalArgumentException("Unsupported builder: " + partBuilder);
@@ -842,33 +885,23 @@ public class CSGMesh implements Serializable {
 		ShortArray idxBuffer = ReflectionUtil.get(builder, "indices");
 		int vertexSize = ((MeshBuilder)partBuilder).getFloatsPerVertex();
 
-		IntArray deadTriangles = null;
-		if(insertIndices != null) {
-			int maxInsertVertexId = CollectionUtil.max(insertIndices);
+		int maxInsertVertexId = CollectionUtil.max(insertIndices);
 
-			if(insertIndices.size > vertices.size
-					&& ((MeshBuilder)partBuilder).getNumVertices() - 1 > maxInsertVertexId)
-				throw new IllegalArgumentException("CSGMesh cannot be fully fill the insertion "
-						+ "region without leaving gaps in the vertex array");
+		if(insertIndices.size > vertices.size
+				&& ((MeshBuilder)partBuilder).getNumVertices() - 1 > maxInsertVertexId)
+			throw new IllegalArgumentException("CSGMesh cannot be fully fill the insertion "
+					+ "region without leaving gaps in the vertex array");
 
-			IntSet insertVerticesSet = CollectionUtil.toGdxSet(insertIndices);
+		IntSet insertVerticesSet = CollectionUtil.toGdxSet(insertIndices);
 
-			deadTriangles = new IntArray();
-			for(int tri = 0; tri < idxBuffer.size / 3; tri++) {
-				int v1 = idxBuffer.get(tri * 3);
-				int v2 = idxBuffer.get(tri * 3 + 1);
-				int v3 = idxBuffer.get(tri * 3 + 2);
+		IntArray deadTriangles = new IntArray();
+		getTrianglesOfVertices(idxBuffer, insertVerticesSet, deadTriangles);
 
-				if(insertVerticesSet.contains(v1) || insertVerticesSet.contains(v2)
-						|| insertVerticesSet.contains(v3))
-					deadTriangles.add(tri);
-			}
-		}
-
+		buffer.ensureCapacity(Math.max(0, (vertices.size - insertIndices.size) * vertexSize));
 		for(int i = 0; i < vertices.size; i++) {
 			MeshVertex vertex = vertices.get(i);
 
-			int index = insertIndices == null || i >= insertIndices.size
+			int index = i >= insertIndices.size
 					? buffer.size / vertexSize
 					: insertIndices.get(i);
 
@@ -880,36 +913,23 @@ public class CSGMesh implements Serializable {
 			vertexIndices.put(vertex, index);
 		}
 
-		if(insertIndices != null && vertices.size < insertIndices.size)
+		if(vertices.size < insertIndices.size)
 			buffer.setSize((insertIndices.get(vertices.size - 1) + 1) * vertexSize);
 
-		idxBuffer.ensureCapacity(Math.max(0,
-				faces.size * 3 - (deadTriangles == null ? 0 : deadTriangles.size)));
+		idxBuffer.ensureCapacity(Math.max(0, (faces.size - deadTriangles.size) * 3));
 		for(int i = 0; i < faces.size; i++) {
 			int index = idxBuffer.size / 3 + 1;
-			if(deadTriangles != null && i < deadTriangles.size)
+			if(i < deadTriangles.size)
 				index = deadTriangles.get(i);
 
 			if(index * 3 >= idxBuffer.size)
 				idxBuffer.setSize((index + 1) * 3);
 
 			MeshFace face = faces.get(i);
-
-			int idx1 = vertexIndices.get(face.getV1(), -1);
-			int idx2 = vertexIndices.get(face.getV2(), -1);
-			int idx3 = vertexIndices.get(face.getV3(), -1);
-
-			if(idx1 == -1 || idx2 == -1 || idx3 == -1)
-				throw new IllegalStateException("CSGMesh has a face refering to a vertex not in "
-						+ "the mesh. Face #" + i + " has vertices "
-						+ "#" + idx1 + ", #" + idx2 + " and #" + idx3);
-
-			idxBuffer.set(index * 3, (short)idx1);
-			idxBuffer.set(index * 3 + 1, (short)idx2);
-			idxBuffer.set(index * 3 + 2, (short)idx3);
+			writeFace(idxBuffer, face, index, vertexIndices);
 		}
 
-		if(deadTriangles != null && faces.size < deadTriangles.size) {
+		if(faces.size < deadTriangles.size) {
 			int maxTriangle = CollectionUtil.max(deadTriangles);
 			if(idxBuffer.size / 3 <= maxTriangle)
 				idxBuffer.setSize((deadTriangles.get(faces.size - 1) + 1) * 3);
@@ -954,6 +974,25 @@ public class CSGMesh implements Serializable {
 				buffer.set(index * vertexSize + attr.offset / 4 + k,
 						vertex.getOtherAttributes()[j++]);
 		}
+	}
+
+	private static void writeFace(ShortArray idxBuffer,
+	                              MeshFace face,
+								  int index,
+	                              ObjectIntMap<MeshVertex> vertexIndices) {
+
+		int idx1 = vertexIndices.get(face.getV1(), -1);
+		int idx2 = vertexIndices.get(face.getV2(), -1);
+		int idx3 = vertexIndices.get(face.getV3(), -1);
+
+		if(idx1 == -1 || idx2 == -1 || idx3 == -1)
+			throw new IllegalStateException("CSGMesh has a face refering to a vertex not in "
+					+ "the mesh. Face #" + index + " has vertices "
+					+ "#" + idx1 + ", #" + idx2 + " and #" + idx3);
+
+		idxBuffer.set(index, (short)idx1);
+		idxBuffer.set(index, (short)idx2);
+		idxBuffer.set(index, (short)idx3);
 	}
 
 	public InsideStatus getInsideStatus(MeshVertex vertex) {
@@ -1180,7 +1219,7 @@ public class CSGMesh implements Serializable {
 				v2 = indexMap.get(v2, -1);
 				v3 = indexMap.get(v3, -1);
 
-				if(ObjectUtil.firstNonNegative(v1, v2, v3) == -1)
+				if(v1 == -1 || v2 == -1 || v3 == -1)
 					continue; // ignore triangles not involving selected vertices
 			}
 
