@@ -929,14 +929,8 @@ public class CSGMesh implements Serializable {
 			writeFace(idxBuffer, face, index, vertexIndices);
 		}
 
-		if(faces.size < deadTriangles.size) {
-			int maxTriangle = CollectionUtil.max(deadTriangles);
-			if(idxBuffer.size / 3 <= maxTriangle)
-				idxBuffer.setSize((deadTriangles.get(faces.size - 1) + 1) * 3);
-			else
-				idxBuffer.removeRange((deadTriangles.get(faces.size - 1) + 1) * 3,
-						last(deadTriangles) * 3);
-		}
+		for(int i = deadTriangles.size - 1; i >= faces.size; i--)
+			idxBuffer.removeIndex(deadTriangles.get(i));
 
 		vertexIndices.clear();
 	}
