@@ -837,22 +837,18 @@ public class CSGMesh implements Serializable {
 		ShortArray idxBuffer = ReflectionUtil.get(builder, "indices");
 		int vertexSize = ((MeshBuilder)partBuilder).getFloatsPerVertex();
 
-		buffer.ensureCapacity(vertices.size * vertexSize);
+		int index = buffer.size / vertexSize;
+		buffer.setSize(buffer.size + vertices.size * vertexSize);
 		for(MeshVertex vertex : vertices) {
-			int index = buffer.size / vertexSize;
-			buffer.setSize((index + 1) * vertexSize);
-
 			writeVertex(buffer, vertex, index, vertexSize, builder.getAttributes());
-
 			vertexIndices.put(vertex, index);
+			index++;
 		}
 
-		idxBuffer.ensureCapacity(faces.size * 3);
-		for(MeshFace face : faces) {
-			int index = idxBuffer.size / 3;
-			idxBuffer.setSize((index + 1) * 3);
-			writeFace(idxBuffer, face, index, vertexIndices);
-		}
+		index = idxBuffer.size / 3;
+		idxBuffer.setSize(idxBuffer.size + faces.size * 3);
+		for(MeshFace face : faces)
+			writeFace(idxBuffer, face, index++, vertexIndices);
 
 		vertexIndices.clear();
 	}
@@ -884,7 +880,6 @@ public class CSGMesh implements Serializable {
 		FloatArray buffer = ReflectionUtil.get(builder, "vertices");
 		ShortArray idxBuffer = ReflectionUtil.get(builder, "indices");
 		int vertexSize = ((MeshBuilder)partBuilder).getFloatsPerVertex();
-
 		int maxInsertVertexId = CollectionUtil.max(insertIndices);
 
 		if(insertIndices.size > vertices.size
@@ -984,9 +979,9 @@ public class CSGMesh implements Serializable {
 					+ "the mesh. Face #" + index + " has vertices "
 					+ "#" + idx1 + ", #" + idx2 + " and #" + idx3);
 
-		idxBuffer.set(index, (short)idx1);
-		idxBuffer.set(index, (short)idx2);
-		idxBuffer.set(index, (short)idx3);
+		idxBuffer.set(index * 3, (short)idx1);
+		idxBuffer.set(index * 3 + 1, (short)idx2);
+		idxBuffer.set(index * 3 + 2, (short)idx3);
 	}
 
 	public InsideStatus getInsideStatus(MeshVertex vertex) {
