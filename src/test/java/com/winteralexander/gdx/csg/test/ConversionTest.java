@@ -14,8 +14,8 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.IntArray;
 import com.winteralexander.gdx.csg.CSGMesh;
 import com.winteralexander.gdx.csg.CSGUtil;
-import com.winteralexander.gdx.csg.test.debugviewer.CSGMeshViewer;
 import com.winteralexander.gdx.csg.test.debugviewer.ModelViewer;
+import com.winteralexander.gdx.utils.collection.CollectionUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -63,37 +63,46 @@ public class ConversionTest {
 		SphereShapeBuilder.build(partBuilder, 1f, 1f, 1f, 5, 5);
 		partBuilder.setVertexTransform(null);
 		int sphereVertexCount = partBuilder.getNumVertices();
+
+		int firstBoxStart = partBuilder.getNumVertices();
 		BoxShapeBuilder.build(partBuilder, 1f, 1f, 1f);
-		IntArray indices = new IntArray();
-		for(int i = sphereVertexCount; i < partBuilder.getNumVertices(); i++)
-			indices.add(i);
+		int firstBoxEnd = partBuilder.getNumVertices();
+
+		partBuilder.setVertexTransform(new Matrix4().setToTranslation(0f, 1f, -1f));
+		SphereShapeBuilder.build(partBuilder, 1f, 1f, 1f, 5, 5);
+		partBuilder.setVertexTransform(null);
+
+		IntArray indices = CollectionUtil.arrayFromRange(firstBoxStart, firstBoxEnd);
 		CSGMesh csgMesh = CSGMesh.fromBuilder(partBuilder, indices);
+
+		partBuilder.setVertexTransform(new Matrix4().setToTranslation(0f, 1f, 1f));
+		SphereShapeBuilder.build(partBuilder, 1f, 1f, 1f, 5, 5);
+		partBuilder.setVertexTransform(null);
+		sphereVertexCount += partBuilder.getNumVertices() - firstBoxEnd;
 
 		int secondBoxStart = partBuilder.getNumVertices();
 		BoxShapeBuilder.build(partBuilder, 1.5f, 0.5f, 0.5f);
-
 		int secondBoxEnd = partBuilder.getNumVertices();
 
 		partBuilder.setVertexTransform(new Matrix4().setToTranslation(-1f, 1f, 0f));
 		SphereShapeBuilder.build(partBuilder, 1f, 1f, 1f, 5, 5);
 		partBuilder.setVertexTransform(null);
-
 		sphereVertexCount += partBuilder.getNumVertices() - secondBoxEnd;
 
 		indices.clear();
-		for(int i = secondBoxStart; i < secondBoxEnd; i++)
-			indices.add(i);
+		CollectionUtil.fillFromRange(secondBoxStart, secondBoxEnd, indices);
+
 		CSGMesh second = CSGMesh.fromBuilder(partBuilder, indices);
 		CSGMesh result = CSGUtil.subtraction(csgMesh, second);
 
 		indices.clear();
-		for(int i = sphereVertexCount; i < secondBoxEnd; i++)
-			indices.add(i);
+		CollectionUtil.fillFromRange(firstBoxStart, firstBoxEnd, indices);
+		CollectionUtil.fillFromRange(secondBoxStart, secondBoxEnd, indices);
+
 		result.getVertices().forEach(v -> v.getPosition().add(0f, 3f, 0f));
 		result.toBuilder(partBuilder, indices);
 
 		// validates it properly deleted the old vertices
-		// assertEquals(sphereVertexCount + 56, partBuilder.getNumVertices());
-		ModelViewer.start(builder);
+		assertEquals(sphereVertexCount + 56, partBuilder.getNumVertices());
 	}
 }
