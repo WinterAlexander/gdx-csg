@@ -13,7 +13,6 @@ import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.math.collision.Segment;
 import com.badlogic.gdx.utils.*;
 import com.winteralexander.gdx.utils.BufferUtil;
-import com.winteralexander.gdx.utils.ObjectUtil;
 import com.winteralexander.gdx.utils.ReflectionUtil;
 import com.winteralexander.gdx.utils.collection.CollectionUtil;
 import com.winteralexander.gdx.utils.io.Serializable;
@@ -102,46 +101,48 @@ public class CSGMesh implements Serializable {
 		this.faces.addAll(other.faces);
 	}
 
+	private void splitIfNeeded(int index, MeshFace face, MeshFace otherFace) {
+		TriangleIntersectionResult result = intersectTriangleTriangle(face.getTriangle(),
+				otherFace.getTriangle(),
+				config.tolerance,
+				intersectSegment);
+		if(result == NONCOPLANAR_FACE_FACE) {
+			cutEdges.add(intersectSegment.cpy());
+			plane.set(otherFace.getPosition1(), otherFace.getNormal());
+			splitFace(index, plane);
+		} else if(result == EDGE_FACE) {
+			boolean isEdgeFromFace = false;
+			for(int j = 0; j < 3; j++) {
+				Vector3 start = face.getTriangle().getPoint(j + 1);
+				Vector3 end = face.getTriangle().getPoint((j + 1) % 3 + 1);
+				if(intersectSegmentSegment(start,
+						end,
+						intersectSegment.a,
+						intersectSegment.b,
+						config.tolerance,
+						tmpSegmentIntersection)
+						== COLLINEAR) {
+					isEdgeFromFace = true;
+					break;
+				}
+			}
+
+			if(!isEdgeFromFace) {
+				cutEdges.add(intersectSegment.cpy());
+				plane.set(otherFace.getPosition1(), otherFace.getNormal());
+				splitFace(index, plane);
+			}
+		}
+	}
+
 	public void splitTriangles(CSGMesh other) {
 		tmpNewVertices.clear();
 		boundaryFaces.clear();
-		for(int i = 0; i < faces.size; i++) {
-			for(MeshFace otherFace : other.faces) {
+		for(int i = 0; i < faces.size; i++)
+			for(MeshFace otherFace : other.faces)
 				// given splitFace may modify the faces array, must not put this at the outer level
-				MeshFace face = faces.get(i);
-				TriangleIntersectionResult result = intersectTriangleTriangle(face.getTriangle(),
-						otherFace.getTriangle(),
-						config.tolerance,
-						intersectSegment);
-				if(result == NONCOPLANAR_FACE_FACE) {
-					cutEdges.add(intersectSegment.cpy());
-					plane.set(otherFace.getPosition1(), otherFace.getNormal());
-					splitFace(i, plane);
-				} else if(result == EDGE_FACE) {
-					boolean isEdgeFromFace = false;
-					for(int j = 0; j < 3; j++) {
-						Vector3 start = face.getTriangle().getPoint(j + 1);
-						Vector3 end = face.getTriangle().getPoint((j + 1) % 3 + 1);
-						if(intersectSegmentSegment(start,
-								   end,
-								   intersectSegment.a,
-								   intersectSegment.b,
-								   config.tolerance,
-								   tmpSegmentIntersection)
-								== COLLINEAR) {
-							isEdgeFromFace = true;
-							break;
-						}
-					}
+				splitIfNeeded(i, faces.get(i), otherFace);
 
-					if(!isEdgeFromFace) {
-						cutEdges.add(intersectSegment.cpy());
-						plane.set(otherFace.getPosition1(), otherFace.getNormal());
-						splitFace(i, plane);
-					}
-				}
-			}
-		}
 
 		if(config.enableBoundaryFaces)
 			for(int i = 0; i < faces.size; i++) {
@@ -161,10 +162,12 @@ public class CSGMesh implements Serializable {
 			}
 		tmpNewVertices.clear();
 
-		for(int j = 0; j < 10; j++)
-			for(int i = 0; i < faces.size; i++) {
-				checkForMergeWithNeighbors(faces.get(i));
-			}
+		boolean mergedOne;
+		do {
+			mergedOne = false;
+			for(int i = 0; i < faces.size; i++)
+				mergedOne |= checkForMergeWithNeighbors(faces.get(i));
+		} while(mergedOne);
 
 		deleteFacelessVertices();
 	}
@@ -191,9 +194,9 @@ public class CSGMesh implements Serializable {
 		toAdd.clear();
 	}
 
-	private void checkForMergeWithNeighbors(MeshFace face) {
+	private boolean checkForMergeWithNeighbors(MeshFace face) {
 		if(!config.enableMerging)
-			return;
+			return false;
 
 	faceLoop:
 		for(int i = 0; i < faces.size; i++) {
@@ -300,9 +303,9 @@ public class CSGMesh implements Serializable {
 			}
 
 			faces.removeIndex(i);
-			checkForMergeWithNeighbors(face);
-			return;
+			return true;
 		}
+		return false;
 	}
 
 	private void interpolate(MeshVertex out,
