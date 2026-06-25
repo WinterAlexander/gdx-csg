@@ -854,8 +854,8 @@ public class CSGMesh implements Serializable {
 	}
 
 	private static void getTrianglesOfVertices(ShortArray idxBuffer,
-	                                           IntSet indices,
-	                                           IntArray outTriangles) {
+			IntSet indices,
+			IntArray outTriangles) {
 		for(int tri = 0; tri < idxBuffer.size / 3; tri++) {
 			int v1 = idxBuffer.get(tri * 3);
 			int v2 = idxBuffer.get(tri * 3 + 1);
@@ -896,9 +896,7 @@ public class CSGMesh implements Serializable {
 		for(int i = 0; i < vertices.size; i++) {
 			MeshVertex vertex = vertices.get(i);
 
-			int index = i >= insertIndices.size
-					? buffer.size / vertexSize
-					: insertIndices.get(i);
+			int index = i >= insertIndices.size ? buffer.size / vertexSize : insertIndices.get(i);
 
 			if((index + 1) * vertexSize > buffer.size)
 				buffer.setSize((index + 1) * vertexSize);
@@ -966,9 +964,9 @@ public class CSGMesh implements Serializable {
 	}
 
 	private static void writeFace(ShortArray idxBuffer,
-	                              MeshFace face,
-								  int index,
-	                              ObjectIntMap<MeshVertex> vertexIndices) {
+			MeshFace face,
+			int index,
+			ObjectIntMap<MeshVertex> vertexIndices) {
 
 		int idx1 = vertexIndices.get(face.getV1(), -1);
 		int idx2 = vertexIndices.get(face.getV2(), -1);
@@ -1248,6 +1246,7 @@ public class CSGMesh implements Serializable {
 					vertexIndex * builder.getFloatsPerVertex() + tanOffset,
 					out.getTangent());
 
+		int bufferIndex = 0;
 		for(VertexAttribute attr : attrs) {
 			if(attr.usage == VertexAttributes.Usage.Position
 					|| attr.usage == VertexAttributes.Usage.Normal
@@ -1256,8 +1255,9 @@ public class CSGMesh implements Serializable {
 				continue;
 
 			for(int i = 0; i < attr.numComponents; i++) {
-				int index = vertexIndex * builder.getFloatsPerVertex() + attr.offset + i;
-				out.getOtherAttributes()[i] = buffer.get(index);
+				int index = vertexIndex * builder.getFloatsPerVertex() + attr.offset / 4 + i;
+				out.getOtherAttributes()[bufferIndex] = buffer.get(index);
+				bufferIndex++;
 			}
 		}
 	}
