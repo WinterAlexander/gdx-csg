@@ -114,13 +114,24 @@ public class ConversionTest {
 		builder.begin();
 		MeshBuilder partBuilder = (MeshBuilder)builder.part("meshPart",
 				GL20.GL_TRIANGLES,
-				new VertexAttributes(new VertexAttribute(VertexAttributes.Usage.Position, 3, ShaderProgram.POSITION_ATTRIBUTE),
-						new VertexAttribute(VertexAttributes.Usage.Normal, 3, ShaderProgram.NORMAL_ATTRIBUTE),
-						new VertexAttribute(VertexAttributes.Usage.BiNormal, 3, ShaderProgram.BINORMAL_ATTRIBUTE),
-						new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, ShaderProgram.TEXCOORD_ATTRIBUTE + "0"),
-						new VertexAttribute(VertexAttributes.Usage.ColorUnpacked, 4, ShaderProgram.COLOR_ATTRIBUTE)),
+				new VertexAttributes(new VertexAttribute(VertexAttributes.Usage.Position,
+											 3,
+											 ShaderProgram.POSITION_ATTRIBUTE),
+						new VertexAttribute(VertexAttributes.Usage.Normal,
+								3,
+								ShaderProgram.NORMAL_ATTRIBUTE),
+						new VertexAttribute(VertexAttributes.Usage.BiNormal,
+								3,
+								ShaderProgram.BINORMAL_ATTRIBUTE),
+						new VertexAttribute(VertexAttributes.Usage.TextureCoordinates,
+								2,
+								ShaderProgram.TEXCOORD_ATTRIBUTE + "0"),
+						new VertexAttribute(VertexAttributes.Usage.ColorUnpacked,
+								4,
+								ShaderProgram.COLOR_ATTRIBUTE)),
 				new Material());
 
+		// clang-format off
 		float[] initialData = new float[] {
 				10f, 8f, 6f, // position
 				0f, 1f, 0f, // normal
@@ -128,6 +139,7 @@ public class ConversionTest {
 				0.5f, 0.75f, // UV
 				0.66f, 0.55f, 0.44f, 0.33f // color
 		};
+		// clang-format on
 
 		partBuilder.vertex(initialData);
 
