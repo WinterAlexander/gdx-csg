@@ -16,6 +16,7 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.DepthShaderProvider;
+import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
@@ -53,6 +54,7 @@ public class ModelViewer implements ApplicationListener {
 	private final Environment environment = new Environment();
 
 	private final Array<Model> models = new Array<>();
+	private final Array<ModelBuilder> builders = new Array<>();
 
 	private Array<ModelInstance> instances = new Array<>();
 	private PerspectiveCamera cam;
@@ -61,8 +63,14 @@ public class ModelViewer implements ApplicationListener {
 	private final Vector3 tmpVec3 = new Vector3();
 	private final Triangle tmpTriangle = new Triangle();
 
-	public ModelViewer(Model... model) {
-		models.addAll(model);
+	public ModelViewer(Object... models) {
+		for(Object model : models)
+			if(model instanceof ModelBuilder)
+				this.builders.add(((ModelBuilder)model));
+			else if(model instanceof Model)
+				this.models.add((Model)model);
+			else
+				throw new IllegalArgumentException("Unrecognized model object: " + model);
 	}
 
 	@Override
@@ -84,6 +92,8 @@ public class ModelViewer implements ApplicationListener {
 
 		for(Model model : models)
 			instances.add(new ModelInstance(model));
+		for(ModelBuilder model : builders)
+			instances.add(new ModelInstance(model.end()));
 
 		Pixmap red = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
 		red.setColor(Color.RED);
@@ -248,14 +258,16 @@ public class ModelViewer implements ApplicationListener {
 	@Override
 	public void dispose() {}
 
-	public static void start(Model... models) {
-		Display.destroy();
-		Gdx.gl = null;
-		Gdx.graphics = null;
-		Gdx.gl20 = null;
-		Gdx.gl30 = null;
-		Gdx.gl31 = null;
-		Gdx.gl32 = null;
+	public static void start(Object... models) {
+		if(Gdx.gl != null) {
+			Display.destroy();
+			Gdx.gl = null;
+			Gdx.graphics = null;
+			Gdx.gl20 = null;
+			Gdx.gl30 = null;
+			Gdx.gl31 = null;
+			Gdx.gl32 = null;
+		}
 
 		try {
 			new LwjglApplication(new ModelViewer(models),

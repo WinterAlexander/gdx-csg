@@ -4,14 +4,18 @@ import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
+import com.badlogic.gdx.graphics.g3d.utils.MeshBuilder;
+import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.math.collision.Segment;
 import com.badlogic.gdx.utils.*;
+import com.winteralexander.gdx.utils.BufferUtil;
+import com.winteralexander.gdx.utils.ReflectionUtil;
+import com.winteralexander.gdx.utils.collection.CollectionUtil;
 import com.winteralexander.gdx.utils.io.Serializable;
-import com.winteralexander.gdx.utils.math.shape3d.Intersector3D.TriangleIntersectionResult;
 import com.winteralexander.gdx.utils.math.shape3d.SegmentPlus;
 import com.winteralexander.gdx.utils.math.vector.VectorUtil;
 
@@ -29,8 +33,8 @@ import static com.winteralexander.gdx.utils.Validation.ensureNotNull;
 import static com.winteralexander.gdx.utils.io.SerializationUtil.readVec3;
 import static com.winteralexander.gdx.utils.io.SerializationUtil.writeVec3;
 import static com.winteralexander.gdx.utils.io.StreamUtil.*;
-import static com.winteralexander.gdx.utils.math.shape3d.Intersector3D.*;
 import static com.winteralexander.gdx.utils.math.shape3d.Intersector3D.LineIntersectionResult.COLLINEAR;
+import static com.winteralexander.gdx.utils.math.shape3d.Intersector3D.*;
 import static com.winteralexander.gdx.utils.math.shape3d.Intersector3D.TriangleIntersectionResult.*;
 
 /**
@@ -96,46 +100,47 @@ public class CSGMesh implements Serializable {
 		this.faces.addAll(other.faces);
 	}
 
+	private void splitIfNeeded(int index, MeshFace face, MeshFace otherFace) {
+		TriangleIntersectionResult result = intersectTriangleTriangle(face.getTriangle(),
+				otherFace.getTriangle(),
+				config.tolerance,
+				intersectSegment);
+		if(result == NONCOPLANAR_FACE_FACE) {
+			cutEdges.add(intersectSegment.cpy());
+			plane.set(otherFace.getPosition1(), otherFace.getNormal());
+			splitFace(index, plane);
+		} else if(result == EDGE_FACE) {
+			boolean isEdgeFromFace = false;
+			for(int j = 0; j < 3; j++) {
+				Vector3 start = face.getTriangle().getPoint(j + 1);
+				Vector3 end = face.getTriangle().getPoint((j + 1) % 3 + 1);
+				if(intersectSegmentSegment(start,
+						   end,
+						   intersectSegment.a,
+						   intersectSegment.b,
+						   config.tolerance,
+						   tmpSegmentIntersection)
+						== COLLINEAR) {
+					isEdgeFromFace = true;
+					break;
+				}
+			}
+
+			if(!isEdgeFromFace) {
+				cutEdges.add(intersectSegment.cpy());
+				plane.set(otherFace.getPosition1(), otherFace.getNormal());
+				splitFace(index, plane);
+			}
+		}
+	}
+
 	public void splitTriangles(CSGMesh other) {
 		tmpNewVertices.clear();
 		boundaryFaces.clear();
-		for(int i = 0; i < faces.size; i++) {
-			for(MeshFace otherFace : other.faces) {
+		for(int i = 0; i < faces.size; i++)
+			for(MeshFace otherFace : other.faces)
 				// given splitFace may modify the faces array, must not put this at the outer level
-				MeshFace face = faces.get(i);
-				TriangleIntersectionResult result = intersectTriangleTriangle(face.getTriangle(),
-						otherFace.getTriangle(),
-						config.tolerance,
-						intersectSegment);
-				if(result == NONCOPLANAR_FACE_FACE) {
-					cutEdges.add(intersectSegment.cpy());
-					plane.set(otherFace.getPosition1(), otherFace.getNormal());
-					splitFace(i, plane);
-				} else if(result == EDGE_FACE) {
-					boolean isEdgeFromFace = false;
-					for(int j = 0; j < 3; j++) {
-						Vector3 start = face.getTriangle().getPoint(j + 1);
-						Vector3 end = face.getTriangle().getPoint((j + 1) % 3 + 1);
-						if(intersectSegmentSegment(start,
-								   end,
-								   intersectSegment.a,
-								   intersectSegment.b,
-								   config.tolerance,
-								   tmpSegmentIntersection)
-								== COLLINEAR) {
-							isEdgeFromFace = true;
-							break;
-						}
-					}
-
-					if(!isEdgeFromFace) {
-						cutEdges.add(intersectSegment.cpy());
-						plane.set(otherFace.getPosition1(), otherFace.getNormal());
-						splitFace(i, plane);
-					}
-				}
-			}
-		}
+				splitIfNeeded(i, faces.get(i), otherFace);
 
 		if(config.enableBoundaryFaces)
 			for(int i = 0; i < faces.size; i++) {
@@ -144,21 +149,23 @@ public class CSGMesh implements Serializable {
 					if(face.getNormal().dot(otherFace.getNormal()) < 0.99f)
 						continue;
 
-					TriangleIntersectionResult result = intersectTriangleTriangle(
-							face.getTriangle(),
-							otherFace.getTriangle(),
-							config.tolerance,
-							intersectSegment);
+					TriangleIntersectionResult
+							result = intersectTriangleTriangle(face.getTriangle(),
+									otherFace.getTriangle(),
+									config.tolerance,
+									intersectSegment);
 					if(result == COPLANAR_FACE_FACE)
 						boundaryFaces.add(face);
 				}
 			}
 		tmpNewVertices.clear();
 
-		for(int j = 0; j < 10; j++)
-			for(int i = 0; i < faces.size; i++) {
-				checkForMergeWithNeighbors(faces.get(i));
-			}
+		boolean mergedOne;
+		do {
+			mergedOne = false;
+			for(int i = 0; i < faces.size; i++)
+				mergedOne |= checkForMergeWithNeighbors(faces.get(i));
+		} while(mergedOne);
 
 		deleteFacelessVertices();
 	}
@@ -185,9 +192,9 @@ public class CSGMesh implements Serializable {
 		toAdd.clear();
 	}
 
-	private void checkForMergeWithNeighbors(MeshFace face) {
+	private boolean checkForMergeWithNeighbors(MeshFace face) {
 		if(!config.enableMerging)
-			return;
+			return false;
 
 	faceLoop:
 		for(int i = 0; i < faces.size; i++) {
@@ -294,9 +301,9 @@ public class CSGMesh implements Serializable {
 			}
 
 			faces.removeIndex(i);
-			checkForMergeWithNeighbors(face);
-			return;
+			return true;
 		}
+		return false;
 	}
 
 	private void interpolate(MeshVertex out,
@@ -311,6 +318,13 @@ public class CSGMesh implements Serializable {
 				.mulAdd(v1.getNormal(), w1)
 				.mulAdd(v2.getNormal(), w2)
 				.mulAdd(v3.getNormal(), w3)
+				.nor();
+
+		out.getBinormal()
+				.set(0f, 0f, 0f)
+				.mulAdd(v1.getBinormal(), w1)
+				.mulAdd(v2.getBinormal(), w2)
+				.mulAdd(v3.getBinormal(), w3)
 				.nor();
 
 		out.getTangent()
@@ -569,6 +583,7 @@ public class CSGMesh implements Serializable {
 			MeshVertex meshVertex = new MeshVertex(vertexAttribsSize);
 			readVec3(stream, meshVertex.getPosition());
 			readVec3(stream, meshVertex.getNormal());
+			readVec3(stream, meshVertex.getBinormal());
 			readVec3(stream, meshVertex.getTangent());
 			for(int j = 0; j < vertexAttribsSize; j++)
 				meshVertex.getOtherAttributes()[j] = readFloat(stream);
@@ -602,6 +617,7 @@ public class CSGMesh implements Serializable {
 		for(MeshVertex vertex : vertices) {
 			writeVec3(stream, vertex.getPosition());
 			writeVec3(stream, vertex.getNormal());
+			writeVec3(stream, vertex.getBinormal());
 			writeVec3(stream, vertex.getTangent());
 			for(float f : vertex.getOtherAttributes())
 				writeFloat(stream, f);
@@ -639,159 +655,19 @@ public class CSGMesh implements Serializable {
 	}
 
 	public MeshPart toMeshPart(Mesh mesh) {
-		FloatBuffer buffer = mesh.getVerticesBuffer(true);
-		ShortBuffer idxBuffer = mesh.getIndicesBuffer(true);
-
-		int vertexSize = mesh.getVertexSize() / 4;
-
-		int posOffset = mesh.getVertexAttribute(VertexAttributes.Usage.Position).offset / 4;
-		VertexAttribute norAttr = mesh.getVertexAttribute(VertexAttributes.Usage.Normal);
-		VertexAttribute tanAttr = mesh.getVertexAttribute(VertexAttributes.Usage.Tangent);
-		int norOffset = norAttr == null ? -1 : norAttr.offset / 4;
-		int tanOffset = tanAttr == null ? -1 : tanAttr.offset / 4;
-
-		buffer.limit((mesh.getNumVertices() + vertices.size) * vertexSize);
-		idxBuffer.limit(mesh.getNumIndices() + faces.size * 3);
-
-		int vOffset = mesh.getNumVertices() * vertexSize;
-
-		vertexIndices.clear();
-		for(int i = 0; i < vertices.size; i++) {
-			MeshVertex vertex = vertices.get(i);
-			buffer.position(vOffset + i * vertexSize + posOffset);
-			buffer.put(vertex.getPosition().x);
-			buffer.put(vertex.getPosition().y);
-			buffer.put(vertex.getPosition().z);
-			if(norOffset != -1) {
-				buffer.position(vOffset + i * vertexSize + norOffset);
-				buffer.put(vertex.getNormal().x);
-				buffer.put(vertex.getNormal().y);
-				buffer.put(vertex.getNormal().z);
-			}
-
-			if(tanOffset != -1) {
-				buffer.position(vOffset + i * vertexSize + tanOffset);
-				buffer.put(vertex.getTangent().x);
-				buffer.put(vertex.getTangent().y);
-				buffer.put(vertex.getTangent().z);
-			}
-
-			int j = 0;
-			for(VertexAttribute attr : attributes) {
-				if(attr.usage == VertexAttributes.Usage.Position
-						|| attr.usage == VertexAttributes.Usage.Normal
-						|| attr.usage == VertexAttributes.Usage.Tangent)
-					continue;
-
-				buffer.position(vOffset + i * vertexSize + attr.offset / 4);
-				for(int k = 0; k < attr.getSizeInBytes() / 4; k++)
-					buffer.put(vertex.getOtherAttributes()[j++]);
-			}
-
-			vertexIndices.put(vertex, i);
-		}
-
-		int fOffset = mesh.getNumIndices();
-
-		for(int i = 0; i < faces.size; i++) {
-			MeshFace face = faces.get(i);
-			idxBuffer.position(fOffset + i * 3);
-
-			int idx1 = vertexIndices.get(face.getV1(), -1);
-			int idx2 = vertexIndices.get(face.getV2(), -1);
-			int idx3 = vertexIndices.get(face.getV3(), -1);
-
-			if(idx1 == -1 || idx2 == -1 || idx3 == -1)
-				throw new IllegalStateException("CSGMesh has a face refering to a vertex not in "
-						+ "the mesh. Face #" + i + " has vertices "
-						+ "#" + idx1 + ", #" + idx2 + " and #" + idx3);
-
-			idxBuffer.put((short)idx1);
-			idxBuffer.put((short)idx2);
-			idxBuffer.put((short)idx3);
-		}
-		vertexIndices.clear();
-
-		return new MeshPart("id" + UUID.randomUUID(),
-				mesh,
-				mesh.getNumIndices() / 3,
-				faces.size,
-				GL_TRIANGLES);
+		return CSGMeshConverter.csgMeshToMeshPart(this, mesh);
 	}
 
 	public Mesh toMesh() {
-		Mesh mesh = new Mesh(true, vertices.size, faces.size * 3, attributes);
+		return CSGMeshConverter.csgMeshToMesh(this);
+	}
 
-		FloatBuffer buffer = mesh.getVerticesBuffer(true);
-		ShortBuffer idxBuffer = mesh.getIndicesBuffer(true);
+	public void toBuilder(MeshPartBuilder partBuilder) {
+		CSGMeshConverter.csgMeshToPartBuilder(this, partBuilder);
+	}
 
-		int vertexSize = mesh.getVertexSize() / 4;
-
-		int posOffset = mesh.getVertexAttribute(VertexAttributes.Usage.Position).offset / 4;
-		VertexAttribute norAttr = mesh.getVertexAttribute(VertexAttributes.Usage.Normal);
-		VertexAttribute tanAttr = mesh.getVertexAttribute(VertexAttributes.Usage.Tangent);
-		int norOffset = norAttr == null ? -1 : norAttr.offset / 4;
-		int tanOffset = tanAttr == null ? -1 : tanAttr.offset / 4;
-
-		buffer.limit(vertices.size * vertexSize);
-		idxBuffer.limit(faces.size * 3);
-
-		vertexIndices.clear();
-		for(int i = 0; i < vertices.size; i++) {
-			MeshVertex vertex = vertices.get(i);
-			buffer.position(i * vertexSize + posOffset);
-			buffer.put(vertex.getPosition().x);
-			buffer.put(vertex.getPosition().y);
-			buffer.put(vertex.getPosition().z);
-			if(norOffset != -1) {
-				buffer.position(i * vertexSize + norOffset);
-				buffer.put(vertex.getNormal().x);
-				buffer.put(vertex.getNormal().y);
-				buffer.put(vertex.getNormal().z);
-			}
-
-			if(tanOffset != -1) {
-				buffer.position(i * vertexSize + tanOffset);
-				buffer.put(vertex.getTangent().x);
-				buffer.put(vertex.getTangent().y);
-				buffer.put(vertex.getTangent().z);
-			}
-
-			int j = 0;
-			for(VertexAttribute attr : attributes) {
-				if(attr.usage == VertexAttributes.Usage.Position
-						|| attr.usage == VertexAttributes.Usage.Normal
-						|| attr.usage == VertexAttributes.Usage.Tangent)
-					continue;
-
-				buffer.position(i * vertexSize + attr.offset / 4);
-				for(int k = 0; k < attr.getSizeInBytes() / 4; k++)
-					buffer.put(vertex.getOtherAttributes()[j++]);
-			}
-
-			vertexIndices.put(vertex, i);
-		}
-
-		for(int i = 0; i < faces.size; i++) {
-			MeshFace face = faces.get(i);
-			idxBuffer.position(i * 3);
-
-			int idx1 = vertexIndices.get(face.getV1(), -1);
-			int idx2 = vertexIndices.get(face.getV2(), -1);
-			int idx3 = vertexIndices.get(face.getV3(), -1);
-
-			if(idx1 == -1 || idx2 == -1 || idx3 == -1)
-				throw new IllegalStateException("CSGMesh has a face refering to a vertex not in "
-						+ "the mesh. Face #" + i + " has vertices "
-						+ "#" + idx1 + ", #" + idx2 + " and #" + idx3);
-
-			idxBuffer.put((short)idx1);
-			idxBuffer.put((short)idx2);
-			idxBuffer.put((short)idx3);
-		}
-		vertexIndices.clear();
-
-		return mesh;
+	public void toBuilder(MeshPartBuilder partBuilder, IntArray insertIndices) {
+		CSGMeshConverter.csgMeshToPartBuilder(this, partBuilder, insertIndices);
 	}
 
 	public InsideStatus getInsideStatus(MeshVertex vertex) {
@@ -839,121 +715,18 @@ public class CSGMesh implements Serializable {
 	public enum InsideStatus { INSIDE, BOUNDARY, OUTSIDE }
 
 	public static CSGMesh fromMeshPart(MeshPart meshPart) {
-		Array<MeshVertex> vertices = new Array<>(meshPart.size);
-		Array<MeshFace> faces = new Array<>(meshPart.size / 3);
-
-		FloatBuffer buffer = meshPart.mesh.getVerticesBuffer(false);
-		ShortBuffer idxBuffer = meshPart.mesh.getIndicesBuffer(false);
-
-		int vertexSize = meshPart.mesh.getVertexSize() / 4;
-
-		VertexAttribute norAttr = meshPart.mesh.getVertexAttribute(VertexAttributes.Usage.Normal);
-		VertexAttribute tanAttr = meshPart.mesh.getVertexAttribute(VertexAttributes.Usage.Tangent);
-		int otherAttrCount = vertexSize
-				- (3 + (norAttr == null ? 0 : 3) + (tanAttr == null ? 0 : 3));
-
-		IntMap<MeshVertex> meshVertices = new IntMap<>();
-
-		int start = meshPart.offset / 3;
-		int end = start + meshPart.size / 3;
-
-		for(int i = start; i < end; i++) {
-			short v1 = idxBuffer.get(i * 3);
-			short v2 = idxBuffer.get(i * 3 + 1);
-			short v3 = idxBuffer.get(i * 3 + 2);
-
-			MeshVertex vertex1 = meshVertices.get(v1);
-			MeshVertex vertex2 = meshVertices.get(v2);
-			MeshVertex vertex3 = meshVertices.get(v3);
-
-			if(vertex1 == null) {
-				vertex1 = new MeshVertex(otherAttrCount);
-				readVertex(meshPart.mesh, buffer, i, vertex1);
-				meshVertices.put(v1, vertex1);
-				vertices.add(vertex1);
-			}
-
-			if(vertex2 == null) {
-				vertex2 = new MeshVertex(otherAttrCount);
-				readVertex(meshPart.mesh, buffer, i, vertex2);
-				meshVertices.put(v2, vertex2);
-				vertices.add(vertex2);
-			}
-
-			if(vertex3 == null) {
-				vertex3 = new MeshVertex(otherAttrCount);
-				readVertex(meshPart.mesh, buffer, i, vertex3);
-				meshVertices.put(v3, vertex3);
-				vertices.add(vertex3);
-			}
-
-			faces.add(new MeshFace(vertex1, vertex2, vertex3));
-		}
-
-		return new CSGMesh(vertices, faces, meshPart.mesh.getVertexAttributes());
+		return CSGMeshConverter.meshPartToCSGMesh(meshPart);
 	}
 
 	public static CSGMesh fromMesh(Mesh mesh) {
-		Array<MeshVertex> vertices = new Array<>(mesh.getNumVertices());
-		Array<MeshFace> faces = new Array<>(mesh.getNumIndices() / 3);
-
-		FloatBuffer buffer = mesh.getVerticesBuffer(false);
-		ShortBuffer idxBuffer = mesh.getIndicesBuffer(false);
-
-		int vertexSize = mesh.getVertexSize() / 4;
-
-		VertexAttribute norAttr = mesh.getVertexAttribute(VertexAttributes.Usage.Normal);
-		VertexAttribute tanAttr = mesh.getVertexAttribute(VertexAttributes.Usage.Tangent);
-		int otherAttrCount = vertexSize
-				- (3 + (norAttr == null ? 0 : 3) + (tanAttr == null ? 0 : 3));
-
-		for(int i = 0; i < mesh.getNumVertices(); i++) {
-			MeshVertex vertex = new MeshVertex(otherAttrCount);
-			readVertex(mesh, buffer, i, vertex);
-			vertices.add(vertex);
-		}
-
-		for(int i = 0; i < mesh.getNumIndices() / 3; i++) {
-			short v1 = idxBuffer.get(i * 3);
-			short v2 = idxBuffer.get(i * 3 + 1);
-			short v3 = idxBuffer.get(i * 3 + 2);
-			MeshFace face = new MeshFace(vertices.get(v1), vertices.get(v2), vertices.get(v3));
-			faces.add(face);
-		}
-
-		return new CSGMesh(vertices, faces, mesh.getVertexAttributes());
+		return CSGMeshConverter.meshToCSGMesh(mesh);
 	}
 
-	private static void readVertex(Mesh mesh, FloatBuffer buffer, int index, MeshVertex out) {
-		int vertexSize = mesh.getVertexSize() / 4;
-		VertexAttribute norAttr = mesh.getVertexAttribute(VertexAttributes.Usage.Normal);
-		VertexAttribute tanAttr = mesh.getVertexAttribute(VertexAttributes.Usage.Tangent);
-		int posOffset = mesh.getVertexAttribute(VertexAttributes.Usage.Position).offset / 4;
-		int norOffset = norAttr == null ? -1 : norAttr.offset / 4;
-		int tanOffset = tanAttr == null ? -1 : tanAttr.offset / 4;
+	public static CSGMesh fromBuilder(MeshPartBuilder partBuilder) {
+		return CSGMeshConverter.partBuilderToCSGMesh(partBuilder);
+	}
 
-		out.getPosition().set(buffer.get(index * vertexSize + posOffset),
-				buffer.get(index * vertexSize + posOffset + 1),
-				buffer.get(index * vertexSize + posOffset + 2));
-		if(norOffset != -1)
-			out.getNormal().set(buffer.get(index * vertexSize + norOffset),
-					buffer.get(index * vertexSize + norOffset + 1),
-					buffer.get(index * vertexSize + norOffset + 2));
-		if(tanOffset != -1)
-			out.getTangent().set(buffer.get(index * vertexSize + tanOffset),
-					buffer.get(index * vertexSize + tanOffset + 1),
-					buffer.get(index * vertexSize + tanOffset + 2));
-
-		int j = 0;
-		for(VertexAttribute attr : mesh.getVertexAttributes()) {
-			if(attr.usage == VertexAttributes.Usage.Position
-					|| attr.usage == VertexAttributes.Usage.Normal
-					|| attr.usage == VertexAttributes.Usage.Tangent)
-				continue;
-
-			for(int k = 0; k < attr.getSizeInBytes() / 4; k++)
-				out.getOtherAttributes()[j++] = buffer.get(index * vertexSize + attr.offset / 4
-						+ k);
-		}
+	public static CSGMesh fromBuilder(MeshPartBuilder partBuilder, IntArray vertexIndices) {
+		return CSGMeshConverter.partBuilderToCSGMesh(partBuilder, vertexIndices);
 	}
 }
