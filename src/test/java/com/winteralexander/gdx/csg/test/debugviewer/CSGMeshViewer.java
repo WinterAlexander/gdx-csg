@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.math.collision.Segment;
@@ -112,121 +113,10 @@ public class CSGMeshViewer implements ApplicationListener {
 
 		__debugOnlyRenderables.addFirst(r -> {
 			int i = -1;
-			for(CSGMesh mesh : meshes) {
-				i++;
-				r.set(ShapeRenderer.ShapeType.Line);
-				for(MeshFace face : mesh.getFaces()) {
-					boolean boundaryFace = mesh.getBoundaryFaces().contains(face);
-					CSGMesh.InsideStatus status1 = mesh.getInsideStatus(face.getV1());
-					CSGMesh.InsideStatus status2 = mesh.getInsideStatus(face.getV2());
-					CSGMesh.InsideStatus status3 = mesh.getInsideStatus(face.getV3());
 
-					boolean isFaceInside = status1 == CSGMesh.InsideStatus.INSIDE
-							|| status2 == CSGMesh.InsideStatus.INSIDE
-							|| status3 == CSGMesh.InsideStatus.INSIDE
-							|| status1 == CSGMesh.InsideStatus.BOUNDARY
-									&& status2 == CSGMesh.InsideStatus.BOUNDARY
-									&& status3 == CSGMesh.InsideStatus.BOUNDARY;
-
-					boolean isFaceOutside = status1 == CSGMesh.InsideStatus.OUTSIDE
-							|| status2 == CSGMesh.InsideStatus.OUTSIDE
-							|| status3 == CSGMesh.InsideStatus.OUTSIDE;
-
-					r.setColor(isFaceInside && isFaceOutside		  ? Color.RED
-									: !isFaceInside && !isFaceOutside ? Color.YELLOW
-									: isFaceInside					  ? Color.BLUE
-																	  : Color.GREEN);
-
-					if(status1 == null || status2 == null || status3 == null) {
-						r.setColor(Color.GRAY);
-					}
-
-					if(boundaryFace)
-						r.setColor(Color.ORANGE);
-
-					tmpVec3.set(face.getPosition1())
-							.add(face.getPosition2())
-							.add(face.getPosition3())
-							.scl(1f / 3f);
-					for(int k = 0; k < (boundaryFace ? 3 : 2); k++) {
-						tmpVec.set(face.getPosition1())
-								.mulAdd(tmpVec3, k * 0.1f * (i + 1))
-								.scl(1f / (1f + k * 0.1f * (i + 1)));
-						tmpVec2.set(face.getPosition2())
-								.mulAdd(tmpVec3, k * 0.1f * (i + 1))
-								.scl(1f / (1f + k * 0.1f * (i + 1)));
-						tmpVec4.set(face.getPosition3())
-								.mulAdd(tmpVec3, k * 0.1f * (i + 1))
-								.scl(1f / (1f + k * 0.1f * (i + 1)));
-						r.line(tmpVec, tmpVec2);
-						r.line(tmpVec2, tmpVec4);
-						r.line(tmpVec4, tmpVec);
-					}
-
-					r.setColor(Color.WHITE);
-					Vector3 normal = face.getNormal();
-					r.line(tmpVec3.x,
-							tmpVec3.y,
-							tmpVec3.z,
-							tmpVec3.x + normal.x / 10f,
-							tmpVec3.y + normal.y / 10f,
-							tmpVec3.z + normal.z / 10f);
-				}
-
-				for(MeshFace face : mesh.getFaces()) {
-					CSGMesh.InsideStatus status1 = mesh.getInsideStatus(face.getV1());
-					CSGMesh.InsideStatus status2 = mesh.getInsideStatus(face.getV2());
-					CSGMesh.InsideStatus status3 = mesh.getInsideStatus(face.getV3());
-
-					boolean isFaceInside = status1 == CSGMesh.InsideStatus.INSIDE
-							|| status2 == CSGMesh.InsideStatus.INSIDE
-							|| status3 == CSGMesh.InsideStatus.INSIDE
-							|| status1 == CSGMesh.InsideStatus.BOUNDARY
-									&& status2 == CSGMesh.InsideStatus.BOUNDARY
-									&& status3 == CSGMesh.InsideStatus.BOUNDARY;
-
-					boolean isFaceOutside = status1 == CSGMesh.InsideStatus.OUTSIDE
-							|| status2 == CSGMesh.InsideStatus.OUTSIDE
-							|| status3 == CSGMesh.InsideStatus.OUTSIDE;
-
-					if(!(isFaceInside && isFaceOutside))
-						continue;
-
-					r.setColor(Color.RED);
-					r.line(face.getPosition1(), face.getPosition2());
-					r.line(face.getPosition2(), face.getPosition3());
-					r.line(face.getPosition3(), face.getPosition1());
-				}
-
-				for(MeshFace face : highlighted) {
-					r.setColor(Color.WHITE);
-					r.line(face.getPosition1(), face.getPosition2());
-					r.line(face.getPosition2(), face.getPosition3());
-					r.line(face.getPosition3(), face.getPosition1());
-				}
-
-				if(i == 0 && !Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT))
-					continue;
-				if(i == 1 && !Gdx.input.isKeyPressed(Input.Keys.CONTROL_RIGHT))
-					continue;
-				r.set(ShapeRenderer.ShapeType.Filled);
-				for(MeshVertex vertex : mesh.getVertices()) {
-					CSGMesh.InsideStatus status = mesh.getInsideStatus(vertex);
-
-					r.setColor(status == CSGMesh.InsideStatus.INSIDE ? Color.BLUE
-									: status == CSGMesh.InsideStatus.BOUNDARY
-									? Color.YELLOW
-									: Color.GREEN);
-					r.set(ShapeRenderer.ShapeType.Filled);
-					float vSize = 0.05f * MathUtil.sigmoid(cam.position.dst2(vertex.getPosition()));
-					r.box(vertex.getPosition().x - vSize / 2f,
-							vertex.getPosition().y - vSize / 2f,
-							vertex.getPosition().z + vSize / 2f,
-							vSize,
-							vSize,
-							vSize);
-				}
-			}
+			if(!Gdx.input.isKeyPressed(Input.Keys.H))
+				for(CSGMesh mesh : meshes)
+					renderMesh(r, mesh, ++i);
 
 			r.set(ShapeRenderer.ShapeType.Line);
 			r.setColor(Color.MAGENTA);
@@ -242,6 +132,121 @@ public class CSGMeshViewer implements ApplicationListener {
 				r.line(triangle.p3, triangle.p1);
 			}
 		});
+	}
+
+	private void renderMesh(ShapeRenderer renderer, CSGMesh mesh, int i) {
+		renderer.set(ShapeRenderer.ShapeType.Line);
+		for(MeshFace face : mesh.getFaces()) {
+			boolean boundaryFace = mesh.getBoundaryFaces().contains(face);
+			CSGMesh.InsideStatus status1 = mesh.getInsideStatus(face.getV1());
+			CSGMesh.InsideStatus status2 = mesh.getInsideStatus(face.getV2());
+			CSGMesh.InsideStatus status3 = mesh.getInsideStatus(face.getV3());
+
+			boolean isFaceInside = status1 == CSGMesh.InsideStatus.INSIDE
+					|| status2 == CSGMesh.InsideStatus.INSIDE
+					|| status3 == CSGMesh.InsideStatus.INSIDE
+					|| status1 == CSGMesh.InsideStatus.BOUNDARY
+					&& status2 == CSGMesh.InsideStatus.BOUNDARY
+					&& status3 == CSGMesh.InsideStatus.BOUNDARY;
+
+			boolean isFaceOutside = status1 == CSGMesh.InsideStatus.OUTSIDE
+					|| status2 == CSGMesh.InsideStatus.OUTSIDE
+					|| status3 == CSGMesh.InsideStatus.OUTSIDE;
+
+			renderer.setColor(isFaceInside && isFaceOutside		  ? Color.RED
+					: !isFaceInside && !isFaceOutside ? Color.YELLOW
+					  : isFaceInside					  ? Color.BLUE
+					    : Color.GREEN);
+
+			if(status1 == null || status2 == null || status3 == null) {
+				renderer.setColor(Color.GRAY);
+			}
+
+			if(boundaryFace)
+				renderer.setColor(Color.ORANGE);
+
+			tmpVec3.set(face.getPosition1())
+					.add(face.getPosition2())
+					.add(face.getPosition3())
+					.scl(1f / 3f);
+			for(int k = 0; k < (boundaryFace ? 3 : 2); k++) {
+				tmpVec.set(face.getPosition1())
+						.mulAdd(tmpVec3, k * 0.1f * (i + 1))
+						.scl(1f / (1f + k * 0.1f * (i + 1)));
+				tmpVec2.set(face.getPosition2())
+						.mulAdd(tmpVec3, k * 0.1f * (i + 1))
+						.scl(1f / (1f + k * 0.1f * (i + 1)));
+				tmpVec4.set(face.getPosition3())
+						.mulAdd(tmpVec3, k * 0.1f * (i + 1))
+						.scl(1f / (1f + k * 0.1f * (i + 1)));
+				renderer.line(tmpVec, tmpVec2);
+				renderer.line(tmpVec2, tmpVec4);
+				renderer.line(tmpVec4, tmpVec);
+			}
+
+			if(Gdx.input.isKeyPressed(Input.Keys.N)) {
+				renderer.setColor(Color.WHITE);
+				Vector3 normal = face.getNormal();
+				renderer.line(tmpVec3.x, tmpVec3.y, tmpVec3.z,
+						tmpVec3.x + normal.x / 10f,
+						tmpVec3.y + normal.y / 10f,
+						tmpVec3.z + normal.z / 10f);
+			}
+		}
+
+		for(MeshFace face : mesh.getFaces()) {
+			CSGMesh.InsideStatus status1 = mesh.getInsideStatus(face.getV1());
+			CSGMesh.InsideStatus status2 = mesh.getInsideStatus(face.getV2());
+			CSGMesh.InsideStatus status3 = mesh.getInsideStatus(face.getV3());
+
+			boolean isFaceInside = status1 == CSGMesh.InsideStatus.INSIDE
+					|| status2 == CSGMesh.InsideStatus.INSIDE
+					|| status3 == CSGMesh.InsideStatus.INSIDE
+					|| status1 == CSGMesh.InsideStatus.BOUNDARY
+					&& status2 == CSGMesh.InsideStatus.BOUNDARY
+					&& status3 == CSGMesh.InsideStatus.BOUNDARY;
+
+			boolean isFaceOutside = status1 == CSGMesh.InsideStatus.OUTSIDE
+					|| status2 == CSGMesh.InsideStatus.OUTSIDE
+					|| status3 == CSGMesh.InsideStatus.OUTSIDE;
+
+			if(!(isFaceInside && isFaceOutside))
+				continue;
+
+			renderer.setColor(Color.RED);
+			renderer.line(face.getPosition1(), face.getPosition2());
+			renderer.line(face.getPosition2(), face.getPosition3());
+			renderer.line(face.getPosition3(), face.getPosition1());
+		}
+
+		for(MeshFace face : highlighted) {
+			renderer.setColor(Color.WHITE);
+			renderer.line(face.getPosition1(), face.getPosition2());
+			renderer.line(face.getPosition2(), face.getPosition3());
+			renderer.line(face.getPosition3(), face.getPosition1());
+		}
+
+		if(i == 0 && !Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT))
+			return;
+		if(i == 1 && !Gdx.input.isKeyPressed(Input.Keys.CONTROL_RIGHT))
+			return;
+		renderer.set(ShapeRenderer.ShapeType.Filled);
+		for(MeshVertex vertex : mesh.getVertices()) {
+			CSGMesh.InsideStatus status = mesh.getInsideStatus(vertex);
+
+			renderer.setColor(status == CSGMesh.InsideStatus.INSIDE ? Color.BLUE
+					: status == CSGMesh.InsideStatus.BOUNDARY
+					  ? Color.YELLOW
+					  : Color.GREEN);
+			renderer.set(ShapeRenderer.ShapeType.Filled);
+			float vSize = 0.05f * MathUtil.sigmoid(cam.position.dst2(vertex.getPosition()));
+			renderer.box(vertex.getPosition().x - vSize / 2f,
+					vertex.getPosition().y - vSize / 2f,
+					vertex.getPosition().z + vSize / 2f,
+					vSize,
+					vSize,
+					vSize);
+		}
 	}
 
 	@Override

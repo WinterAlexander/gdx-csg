@@ -6,19 +6,11 @@ import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.utils.MeshBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.CylinderShapeBuilder;
-import com.badlogic.gdx.utils.IntArray;
+import com.winteralexander.gdx.csg.CSGConfiguration;
 import com.winteralexander.gdx.csg.CSGMesh;
 import com.winteralexander.gdx.csg.CSGUtil;
-import com.winteralexander.gdx.csg.test.debugviewer.CSGMeshViewer;
-import com.winteralexander.gdx.csg.test.debugviewer.TriangleViewer;
 import com.winteralexander.gdx.utils.collection.CollectionUtil;
-import com.winteralexander.gdx.utils.math.shape3d.Intersector3D;
-import com.winteralexander.gdx.utils.math.shape3d.SegmentPlus;
-import com.winteralexander.gdx.utils.math.shape3d.Triangle;
 import org.junit.Test;
-
-import static com.winteralexander.gdx.utils.math.shape3d.Intersector3D.intersectTriangleTriangle;
-import static org.junit.Assert.assertEquals;
 
 /**
  * Tests the CSGMesh operations with a libGDX model builder, which is convenient since it requires
@@ -43,13 +35,15 @@ public class CSGMeshWithBuilderTest {
 		csgMesh.getVertices().forEach(v -> v.getPosition().add(0f, 0f, -0.5f));
 
 		int idxStart = partBuilder.getNumVertices();
-		CylinderShapeBuilder.build(partBuilder, 0.05f, 0.02f, 0.05f, 10);
+		CylinderShapeBuilder.build(partBuilder, 0.075f, 0.02f, 0.075f, 10);
 
 		CSGMesh substrahend = CSGMesh.fromBuilder(partBuilder,
 				CollectionUtil.arrayFromRange(idxStart, partBuilder.getNumVertices()));
 		substrahend.getVertices().forEach(v -> v.getPosition().add(-0.05f, 0f, -0.5f));
 
-		CSGUtil.subtraction(csgMesh, substrahend);
+		CSGUtil.subtraction(csgMesh, substrahend, new CSGConfiguration() {{
+			tolerance = 1e-6f;
+		}});
 		// test is to ensure this doesn't crash
 	}
 }

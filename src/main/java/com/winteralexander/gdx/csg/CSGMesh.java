@@ -137,10 +137,11 @@ public class CSGMesh implements Serializable {
 	public void splitTriangles(CSGMesh other) {
 		tmpNewVertices.clear();
 		boundaryFaces.clear();
-		for(int i = 0; i < faces.size; i++)
-			for(MeshFace otherFace : other.faces)
-				// given splitFace may modify the faces array, must not put this at the outer level
-				splitIfNeeded(i, faces.get(i), otherFace);
+		for(int j = 0; j < 10; j++)
+			for(int i = 0; i < faces.size; i++)
+				for(MeshFace otherFace : other.faces)
+					// given splitFace may modify the faces array, must not put this at the outer level
+					splitIfNeeded(i, faces.get(i), otherFace);
 
 		if(config.enableBoundaryFaces)
 			for(int i = 0; i < faces.size; i++) {
@@ -159,7 +160,7 @@ public class CSGMesh implements Serializable {
 				}
 			}
 		tmpNewVertices.clear();
-
+/*
 		boolean mergedOne;
 		do {
 			mergedOne = false;
@@ -167,7 +168,7 @@ public class CSGMesh implements Serializable {
 				mergedOne |= checkForMergeWithNeighbors(faces.get(i));
 		} while(mergedOne);
 
-		deleteFacelessVertices();
+		deleteFacelessVertices();*/
 	}
 
 	private void splitFace(int faceIndex, Plane plane) {
