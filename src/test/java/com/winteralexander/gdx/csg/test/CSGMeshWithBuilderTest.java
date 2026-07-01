@@ -46,4 +46,29 @@ public class CSGMeshWithBuilderTest {
 		}});
 		// test is to ensure this doesn't crash
 	}
+
+
+	@Test
+	public void testBuildWrench2() {
+		ModelBuilder builder = new ModelBuilder();
+		builder.begin();
+		MeshBuilder partBuilder = (MeshBuilder)builder.part("wrench", GL20.GL_TRIANGLES,
+				VertexAttributes.Usage.Position
+						| VertexAttributes.Usage.Normal
+						| VertexAttributes.Usage.Tangent, new Material());
+
+		CylinderShapeBuilder.build(partBuilder, 15f, 2f, 15f, 10);
+		CSGMesh csgMesh = CSGMesh.fromBuilder(partBuilder);
+		csgMesh.getVertices().forEach(v -> v.getPosition().add(0f, 0f, -50f));
+
+		int idxStart = partBuilder.getNumVertices();
+		CylinderShapeBuilder.build(partBuilder, 7.5f, 2f, 7.5f, 10);
+
+		CSGMesh substrahend = CSGMesh.fromBuilder(partBuilder,
+				CollectionUtil.arrayFromRange(idxStart, partBuilder.getNumVertices()));
+		substrahend.getVertices().forEach(v -> v.getPosition().add(-5f, 0f, -50f));
+
+		CSGUtil.subtraction(csgMesh, substrahend, new CSGConfiguration());
+		// test is to ensure this doesn't crash
+	}
 }
