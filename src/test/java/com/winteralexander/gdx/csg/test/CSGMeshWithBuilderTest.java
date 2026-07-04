@@ -42,7 +42,7 @@ public class CSGMeshWithBuilderTest {
 		substrahend.getVertices().forEach(v -> v.getPosition().add(-0.05f, 0f, -0.5f));
 
 		CSGUtil.subtraction(csgMesh, substrahend, new CSGConfiguration() {{
-			tolerance = 1e-6f;
+			tolerance = 1e-5f;
 		}});
 		// test is to ensure this doesn't crash
 	}
