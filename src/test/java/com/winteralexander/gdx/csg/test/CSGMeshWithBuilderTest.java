@@ -9,6 +9,8 @@ import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.CylinderShapeBuilder;
 import com.winteralexander.gdx.csg.CSGConfiguration;
 import com.winteralexander.gdx.csg.CSGMesh;
 import com.winteralexander.gdx.csg.CSGUtil;
+import com.winteralexander.gdx.csg.test.debugviewer.CSGMeshViewer;
+import com.winteralexander.gdx.csg.test.debugviewer.ModelViewer;
 import com.winteralexander.gdx.utils.collection.CollectionUtil;
 import org.junit.Test;
 
@@ -68,7 +70,9 @@ public class CSGMeshWithBuilderTest {
 				CollectionUtil.arrayFromRange(idxStart, partBuilder.getNumVertices()));
 		substrahend.getVertices().forEach(v -> v.getPosition().add(-5f, 0f, -50f));
 
-		CSGUtil.subtraction(csgMesh, substrahend, new CSGConfiguration());
+		CSGMesh result = CSGUtil.subtraction(csgMesh, substrahend, new CSGConfiguration());
+		result.toBuilder(partBuilder, CollectionUtil.arrayFromRange(0, partBuilder.getNumVertices()));
 		// test is to ensure this doesn't crash
+		ModelViewer.start(builder);
 	}
 }
