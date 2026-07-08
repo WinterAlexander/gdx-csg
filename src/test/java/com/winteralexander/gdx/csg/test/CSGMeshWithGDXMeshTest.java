@@ -546,7 +546,7 @@ public class CSGMeshWithGDXMeshTest {
 		copy1.classifyFaces(mesh2);
 		copy2.classifyFaces(mesh1);
 
-		CSGMeshViewer.start(copy1, copy2);
+		//CSGMeshViewer.start(copy1, copy2);
 
 		copy1.removeFaces(true, false);
 		copy2.removeFaces(true, true);
@@ -554,7 +554,7 @@ public class CSGMeshWithGDXMeshTest {
 		copy1.mergeWith(copy2);
 		copy1.clearInsideStatus();
 
-		CSGMeshViewer.start(copy1);
+		//CSGMeshViewer.start(copy1);
 
 		CSGUtil.union(box, box.meshes.get(0));
 

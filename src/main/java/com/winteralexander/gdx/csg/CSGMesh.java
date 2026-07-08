@@ -102,7 +102,7 @@ public class CSGMesh implements Serializable {
 		this.faces.addAll(other.faces);
 	}
 
-	private void splitIfNeeded(int index, MeshFace face, MeshFace otherFace) {
+	private boolean splitIfNeeded(int index, MeshFace face, MeshFace otherFace) {
 		TriangleIntersectionResult result = intersectTriangleTriangle(face.getTriangle(),
 				otherFace.getTriangle(),
 				config.tolerance,
@@ -110,7 +110,7 @@ public class CSGMesh implements Serializable {
 		if(result == NONCOPLANAR_FACE_FACE) {
 			cutEdges.add(intersectSegment.cpy());
 			plane.set(otherFace.getPosition1(), otherFace.getNormal());
-			splitFace(index, plane);
+			return splitFace(index, plane);
 		} else if(result == EDGE_FACE) {
 			boolean isEdgeFromFace = false;
 			for(int j = 0; j < 3; j++) {
@@ -131,18 +131,23 @@ public class CSGMesh implements Serializable {
 			if(!isEdgeFromFace) {
 				cutEdges.add(intersectSegment.cpy());
 				plane.set(otherFace.getPosition1(), otherFace.getNormal());
-				splitFace(index, plane);
+				return splitFace(index, plane);
 			}
 		}
+		return false;
 	}
 
 	public void splitTriangles(CSGMesh other) {
 		tmpNewVertices.clear();
 		boundaryFaces.clear();
-		for(int i = 0; i < faces.size; i++)
-			for(MeshFace otherFace : other.faces)
-				// given splitFace may modify the faces array, must not put this at the outer level
-				splitIfNeeded(i, faces.get(i), otherFace);
+		boolean splitOne;
+		do {
+			splitOne = false;
+			for(int i = 0; i < faces.size; i++)
+				for(MeshFace otherFace : other.faces)
+					// given splitFace may modify the faces array, must not put this at the outer level
+					splitOne |= splitIfNeeded(i, faces.get(i), otherFace);
+		} while(splitOne);
 		tmpNewVertices.clear();
 
 		if(config.enableBoundaryFaces)
@@ -187,10 +192,13 @@ public class CSGMesh implements Serializable {
 		}
 	}
 
-	private void splitFace(int faceIndex, Plane plane) {
+	private boolean splitFace(int faceIndex, Plane plane) {
 		MeshFace face = faces.get(faceIndex);
 		face.getTriangle().toArray(tmpArray);
 		Intersector.splitTriangle(tmpArray, plane, splitTriangle);
+
+		if(splitTriangle.total == 1)
+			return false;
 
 		if(splitTriangle.numBack == 0 && splitTriangle.numFront == 0)
 			throw new IllegalStateException("Split face has no split result");
@@ -201,12 +209,13 @@ public class CSGMesh implements Serializable {
 		for(int i = 0; i < splitTriangle.numFront; i++)
 			processSplitTriangle(face, splitTriangle.front, i * 9);
 		if(toAdd.size == 0)
-			return;
+			return false;
 
 		faces.set(faceIndex, toAdd.get(0));
 		faces.addAll(toAdd, 1, toAdd.size - 1);
 
 		toAdd.clear();
+		return true;
 	}
 
 	private boolean checkForMergeWithNeighbors(MeshFace face) {

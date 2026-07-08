@@ -444,8 +444,11 @@ public class CSGMeshConverter {
 			writeFace(idxBuffer, face, index, tmpVertexIndices);
 		}
 
-		for(int i = tmpDeadTriangles.size - 1; i >= csgMesh.getFaces().size; i--)
-			idxBuffer.removeIndex(tmpDeadTriangles.get(i));
+		for(int i = tmpDeadTriangles.size - 1; i >= csgMesh.getFaces().size; i--) {
+			idxBuffer.removeIndex(tmpDeadTriangles.get(i) * 3 + 2);
+			idxBuffer.removeIndex(tmpDeadTriangles.get(i) * 3 + 1);
+			idxBuffer.removeIndex(tmpDeadTriangles.get(i) * 3);
+		}
 
 		tmpDeadTriangles.clear();
 		tmpVertexIndices.clear();
