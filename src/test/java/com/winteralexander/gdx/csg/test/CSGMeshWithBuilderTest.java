@@ -9,7 +9,6 @@ import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.CylinderShapeBuilder;
 import com.winteralexander.gdx.csg.CSGConfiguration;
 import com.winteralexander.gdx.csg.CSGMesh;
 import com.winteralexander.gdx.csg.CSGUtil;
-import com.winteralexander.gdx.csg.test.debugviewer.ModelViewer;
 import com.winteralexander.gdx.utils.collection.CollectionUtil;
 import org.junit.Test;
 
@@ -47,7 +46,7 @@ public class CSGMeshWithBuilderTest {
 		}});
 		result.toBuilder(partBuilder, CollectionUtil.arrayFromRange(0, partBuilder.getNumVertices()));
 		// test is to ensure this doesn't crash
-		ModelViewer.start(builder);
+		// ModelViewer.start(builder);
 	}
 
 	@Test
