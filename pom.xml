@@ -22,7 +22,7 @@
         <dependency>
             <groupId>com.github.WinterAlexander</groupId>
             <artifactId>gdx-utils</artifactId>
-            <version>16.0.0-prerel-12</version>
+            <version>[15.8.0, 16.0.0)</version>
         </dependency>
         <!-- Test dependencies -->
         <dependency>
