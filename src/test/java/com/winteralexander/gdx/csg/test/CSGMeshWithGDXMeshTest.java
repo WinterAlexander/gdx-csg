@@ -366,8 +366,8 @@ public class CSGMeshWithGDXMeshTest {
 		Model sphere = builder.createSphere(1f,
 				1f,
 				1f,
-				50,
-				50,
+				40,
+				40,
 				new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh sphereMesh = sphere.meshes.get(0);
@@ -479,8 +479,8 @@ public class CSGMeshWithGDXMeshTest {
 		Model sphere = builder.createSphere(1f,
 				1f,
 				1f,
-				50,
-				50,
+				40,
+				40,
 				new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh sphereMesh = sphere.meshes.get(0);
@@ -504,8 +504,8 @@ public class CSGMeshWithGDXMeshTest {
 		Model sphere = builder.createSphere(1f,
 				1f,
 				1f,
-				50,
-				50,
+				40,
+				40,
 				new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal);
 		Mesh sphereMesh = sphere.meshes.get(0);
@@ -743,8 +743,8 @@ public class CSGMeshWithGDXMeshTest {
 		Model sphere = builder.createSphere(1.25f,
 				1.25f,
 				1.25f,
-				20,
-				20,
+				15,
+				15,
 				new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal
 						| VertexAttributes.Usage.TextureCoordinates);
@@ -755,8 +755,8 @@ public class CSGMeshWithGDXMeshTest {
 		Model bigger = builder.createSphere(1.4f,
 				1.4f,
 				1.4f,
-				20,
-				20,
+				15,
+				15,
 				new Material(),
 				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal
 						| VertexAttributes.Usage.TextureCoordinates);
