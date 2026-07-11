@@ -177,12 +177,9 @@ public class CSGMesh implements Serializable {
 			}
 
 			coveredArea /= face.getTriangle().getArea();
+			// ignore not fully covered faces (in practice this should always be 0 or 1)
 			if(coveredArea > 0.8f)
 				boundaryFaces.add(face);
-
-			if(coveredArea > 0.01f && coveredArea < 0.99f)
-				System.out.println("WARNING partial covered for face, only " +
-						coveredArea * 100f + "% is covered");
 		}
 	}
 
