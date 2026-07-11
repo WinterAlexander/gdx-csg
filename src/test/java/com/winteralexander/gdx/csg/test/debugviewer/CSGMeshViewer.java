@@ -292,6 +292,8 @@ public class CSGMeshViewer implements ApplicationListener {
 				rays.add((Ray)object);
 			else if(object instanceof Triangle)
 				tris.add((Triangle)object);
+			else if(object instanceof MeshFace)
+				tris.add(((MeshFace)object).getTriangle());
 			else
 				throw new IllegalArgumentException("Unrecognized object: " + object);
 		}

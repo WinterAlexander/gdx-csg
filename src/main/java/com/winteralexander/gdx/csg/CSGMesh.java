@@ -147,12 +147,12 @@ public class CSGMesh implements Serializable {
 		if(config.enableBoundaryFaces)
 			findBoundaryFaces(other);
 
-		/*boolean mergedOne;
+		boolean mergedOne;
 		do {
 			mergedOne = false;
 			for(int i = 0; i < faces.size; i++)
 				mergedOne |= checkForMergeWithNeighbors(faces.get(i));
-		} while(mergedOne);*/
+		} while(mergedOne);
 
 		deleteFacelessVertices();
 	}
