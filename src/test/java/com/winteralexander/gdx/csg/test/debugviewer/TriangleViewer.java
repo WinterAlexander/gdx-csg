@@ -21,9 +21,9 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Queue;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.winteralexander.gdx.csg.MeshFace;
 import com.winteralexander.gdx.utils.input.InputUtil;
 import com.winteralexander.gdx.utils.math.MathUtil;
-import com.winteralexander.gdx.utils.math.shape3d.Intersector3D;
 import com.winteralexander.gdx.utils.math.shape3d.Intersector3D.TriangleIntersectionResult;
 import com.winteralexander.gdx.utils.math.shape3d.SegmentPlus;
 import com.winteralexander.gdx.utils.math.shape3d.Triangle;
@@ -265,6 +265,8 @@ public class TriangleViewer implements ApplicationListener {
 				rays.add((Ray)obj);
 			if(obj instanceof Segment)
 				segments.add((Segment)obj);
+			if(obj instanceof MeshFace)
+				tris.add(((MeshFace)obj).getTriangle());
 		}
 		start(tris.toArray(Triangle.class),
 				rays.toArray(Ray.class),

@@ -16,7 +16,9 @@ import com.winteralexander.gdx.utils.BufferUtil;
 import com.winteralexander.gdx.utils.ReflectionUtil;
 import com.winteralexander.gdx.utils.collection.CollectionUtil;
 import com.winteralexander.gdx.utils.io.Serializable;
+import com.winteralexander.gdx.utils.math.shape3d.Intersector3D;
 import com.winteralexander.gdx.utils.math.shape3d.SegmentPlus;
+import com.winteralexander.gdx.utils.math.shape3d.Triangle;
 import com.winteralexander.gdx.utils.math.vector.VectorUtil;
 
 import java.io.IOException;
@@ -139,26 +141,11 @@ public class CSGMesh implements Serializable {
 		boundaryFaces.clear();
 		for(int i = 0; i < faces.size; i++)
 			for(MeshFace otherFace : other.faces)
-				// given splitFace may modify the faces array, must not put this at the outer level
 				splitIfNeeded(i, faces.get(i), otherFace);
+		tmpNewVertices.clear();
 
 		if(config.enableBoundaryFaces)
-			for(int i = 0; i < faces.size; i++) {
-				MeshFace face = faces.get(i);
-				for(MeshFace otherFace : other.faces) {
-					if(face.getNormal().dot(otherFace.getNormal()) < 0.99f)
-						continue;
-
-					TriangleIntersectionResult
-							result = intersectTriangleTriangle(face.getTriangle(),
-									otherFace.getTriangle(),
-									config.tolerance,
-									intersectSegment);
-					if(result == COPLANAR_FACE_FACE)
-						boundaryFaces.add(face);
-				}
-			}
-		tmpNewVertices.clear();
+			findBoundaryFaces(other);
 
 		boolean mergedOne;
 		do {
@@ -170,10 +157,39 @@ public class CSGMesh implements Serializable {
 		deleteFacelessVertices();
 	}
 
+	private void findBoundaryFaces(CSGMesh other) {
+		for(int i = 0; i < faces.size; i++) {
+			MeshFace face = faces.get(i);
+			float coveredArea = 0f;
+			Array<Triangle> overlapTris = new Array<>();
+			for(MeshFace otherFace : other.faces) {
+				if(face.getNormal().dot(otherFace.getNormal()) < 0.99f)
+					continue;
+
+				if(intersectTriangleTriangle(face.getTriangle(),
+						otherFace.getTriangle(),
+						config.tolerance,
+						intersectSegment) != COPLANAR_FACE_FACE)
+					continue;
+
+				overlapTris.add(otherFace.getTriangle());
+				coveredArea += Intersector3D.computeOverlapArea(face.getTriangle(), otherFace.getTriangle());
+			}
+
+			coveredArea /= face.getTriangle().getArea();
+			// ignore not fully covered faces (in practice this should always be 0 or 1)
+			if(coveredArea > 0.8f)
+				boundaryFaces.add(face);
+		}
+	}
+
 	private void splitFace(int faceIndex, Plane plane) {
 		MeshFace face = faces.get(faceIndex);
 		face.getTriangle().toArray(tmpArray);
 		Intersector.splitTriangle(tmpArray, plane, splitTriangle);
+
+		if(splitTriangle.total == 1)
+			return;
 
 		if(splitTriangle.numBack == 0 && splitTriangle.numFront == 0)
 			throw new IllegalStateException("Split face has no split result");
@@ -183,8 +199,6 @@ public class CSGMesh implements Serializable {
 
 		for(int i = 0; i < splitTriangle.numFront; i++)
 			processSplitTriangle(face, splitTriangle.front, i * 9);
-		if(toAdd.size == 0)
-			return;
 
 		faces.set(faceIndex, toAdd.get(0));
 		faces.addAll(toAdd, 1, toAdd.size - 1);
@@ -476,7 +490,6 @@ public class CSGMesh implements Serializable {
 		float minT = Float.POSITIVE_INFINITY;
 		boolean upFacing = false;
 
-	faceLoop:
 		for(MeshFace face : faces) {
 			if(!intersectTriangleRay(face.getTriangle(), tmpRay, config.tolerance, tmpSegment))
 				continue;
