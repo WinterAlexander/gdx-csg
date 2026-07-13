@@ -452,6 +452,9 @@ public class CSGMeshConverter {
 
 		tmpDeadTriangles.clear();
 		tmpVertexIndices.clear();
+
+		ReflectionUtil.set(builder, "vindex", builder.getNumVertices());
+		ReflectionUtil.set(builder, "lastIndex", builder.getNumVertices() - 1);
 	}
 
 	private static void getTrianglesOfVertices(ShortArray idxBuffer,
