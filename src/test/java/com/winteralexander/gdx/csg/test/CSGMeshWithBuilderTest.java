@@ -74,4 +74,49 @@ public class CSGMeshWithBuilderTest {
 		// test is to ensure this doesn't crash
 		// ModelViewer.start(builder);
 	}
+
+	@Test
+	public void testBuildWrenchTwoInARow() {
+		ModelBuilder builder = new ModelBuilder();
+		builder.begin();
+		MeshBuilder partBuilder = (MeshBuilder)builder.part("wrench", GL20.GL_TRIANGLES,
+				VertexAttributes.Usage.Position
+						| VertexAttributes.Usage.Normal
+						| VertexAttributes.Usage.Tangent, new Material());
+
+		CylinderShapeBuilder.build(partBuilder, 0.15f, 0.025f, 0.15f, 10);
+		CSGMesh csgMesh = CSGMesh.fromBuilder(partBuilder);
+
+		int idxStart = partBuilder.getNumVertices();
+		CylinderShapeBuilder.build(partBuilder, 0.12f, 0.025f, 0.12f, 10);
+
+		CSGMesh substrahend = CSGMesh.fromBuilder(partBuilder,
+				CollectionUtil.arrayFromRange(idxStart, partBuilder.getNumVertices()));
+		substrahend.getVertices().forEach(v -> v.getPosition().add(0f, 0f, -0.03f));
+
+		CSGMesh result = CSGUtil.subtraction(csgMesh, substrahend, new CSGConfiguration() {{
+			tolerance = 1e-5f;
+		}});
+		result.toBuilder(partBuilder, CollectionUtil.arrayFromRange(0, partBuilder.getNumVertices()));
+
+		int startSecond = partBuilder.getNumVertices();
+		CylinderShapeBuilder.build(partBuilder, 0.15f, 0.02f, 0.15f, 10);
+		csgMesh = CSGMesh.fromBuilder(partBuilder,
+				CollectionUtil.arrayFromRange(startSecond, partBuilder.getNumVertices()));
+		csgMesh.getVertices().forEach(v -> v.getPosition().add(0f, 0f, -0.5f));
+
+		int startSecond2 = partBuilder.getNumVertices();
+		CylinderShapeBuilder.build(partBuilder, 0.075f, 0.02f, 0.075f, 10);
+
+		substrahend = CSGMesh.fromBuilder(partBuilder,
+				CollectionUtil.arrayFromRange(startSecond2, partBuilder.getNumVertices()));
+		substrahend.getVertices().forEach(v -> v.getPosition().add(-0.05f, 0f, -0.5f));
+
+		result = CSGUtil.subtraction(csgMesh, substrahend, new CSGConfiguration() {{
+			tolerance = 1e-5f;
+		}});
+		result.toBuilder(partBuilder, CollectionUtil.arrayFromRange(startSecond, partBuilder.getNumVertices()));
+		// test is to ensure this doesn't crash
+		// ModelViewer.start(builder);
+	}
 }
