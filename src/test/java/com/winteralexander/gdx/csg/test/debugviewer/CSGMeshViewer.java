@@ -146,17 +146,17 @@ public class CSGMeshViewer implements ApplicationListener {
 					|| status2 == CSGMesh.InsideStatus.INSIDE
 					|| status3 == CSGMesh.InsideStatus.INSIDE
 					|| status1 == CSGMesh.InsideStatus.BOUNDARY
-					&& status2 == CSGMesh.InsideStatus.BOUNDARY
-					&& status3 == CSGMesh.InsideStatus.BOUNDARY;
+							&& status2 == CSGMesh.InsideStatus.BOUNDARY
+							&& status3 == CSGMesh.InsideStatus.BOUNDARY;
 
 			boolean isFaceOutside = status1 == CSGMesh.InsideStatus.OUTSIDE
 					|| status2 == CSGMesh.InsideStatus.OUTSIDE
 					|| status3 == CSGMesh.InsideStatus.OUTSIDE;
 
-			renderer.setColor(isFaceInside && isFaceOutside		  ? Color.RED
-					: !isFaceInside && !isFaceOutside ? Color.YELLOW
-					  : isFaceInside					  ? Color.BLUE
-					    : Color.GREEN);
+			renderer.setColor(isFaceInside && isFaceOutside	  ? Color.RED
+							: !isFaceInside && !isFaceOutside ? Color.YELLOW
+							: isFaceInside					  ? Color.BLUE
+															  : Color.GREEN);
 
 			if(status1 == null || status2 == null || status3 == null) {
 				renderer.setColor(Color.GRAY);
@@ -187,7 +187,9 @@ public class CSGMeshViewer implements ApplicationListener {
 			if(Gdx.input.isKeyPressed(Input.Keys.N)) {
 				renderer.setColor(Color.WHITE);
 				Vector3 normal = face.getNormal();
-				renderer.line(tmpVec3.x, tmpVec3.y, tmpVec3.z,
+				renderer.line(tmpVec3.x,
+						tmpVec3.y,
+						tmpVec3.z,
 						tmpVec3.x + normal.x / 10f,
 						tmpVec3.y + normal.y / 10f,
 						tmpVec3.z + normal.z / 10f);
@@ -203,8 +205,8 @@ public class CSGMeshViewer implements ApplicationListener {
 					|| status2 == CSGMesh.InsideStatus.INSIDE
 					|| status3 == CSGMesh.InsideStatus.INSIDE
 					|| status1 == CSGMesh.InsideStatus.BOUNDARY
-					&& status2 == CSGMesh.InsideStatus.BOUNDARY
-					&& status3 == CSGMesh.InsideStatus.BOUNDARY;
+							&& status2 == CSGMesh.InsideStatus.BOUNDARY
+							&& status3 == CSGMesh.InsideStatus.BOUNDARY;
 
 			boolean isFaceOutside = status1 == CSGMesh.InsideStatus.OUTSIDE
 					|| status2 == CSGMesh.InsideStatus.OUTSIDE
@@ -235,9 +237,9 @@ public class CSGMeshViewer implements ApplicationListener {
 			CSGMesh.InsideStatus status = mesh.getInsideStatus(vertex);
 
 			renderer.setColor(status == CSGMesh.InsideStatus.INSIDE ? Color.BLUE
-					: status == CSGMesh.InsideStatus.BOUNDARY
-					  ? Color.YELLOW
-					  : Color.GREEN);
+							: status == CSGMesh.InsideStatus.BOUNDARY
+							? Color.YELLOW
+							: Color.GREEN);
 			renderer.set(ShapeRenderer.ShapeType.Filled);
 			float vSize = 0.05f * MathUtil.sigmoid(cam.position.dst2(vertex.getPosition()));
 			renderer.box(vertex.getPosition().x - vSize / 2f,
