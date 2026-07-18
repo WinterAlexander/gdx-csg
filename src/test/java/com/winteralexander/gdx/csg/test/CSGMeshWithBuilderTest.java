@@ -30,10 +30,11 @@ public class CSGMeshWithBuilderTest {
 	public void testBuildWrench() {
 		ModelBuilder builder = new ModelBuilder();
 		builder.begin();
-		MeshBuilder partBuilder = (MeshBuilder)builder.part("wrench", GL20.GL_TRIANGLES,
-				VertexAttributes.Usage.Position
-				| VertexAttributes.Usage.Normal
-				| VertexAttributes.Usage.Tangent, new Material());
+		MeshBuilder partBuilder = (MeshBuilder)builder.part("wrench",
+				GL20.GL_TRIANGLES,
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal
+						| VertexAttributes.Usage.Tangent,
+				new Material());
 
 		CylinderShapeBuilder.build(partBuilder, 0.15f, 0.02f, 0.15f, 10);
 		CSGMesh csgMesh = CSGMesh.fromBuilder(partBuilder);
@@ -46,10 +47,13 @@ public class CSGMeshWithBuilderTest {
 				CollectionUtil.arrayFromRange(idxStart, partBuilder.getNumVertices()));
 		substrahend.getVertices().forEach(v -> v.getPosition().add(-0.05f, 0f, -0.5f));
 
-		CSGMesh result = CSGUtil.subtraction(csgMesh, substrahend, new CSGConfiguration() {{
-			tolerance = 1e-5f;
-		}});
-		result.toBuilder(partBuilder, CollectionUtil.arrayFromRange(0, partBuilder.getNumVertices()));
+		CSGMesh result = CSGUtil.subtraction(csgMesh, substrahend, new CSGConfiguration() {
+			{
+				tolerance = 1e-5f;
+			}
+		});
+		result.toBuilder(partBuilder,
+				CollectionUtil.arrayFromRange(0, partBuilder.getNumVertices()));
 		// test is to ensure this doesn't crash
 		// ModelViewer.start(builder);
 	}
@@ -58,10 +62,11 @@ public class CSGMeshWithBuilderTest {
 	public void testBuildWrench2() {
 		ModelBuilder builder = new ModelBuilder();
 		builder.begin();
-		MeshBuilder partBuilder = (MeshBuilder)builder.part("wrench", GL20.GL_TRIANGLES,
-				VertexAttributes.Usage.Position
-						| VertexAttributes.Usage.Normal
-						| VertexAttributes.Usage.Tangent, new Material());
+		MeshBuilder partBuilder = (MeshBuilder)builder.part("wrench",
+				GL20.GL_TRIANGLES,
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal
+						| VertexAttributes.Usage.Tangent,
+				new Material());
 
 		CylinderShapeBuilder.build(partBuilder, 15f, 2f, 15f, 10);
 		CSGMesh csgMesh = CSGMesh.fromBuilder(partBuilder);
@@ -75,7 +80,8 @@ public class CSGMeshWithBuilderTest {
 		substrahend.getVertices().forEach(v -> v.getPosition().add(-5f, 0f, -50f));
 
 		CSGMesh result = CSGUtil.subtraction(csgMesh, substrahend, new CSGConfiguration());
-		result.toBuilder(partBuilder, CollectionUtil.arrayFromRange(0, partBuilder.getNumVertices()));
+		result.toBuilder(partBuilder,
+				CollectionUtil.arrayFromRange(0, partBuilder.getNumVertices()));
 		// test is to ensure this doesn't crash
 		// ModelViewer.start(builder);
 	}
@@ -84,10 +90,11 @@ public class CSGMeshWithBuilderTest {
 	public void testBuildWrenchTwoInARow() {
 		ModelBuilder builder = new ModelBuilder();
 		builder.begin();
-		MeshBuilder partBuilder = (MeshBuilder)builder.part("wrench", GL20.GL_TRIANGLES,
-				VertexAttributes.Usage.Position
-						| VertexAttributes.Usage.Normal
-						| VertexAttributes.Usage.Tangent, new Material());
+		MeshBuilder partBuilder = (MeshBuilder)builder.part("wrench",
+				GL20.GL_TRIANGLES,
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal
+						| VertexAttributes.Usage.Tangent,
+				new Material());
 
 		CylinderShapeBuilder.build(partBuilder, 0.15f, 0.025f, 0.15f, 10);
 		CSGMesh csgMesh = CSGMesh.fromBuilder(partBuilder);
@@ -99,10 +106,13 @@ public class CSGMeshWithBuilderTest {
 				CollectionUtil.arrayFromRange(idxStart, partBuilder.getNumVertices()));
 		substrahend.getVertices().forEach(v -> v.getPosition().add(0f, 0f, -0.03f));
 
-		CSGMesh result = CSGUtil.subtraction(csgMesh, substrahend, new CSGConfiguration() {{
-			tolerance = 1e-5f;
-		}});
-		result.toBuilder(partBuilder, CollectionUtil.arrayFromRange(0, partBuilder.getNumVertices()));
+		CSGMesh result = CSGUtil.subtraction(csgMesh, substrahend, new CSGConfiguration() {
+			{
+				tolerance = 1e-5f;
+			}
+		});
+		result.toBuilder(partBuilder,
+				CollectionUtil.arrayFromRange(0, partBuilder.getNumVertices()));
 
 		int startSecond = partBuilder.getNumVertices();
 		CylinderShapeBuilder.build(partBuilder, 0.15f, 0.02f, 0.15f, 10);
@@ -117,10 +127,13 @@ public class CSGMeshWithBuilderTest {
 				CollectionUtil.arrayFromRange(startSecond2, partBuilder.getNumVertices()));
 		substrahend.getVertices().forEach(v -> v.getPosition().add(-0.05f, 0f, -0.5f));
 
-		result = CSGUtil.subtraction(csgMesh, substrahend, new CSGConfiguration() {{
-			tolerance = 1e-5f;
-		}});
-		result.toBuilder(partBuilder, CollectionUtil.arrayFromRange(startSecond, partBuilder.getNumVertices()));
+		result = CSGUtil.subtraction(csgMesh, substrahend, new CSGConfiguration() {
+			{
+				tolerance = 1e-5f;
+			}
+		});
+		result.toBuilder(partBuilder,
+				CollectionUtil.arrayFromRange(startSecond, partBuilder.getNumVertices()));
 		// test is to ensure this doesn't crash
 		// ModelViewer.start(builder);
 	}
@@ -129,11 +142,12 @@ public class CSGMeshWithBuilderTest {
 	public void testCutHouse() {
 		ModelBuilder builder = new ModelBuilder();
 		builder.begin();
-		MeshBuilder partBuilder = (MeshBuilder)builder.part("house", GL20.GL_TRIANGLES,
-				VertexAttributes.Usage.Position
-						| VertexAttributes.Usage.Normal
+		MeshBuilder partBuilder = (MeshBuilder)builder.part("house",
+				GL20.GL_TRIANGLES,
+				VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal
 						| VertexAttributes.Usage.Tangent
-						| VertexAttributes.Usage.TextureCoordinates , new Material());
+						| VertexAttributes.Usage.TextureCoordinates,
+				new Material());
 
 		Vector3 tmpV0 = new Vector3();
 		Vector3 tmpV1 = new Vector3();
@@ -213,12 +227,13 @@ public class CSGMeshWithBuilderTest {
 		MeshBuilderUtil.createSixSidedBox(partBuilder, 0.18f, 0.1f, 0.18f);
 
 		MeshBuilderUtil.transform(partBuilder,
-				startChimney, startChimney2,
+				startChimney,
+				startChimney2,
 				matTmp1.idt().translate(0.3f, 1.2f, -0.3f));
 		MeshBuilderUtil.transform(partBuilder,
-				startChimney2, partBuilder.getNumVertices(),
+				startChimney2,
+				partBuilder.getNumVertices(),
 				matTmp1.idt().translate(0.3f, 1.3f, -0.3f));
-
 
 		CSGMesh base = CSGMesh.fromBuilder(partBuilder,
 				CollectionUtil.arrayFromRange(startIdx, partBuilder.getNumVertices()));
@@ -227,21 +242,9 @@ public class CSGMeshWithBuilderTest {
 		MeshBuilderUtil.createSixSidedBox(partBuilder, 1f, 1f, 1f);
 		int doorEndIdx = partBuilder.getNumVertices();
 
-		MeshBuilderUtil.dynamicUVTransform(partBuilder, doorStartIdx, doorEndIdx,
-				(position, normal, uv) -> {
-					if(normal.z == -1f)
-						return;
-					uv.x = 0f;
-					uv.y = 0f;
-				});
-		MeshBuilderUtil.transform(partBuilder, doorStartIdx, doorEndIdx, matTmp1.idt()
-				.translate(0f, DOOR_HEIGHT / 2f + 0.01f, BOTTOM_WIDTH / 2f)
-				.scl(DOOR_WIDTH, DOOR_HEIGHT, DOOR_WIDTH / 2f));
-
-		int windowStartIdx = partBuilder.getNumVertices();
-		MeshBuilderUtil.createSixSidedBox(partBuilder, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_WIDTH / 2f);
-		int windowEndIdx = partBuilder.getNumVertices();
-		MeshBuilderUtil.dynamicUVTransform(partBuilder, windowStartIdx, windowEndIdx,
+		MeshBuilderUtil.dynamicUVTransform(partBuilder,
+				doorStartIdx,
+				doorEndIdx,
 				(position, normal, uv) -> {
 					if(normal.z == -1f)
 						return;
@@ -249,13 +252,41 @@ public class CSGMeshWithBuilderTest {
 					uv.y = 0f;
 				});
 		MeshBuilderUtil.transform(partBuilder,
-				windowStartIdx, windowEndIdx,
+				doorStartIdx,
+				doorEndIdx,
+				matTmp1.idt()
+						.translate(0f, DOOR_HEIGHT / 2f + 0.01f, BOTTOM_WIDTH / 2f)
+						.scl(DOOR_WIDTH, DOOR_HEIGHT, DOOR_WIDTH / 2f));
+
+		int windowStartIdx = partBuilder.getNumVertices();
+		MeshBuilderUtil.createSixSidedBox(partBuilder,
+				WINDOW_WIDTH,
+				WINDOW_HEIGHT,
+				WINDOW_WIDTH / 2f);
+		int windowEndIdx = partBuilder.getNumVertices();
+		MeshBuilderUtil.dynamicUVTransform(partBuilder,
+				windowStartIdx,
+				windowEndIdx,
+				(position, normal, uv) -> {
+					if(normal.z == -1f)
+						return;
+					uv.x = 0f;
+					uv.y = 0f;
+				});
+		MeshBuilderUtil.transform(partBuilder,
+				windowStartIdx,
+				windowEndIdx,
 				matTmp1.idt().translate(0.325f, DOOR_HEIGHT, BOTTOM_WIDTH / 2f));
 
 		int window2StartIdx = partBuilder.getNumVertices();
-		MeshBuilderUtil.createSixSidedBox(partBuilder, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_WIDTH / 2f);
+		MeshBuilderUtil.createSixSidedBox(partBuilder,
+				WINDOW_WIDTH,
+				WINDOW_HEIGHT,
+				WINDOW_WIDTH / 2f);
 		int window2EndIdx = partBuilder.getNumVertices();
-		MeshBuilderUtil.dynamicUVTransform(partBuilder, window2StartIdx, window2EndIdx,
+		MeshBuilderUtil.dynamicUVTransform(partBuilder,
+				window2StartIdx,
+				window2EndIdx,
 				(position, normal, uv) -> {
 					if(normal.z == -1f)
 						return;
@@ -263,23 +294,29 @@ public class CSGMeshWithBuilderTest {
 					uv.y = 0f;
 				});
 		MeshBuilderUtil.transform(partBuilder,
-				window2StartIdx, window2EndIdx,
+				window2StartIdx,
+				window2EndIdx,
 				matTmp1.idt().translate(-0.325f, DOOR_HEIGHT, BOTTOM_WIDTH / 2f));
 
 		CSGMesh subtrahend = CSGMesh.fromBuilder(partBuilder,
 				CollectionUtil.arrayFromRange(doorStartIdx, partBuilder.getNumVertices()));
 
-		CSGUtil.subtraction(base, subtrahend, new CSGConfiguration() {{
-			insideTestDirection.set(1f, 0f, 0f);
-		}}).toBuilder(partBuilder,
-				CollectionUtil.arrayFromRange(startIdx, partBuilder.getNumVertices()));
-
+		CSGUtil.subtraction(base,
+					   subtrahend,
+					   new CSGConfiguration() {
+						   {
+							   insideTestDirection.set(1f, 0f, 0f);
+						   }
+					   })
+				.toBuilder(partBuilder,
+						CollectionUtil.arrayFromRange(startIdx, partBuilder.getNumVertices()));
 
 		MeshBuilderUtil.transform(partBuilder, matTmp1.idt().scale(0.5f, 0.5f, 0.5f));
 		MeshBuilderUtil.transform(partBuilder, matTmp1.idt().translate(0f, 0.2f, -0.7f));
 
 		int houseEnd = partBuilder.getNumVertices();
-		CSGMesh house = CSGMesh.fromBuilder(partBuilder, CollectionUtil.arrayFromRange(0, houseEnd));
+		CSGMesh house = CSGMesh.fromBuilder(partBuilder,
+				CollectionUtil.arrayFromRange(0, houseEnd));
 
 		BoxShapeBuilder.build(partBuilder, 1f, 1f, 1f);
 		MeshBuilderUtil.transform(partBuilder, matTmp1.idt().translate(0f, 0f, -1f));
@@ -287,12 +324,15 @@ public class CSGMeshWithBuilderTest {
 		CSGMesh cube = CSGMesh.fromBuilder(partBuilder,
 				CollectionUtil.arrayFromRange(houseEnd, partBuilder.getNumVertices()));
 
-		CSGMesh result = CSGUtil.subtraction(house, cube, new CSGConfiguration() {{
-			insideTestDirection.set(1f, 0f, 0f);
-		}});
+		CSGMesh result = CSGUtil.subtraction(house, cube, new CSGConfiguration() {
+			{
+				insideTestDirection.set(1f, 0f, 0f);
+			}
+		});
 		CSGMeshViewer.start(result);
 
-		result.toBuilder(partBuilder, CollectionUtil.arrayFromRange(0, partBuilder.getNumVertices()));
+		result.toBuilder(partBuilder,
+				CollectionUtil.arrayFromRange(0, partBuilder.getNumVertices()));
 		ModelViewer.start(builder);
 	}
 }

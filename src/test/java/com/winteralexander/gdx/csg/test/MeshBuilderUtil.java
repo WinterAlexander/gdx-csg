@@ -55,8 +55,9 @@ public class MeshBuilderUtil {
 		int norOffset = ReflectionUtil.get(meshBuilder, "norOffset");
 		int biNorOffset = ReflectionUtil.get(meshBuilder, "biNorOffset");
 		int tangentOffset = ReflectionUtil.get(meshBuilder, "tangentOffset");
-		int uvOffset = meshBuilder.getAttributes()
-				.getOffset(VertexAttributes.Usage.TextureCoordinates, -1);
+		int uvOffset = meshBuilder.getAttributes().getOffset(
+				VertexAttributes.Usage.TextureCoordinates,
+				-1);
 		FloatArray vertices = ReflectionUtil.get(meshBuilder, "vertices");
 
 		int offset = index * meshBuilder.getFloatsPerVertex() + posOffset;
@@ -99,23 +100,29 @@ public class MeshBuilderUtil {
 	}
 
 	public static void setVertex(MeshBuilder meshBuilder, int index, Vertex vertex) {
-		setVertex(meshBuilder, index,
-				vertex.position, vertex.normal, vertex.binormal, vertex.tangent, vertex.uv);
+		setVertex(meshBuilder,
+				index,
+				vertex.position,
+				vertex.normal,
+				vertex.binormal,
+				vertex.tangent,
+				vertex.uv);
 	}
 
 	public static void setVertex(MeshBuilder meshBuilder,
-	                              int index,
-	                              Vector3 position,
-	                              Vector3 normal,
-	                              Vector3 binormal,
-	                              Vector3 tangent,
-	                              Vector2 uv) {
+			int index,
+			Vector3 position,
+			Vector3 normal,
+			Vector3 binormal,
+			Vector3 tangent,
+			Vector2 uv) {
 		int posOffset = ReflectionUtil.get(meshBuilder, "posOffset");
 		int norOffset = ReflectionUtil.get(meshBuilder, "norOffset");
 		int biNorOffset = ReflectionUtil.get(meshBuilder, "biNorOffset");
 		int tangentOffset = ReflectionUtil.get(meshBuilder, "tangentOffset");
-		int uvOffset = meshBuilder.getAttributes()
-				.getOffset(VertexAttributes.Usage.TextureCoordinates, -1);
+		int uvOffset = meshBuilder.getAttributes().getOffset(
+				VertexAttributes.Usage.TextureCoordinates,
+				-1);
 		FloatArray vertices = ReflectionUtil.get(meshBuilder, "vertices");
 
 		if(position != null) {
@@ -158,44 +165,50 @@ public class MeshBuilderUtil {
 	 * @param region region to give UVs
 	 */
 	public static void quad(MeshPartBuilder builder,
-	                        Vector3 p1, Vector3 p2,
-	                        Vector3 p3, Vector3 p4,
-	                        Vector3 normal,
-	                        TextureRegion region) {
-		boolean flip = normal.dot(tmpVec3.set(p2).sub(p1)
-				.crs(p3.x - p1.x, p3.y - p1.y, p3.z - p1.z)) < 0f;
-		short corner00 = builder.vertex(p1, normal, Color.WHITE,
+			Vector3 p1,
+			Vector3 p2,
+			Vector3 p3,
+			Vector3 p4,
+			Vector3 normal,
+			TextureRegion region) {
+		boolean flip = normal.dot(tmpVec3.set(p2).sub(p1).crs(p3.x - p1.x,
+							   p3.y - p1.y,
+							   p3.z - p1.z))
+				< 0f;
+		short corner00 = builder.vertex(p1,
+				normal,
+				Color.WHITE,
 				tmpVec2.set(region.getU(), region.getV2()));
-		short corner10 = builder.vertex(p2, normal, Color.WHITE,
+		short corner10 = builder.vertex(p2,
+				normal,
+				Color.WHITE,
 				tmpVec2.set(region.getU2(), region.getV2()));
-		short corner11 = builder.vertex(p3, normal, Color.WHITE,
+		short corner11 = builder.vertex(p3,
+				normal,
+				Color.WHITE,
 				tmpVec2.set(region.getU2(), region.getV()));
-		short corner01 = builder.vertex(p4, normal, Color.WHITE,
+		short corner01 = builder.vertex(p4,
+				normal,
+				Color.WHITE,
 				tmpVec2.set(region.getU(), region.getV()));
-		builder.rect(corner00,
-				flip ? corner01 : corner10,
-				corner11,
-				flip ? corner10 : corner01);
+		builder.rect(corner00, flip ? corner01 : corner10, corner11, flip ? corner10 : corner01);
 	}
 
 	public static void quad(MeshPartBuilder builder,
-	                        Vector3 p1, Vector3 p2,
-	                        Vector3 p3, Vector3 p4,
-	                        Vector3 normal) {
-		boolean flip = normal.dot(tmpVec3.set(p2).sub(p1)
-				.crs(p3.x - p1.x, p3.y - p1.y, p3.z - p1.z)) < 0f;
-		short corner00 = builder.vertex(p1, normal, Color.WHITE,
-				tmpVec2.set(0f, 1f));
-		short corner10 = builder.vertex(p2, normal, Color.WHITE,
-				tmpVec2.set(1f, 1f));
-		short corner11 = builder.vertex(p3, normal, Color.WHITE,
-				tmpVec2.set(1f, 0f));
-		short corner01 = builder.vertex(p4, normal, Color.WHITE,
-				tmpVec2.set(0f, 0f));
-		builder.rect(corner00,
-				flip ? corner01 : corner10,
-				corner11,
-				flip ? corner10 : corner01);
+			Vector3 p1,
+			Vector3 p2,
+			Vector3 p3,
+			Vector3 p4,
+			Vector3 normal) {
+		boolean flip = normal.dot(tmpVec3.set(p2).sub(p1).crs(p3.x - p1.x,
+							   p3.y - p1.y,
+							   p3.z - p1.z))
+				< 0f;
+		short corner00 = builder.vertex(p1, normal, Color.WHITE, tmpVec2.set(0f, 1f));
+		short corner10 = builder.vertex(p2, normal, Color.WHITE, tmpVec2.set(1f, 1f));
+		short corner11 = builder.vertex(p3, normal, Color.WHITE, tmpVec2.set(1f, 0f));
+		short corner01 = builder.vertex(p4, normal, Color.WHITE, tmpVec2.set(0f, 0f));
+		builder.rect(corner00, flip ? corner01 : corner10, corner11, flip ? corner10 : corner01);
 	}
 
 	public static void transform(Model model, Matrix4 transform) {
@@ -259,7 +272,12 @@ public class MeshBuilderUtil {
 		offset(meshBuilder, 0, meshBuilder.getNumVertices(), x, y, z);
 	}
 
-	public static void offset(MeshBuilder meshBuilder, int startIndex, int endIndex, float x, float y, float z) {
+	public static void offset(MeshBuilder meshBuilder,
+			int startIndex,
+			int endIndex,
+			float x,
+			float y,
+			float z) {
 		int posOffset = ReflectionUtil.get(meshBuilder, "posOffset");
 		FloatArray vertices = ReflectionUtil.get(meshBuilder, "vertices");
 		for(int i = startIndex; i < endIndex; i++) {
@@ -270,30 +288,28 @@ public class MeshBuilderUtil {
 		}
 	}
 
-	public static void transform(MeshBuilder meshBuilder,
-	                             Matrix4 transform) {
+	public static void transform(MeshBuilder meshBuilder, Matrix4 transform) {
 		transform(meshBuilder, transform, transform.cpy().inv().tra());
 	}
 
 	public static void transform(MeshBuilder meshBuilder,
-	                             Matrix4 transform,
-	                             Matrix4 normalTransform) {
+			Matrix4 transform,
+			Matrix4 normalTransform) {
 		transform(meshBuilder, 0, meshBuilder.getNumVertices(), transform, normalTransform);
 	}
 
-
 	public static void transform(MeshBuilder meshBuilder,
-	                             int startIndex,
-	                             int endIndex,
-	                             Matrix4 transform) {
+			int startIndex,
+			int endIndex,
+			Matrix4 transform) {
 		transform(meshBuilder, startIndex, endIndex, transform, transform.cpy().inv().tra());
 	}
 
 	public static void transform(MeshBuilder meshBuilder,
-	                             int startIndex,
-	                             int endIndex,
-	                             Matrix4 transform,
-	                             Matrix4 normalTransform) {
+			int startIndex,
+			int endIndex,
+			Matrix4 transform,
+			Matrix4 normalTransform) {
 		int posOffset = ReflectionUtil.get(meshBuilder, "posOffset");
 		int norOffset = ReflectionUtil.get(meshBuilder, "norOffset");
 		int biNorOffset = ReflectionUtil.get(meshBuilder, "biNorOffset");
@@ -356,7 +372,6 @@ public class MeshBuilderUtil {
 		int norOffset = ReflectionUtil.get(meshBuilder, "norOffset");
 		FloatArray vertices = ReflectionUtil.get(meshBuilder, "vertices");
 
-
 		if(norOffset == -1)
 			throw new IllegalArgumentException("MeshBuilder has no normals");
 
@@ -380,7 +395,6 @@ public class MeshBuilderUtil {
 		int biNorOffset = ReflectionUtil.get(meshBuilder, "biNorOffset");
 		FloatArray vertices = ReflectionUtil.get(meshBuilder, "vertices");
 
-
 		if(biNorOffset == -1)
 			throw new IllegalArgumentException("MeshBuilder has no normals");
 
@@ -403,7 +417,6 @@ public class MeshBuilderUtil {
 	public static void setTangent(MeshBuilder meshBuilder, int vertex, Vector3 normal) {
 		int tanOffset = ReflectionUtil.get(meshBuilder, "tangentOffset");
 		FloatArray vertices = ReflectionUtil.get(meshBuilder, "vertices");
-
 
 		if(tanOffset == -1)
 			throw new IllegalArgumentException("MeshBuilder has no tangents");
@@ -429,8 +442,7 @@ public class MeshBuilderUtil {
 			int v2 = indices.get(tri * 3 + 1);
 			int v3 = indices.get(tri * 3 + 2);
 
-			if(!tmpVerticesTriCount.containsKey(v1)
-					&& !tmpVerticesTriCount.containsKey(v2)
+			if(!tmpVerticesTriCount.containsKey(v1) && !tmpVerticesTriCount.containsKey(v2)
 					&& !tmpVerticesTriCount.containsKey(v3))
 				continue;
 
@@ -458,25 +470,28 @@ public class MeshBuilderUtil {
 
 		for(int i = 0; i < vertexIndices.size; i++) {
 			int idx = vertexIndices.get(i);
-			setNormal(meshBuilder, idx,
+			setNormal(meshBuilder,
+					idx,
 					getNormal(meshBuilder, idx, tmpVec3).scl(1f / tmpVerticesTriCount.get(idx, 1)));
 		}
 		tmpVerticesTriCount.clear();
 	}
 
 	public static void dynamicTransform(MeshBuilder meshBuilder,
-	                                    int startIndex,
-	                                    int endIndex,
-	                                    BiConsumer<Vector3, Matrix4> dynamicTransform) {
-		dynamicTransform(meshBuilder, startIndex, endIndex,
+			int startIndex,
+			int endIndex,
+			BiConsumer<Vector3, Matrix4> dynamicTransform) {
+		dynamicTransform(meshBuilder,
+				startIndex,
+				endIndex,
 				(position, transformOut, normalTransformOut) -> {
-			dynamicTransform.accept(position, transformOut);
-			normalTransformOut.set(transformOut).inv().tra();
-		});
+					dynamicTransform.accept(position, transformOut);
+					normalTransformOut.set(transformOut).inv().tra();
+				});
 	}
 
 	public static void dynamicTransform(MeshBuilder meshBuilder,
-	                                    BiConsumer<Vector3, Matrix4> dynamicTransform) {
+			BiConsumer<Vector3, Matrix4> dynamicTransform) {
 		dynamicTransform(meshBuilder, (position, transformOut, normalTransformOut) -> {
 			dynamicTransform.accept(position, transformOut);
 			normalTransformOut.set(transformOut).inv().tra();
@@ -484,14 +499,14 @@ public class MeshBuilderUtil {
 	}
 
 	public static void dynamicTransform(MeshBuilder meshBuilder,
-	                                    DynamicTransform dynamicTransform) {
+			DynamicTransform dynamicTransform) {
 		dynamicTransform(meshBuilder, 0, meshBuilder.getNumVertices(), dynamicTransform);
 	}
 
 	public static void dynamicTransform(MeshBuilder meshBuilder,
-	                                    int startIndex,
-	                                    int endIndex,
-	                                    DynamicTransform dynamicTransform) {
+			int startIndex,
+			int endIndex,
+			DynamicTransform dynamicTransform) {
 		int posOffset = ReflectionUtil.get(meshBuilder, "posOffset");
 		int norOffset = ReflectionUtil.get(meshBuilder, "norOffset");
 		int biNorOffset = ReflectionUtil.get(meshBuilder, "biNorOffset");
@@ -535,15 +550,16 @@ public class MeshBuilderUtil {
 	}
 
 	public static void dynamicTransformInterpolateUVs(MeshBuilder meshBuilder,
-	                                                  int startIndex,
-	                                                  int endIndex,
-	                                                  DynamicTransform dynamicTransform) {
+			int startIndex,
+			int endIndex,
+			DynamicTransform dynamicTransform) {
 		int posOffset = ReflectionUtil.get(meshBuilder, "posOffset");
 		int norOffset = ReflectionUtil.get(meshBuilder, "norOffset");
 		int biNorOffset = ReflectionUtil.get(meshBuilder, "biNorOffset");
 		int tangentOffset = ReflectionUtil.get(meshBuilder, "tangentOffset");
-		int uvOffset = meshBuilder.getAttributes()
-				.getOffset(VertexAttributes.Usage.TextureCoordinates, -1);
+		int uvOffset = meshBuilder.getAttributes().getOffset(
+				VertexAttributes.Usage.TextureCoordinates,
+				-1);
 		FloatArray vertices = ReflectionUtil.get(meshBuilder, "vertices");
 		ShortArray indices = ReflectionUtil.get(meshBuilder, "indices");
 
@@ -577,9 +593,15 @@ public class MeshBuilderUtil {
 					if(v1 != i && v2 != i && v3 != i)
 						continue;
 
-					BufferUtil.getVector2(vertices, v1 * meshBuilder.getFloatsPerVertex() + uvOffset, uv1);
-					BufferUtil.getVector2(vertices, v2 * meshBuilder.getFloatsPerVertex() + uvOffset, uv2);
-					BufferUtil.getVector2(vertices, v3 * meshBuilder.getFloatsPerVertex() + uvOffset, uv3);
+					BufferUtil.getVector2(vertices,
+							v1 * meshBuilder.getFloatsPerVertex() + uvOffset,
+							uv1);
+					BufferUtil.getVector2(vertices,
+							v2 * meshBuilder.getFloatsPerVertex() + uvOffset,
+							uv2);
+					BufferUtil.getVector2(vertices,
+							v3 * meshBuilder.getFloatsPerVertex() + uvOffset,
+							uv3);
 
 					int offset1 = v1 * meshBuilder.getFloatsPerVertex() + posOffset;
 					int offset2 = v2 * meshBuilder.getFloatsPerVertex() + posOffset;
@@ -617,7 +639,9 @@ public class MeshBuilderUtil {
 				if(triCount > 0) {
 					uv.scl(1f / triCount);
 
-					BufferUtil.putVector2(vertices, i * meshBuilder.getFloatsPerVertex() + uvOffset, uv);
+					BufferUtil.putVector2(vertices,
+							i * meshBuilder.getFloatsPerVertex() + uvOffset,
+							uv);
 				}
 			}
 
@@ -646,8 +670,11 @@ public class MeshBuilderUtil {
 		}
 	}
 
-	public static void addMeshWithOffset(MeshPartBuilder builder, Mesh mesh,
-	                                     float x, float y, float z) {
+	public static void addMeshWithOffset(MeshPartBuilder builder,
+			Mesh mesh,
+			float x,
+			float y,
+			float z) {
 		Vector3 tmpVec3 = new Vector3();
 		FloatArray tmpVertices = new FloatArray();
 		ShortArray tmpIndices = new ShortArray();
@@ -659,8 +686,8 @@ public class MeshBuilderUtil {
 		mesh.getVertices(tmpVertices.items);
 
 		for(int i = 0; i < mesh.getNumVertices(); i++) {
-			int offset = i * mesh.getVertexSize() / 4 +
-					mesh.getVertexAttribute(VertexAttributes.Usage.Position).offset / 4;
+			int offset = i * mesh.getVertexSize() / 4
+					+ mesh.getVertexAttribute(VertexAttributes.Usage.Position).offset / 4;
 
 			BufferUtil.getVector3(tmpVertices, offset, tmpVec3);
 			tmpVec3.add(x, y, z);
@@ -680,9 +707,9 @@ public class MeshBuilderUtil {
 	}
 
 	public static void addMeshWithTransform(MeshPartBuilder builder,
-	                                        Mesh mesh,
-	                                        Matrix4 transform,
-	                                        boolean flipTriangles) {
+			Mesh mesh,
+			Matrix4 transform,
+			boolean flipTriangles) {
 		if(mesh.getNumVertices() == 0 || mesh.getNumIndices() == 0)
 			return;
 
@@ -698,15 +725,16 @@ public class MeshBuilderUtil {
 		mesh.getVertices(tmpVertices.items);
 
 		for(int i = 0; i < mesh.getNumVertices(); i++) {
-			int offset = i * mesh.getVertexSize() / 4 +
-					mesh.getVertexAttribute(VertexAttributes.Usage.Position).offset / 4;
+			int offset = i * mesh.getVertexSize() / 4
+					+ mesh.getVertexAttribute(VertexAttributes.Usage.Position).offset / 4;
 
 			BufferUtil.getVector3(tmpVertices, offset, tmpVec3);
 			tmpVec3.mul(transform);
 			BufferUtil.putVector3(tmpVertices, offset, tmpVec3);
 
 			if(mesh.getVertexAttribute(VertexAttributes.Usage.Normal) != null) {
-				int norOffset = i * mesh.getVertexSize() / 4 + mesh.getVertexAttribute(VertexAttributes.Usage.Normal).offset / 4;
+				int norOffset = i * mesh.getVertexSize() / 4
+						+ mesh.getVertexAttribute(VertexAttributes.Usage.Normal).offset / 4;
 
 				BufferUtil.getVector3(tmpVertices, norOffset, tmpVec3);
 				tmpVec3.mul(invTrans);
@@ -732,13 +760,25 @@ public class MeshBuilderUtil {
 	}
 
 	public static void rect(MeshPartBuilder meshBuilder,
-	                         float x1, float y1, float z1,
-	                         float x2, float y2, float z2,
-	                         float x3, float y3, float z3,
-	                         float x4, float y4, float z4,
-	                         float nx, float ny, float nz,
-	                         float u1, float v1,
-	                         float u2, float v2) {
+			float x1,
+			float y1,
+			float z1,
+			float x2,
+			float y2,
+			float z2,
+			float x3,
+			float y3,
+			float z3,
+			float x4,
+			float y4,
+			float z4,
+			float nx,
+			float ny,
+			float nz,
+			float u1,
+			float v1,
+			float u2,
+			float v2) {
 		MeshPartBuilder.VertexInfo fVert1 = new MeshPartBuilder.VertexInfo();
 		MeshPartBuilder.VertexInfo fVert2 = new MeshPartBuilder.VertexInfo();
 		MeshPartBuilder.VertexInfo fVert3 = new MeshPartBuilder.VertexInfo();
@@ -755,10 +795,7 @@ public class MeshBuilderUtil {
 		fVert4.setPos(x4, y4, z4).setUV(u1, v1);
 
 		meshBuilder.ensureVertices(4);
-		meshBuilder.rect(fVert1,
-				fVert2,
-				fVert3,
-				fVert4);
+		meshBuilder.rect(fVert1, fVert2, fVert3, fVert4);
 	}
 
 	public static void setAllUVs(Mesh mesh, float u, float v) {
@@ -766,7 +803,7 @@ public class MeshBuilderUtil {
 		int uvOffset = mesh.getVertexAttribute(VertexAttributes.Usage.TextureCoordinates).offset;
 
 		for(int i = 0; i < mesh.getNumVertices(); i++) {
-			//noinspection RedundantCast
+			// noinspection RedundantCast
 			((Buffer)buffer).position(i * mesh.getVertexSize() / 4 + uvOffset / 4);
 			buffer.put(u);
 			buffer.put(v);
@@ -781,9 +818,15 @@ public class MeshBuilderUtil {
 		setAllUVs(meshBuilder, startIndex, meshBuilder.getNumVertices(), u, v);
 	}
 
-	public static void setAllUVs(MeshBuilder meshBuilder, int startIndex, int endIndex, float u, float v) {
+	public static void setAllUVs(MeshBuilder meshBuilder,
+			int startIndex,
+			int endIndex,
+			float u,
+			float v) {
 		FloatArray buffer = ReflectionUtil.get(meshBuilder, "vertices");
-		int uvOffset = meshBuilder.getAttributes().findByUsage(VertexAttributes.Usage.TextureCoordinates).offset;
+		int uvOffset = meshBuilder.getAttributes()
+							   .findByUsage(VertexAttributes.Usage.TextureCoordinates)
+							   .offset;
 
 		for(int i = startIndex; i < endIndex; i++) {
 			int pos = i * meshBuilder.getFloatsPerVertex() + uvOffset / 4;
@@ -797,25 +840,36 @@ public class MeshBuilderUtil {
 	}
 
 	public static void transformUVs(Mesh mesh, int startIndex, int endIndex, TextureRegion region) {
-		transformUVs(mesh, startIndex, endIndex,
-				region.getU(), region.getV(), region.getU2(), region.getV2());
+		transformUVs(mesh,
+				startIndex,
+				endIndex,
+				region.getU(),
+				region.getV(),
+				region.getU2(),
+				region.getV2());
 	}
 
 	public static void transformUVs(Mesh mesh, float u1, float v1, float u2, float v2) {
 		transformUVs(mesh, 0, mesh.getNumVertices(), u1, v1, u2, v2);
 	}
 
-	public static void transformUVs(Mesh mesh, int startIndex, int endIndex, float u1, float v1, float u2, float v2) {
+	public static void transformUVs(Mesh mesh,
+			int startIndex,
+			int endIndex,
+			float u1,
+			float v1,
+			float u2,
+			float v2) {
 		FloatBuffer buffer = mesh.getVerticesBuffer(true);
 		int uvOffset = mesh.getVertexAttribute(VertexAttributes.Usage.TextureCoordinates).offset;
 
 		for(int i = startIndex; i < endIndex; i++) {
 			int index = i * mesh.getVertexSize() / 4 + uvOffset / 4;
-			//noinspection RedundantCast
+			// noinspection RedundantCast
 			((Buffer)buffer).position(index);
 			float u = buffer.get();
 			float v = buffer.get();
-			//noinspection RedundantCast
+			// noinspection RedundantCast
 			((Buffer)buffer).position(index);
 			buffer.put(u * (u2 - u1) + u1);
 			buffer.put(v * (v2 - v1) + v1);
@@ -826,18 +880,38 @@ public class MeshBuilderUtil {
 		transformUVs(meshBuilder, 0, meshBuilder.getNumVertices(), region);
 	}
 
-	public static void transformUVs(MeshBuilder meshBuilder, int startIndex, int endIndex, TextureRegion region) {
-		transformUVs(meshBuilder, startIndex, endIndex,
-				region.getU(), region.getV(), region.getU2(), region.getV2());
+	public static void transformUVs(MeshBuilder meshBuilder,
+			int startIndex,
+			int endIndex,
+			TextureRegion region) {
+		transformUVs(meshBuilder,
+				startIndex,
+				endIndex,
+				region.getU(),
+				region.getV(),
+				region.getU2(),
+				region.getV2());
 	}
 
-	public static void transformUVs(MeshBuilder meshBuilder, float u1, float v1, float u2, float v2) {
+	public static void transformUVs(MeshBuilder meshBuilder,
+			float u1,
+			float v1,
+			float u2,
+			float v2) {
 		transformUVs(meshBuilder, 0, meshBuilder.getNumVertices(), u1, v1, u2, v2);
 	}
 
-	public static void transformUVs(MeshBuilder meshBuilder, int startIndex, int endIndex, float u1, float v1, float u2, float v2) {
+	public static void transformUVs(MeshBuilder meshBuilder,
+			int startIndex,
+			int endIndex,
+			float u1,
+			float v1,
+			float u2,
+			float v2) {
 		FloatArray buffer = ReflectionUtil.get(meshBuilder, "vertices");
-		int uvOffset = meshBuilder.getAttributes().findByUsage(VertexAttributes.Usage.TextureCoordinates).offset;
+		int uvOffset = meshBuilder.getAttributes()
+							   .findByUsage(VertexAttributes.Usage.TextureCoordinates)
+							   .offset;
 
 		for(int i = startIndex; i < endIndex; i++) {
 			int pos = i * meshBuilder.getFloatsPerVertex() + uvOffset / 4;
@@ -847,10 +921,12 @@ public class MeshBuilderUtil {
 	}
 
 	public static void transformConeUVsToCircular(MeshBuilder meshBuilder,
-	                                              int startIndex,
-	                                              int endIndex) {
+			int startIndex,
+			int endIndex) {
 		FloatArray buffer = ReflectionUtil.get(meshBuilder, "vertices");
-		int uvOffset = meshBuilder.getAttributes().findByUsage(VertexAttributes.Usage.TextureCoordinates).offset;
+		int uvOffset = meshBuilder.getAttributes()
+							   .findByUsage(VertexAttributes.Usage.TextureCoordinates)
+							   .offset;
 
 		for(int i = startIndex; i < endIndex; i++) {
 			int pos = i * meshBuilder.getFloatsPerVertex() + uvOffset / 4;
@@ -863,28 +939,27 @@ public class MeshBuilderUtil {
 				v = (MathUtils.sin(u * MathUtils.PI2) + 1f) / 2f;
 				u = (MathUtils.cos(u * MathUtils.PI2) + 1f) / 2f;
 			} else
-				throw new IllegalArgumentException("Provided meshBuilder has non cone UVs " +
-						"(" + u + ", " + v + ")");
+				throw new IllegalArgumentException("Provided meshBuilder has non cone UVs "
+						+ "(" + u + ", " + v + ")");
 
 			buffer.set(pos, u);
 			buffer.set(pos + 1, v);
 		}
 	}
 
-	public static int indexOfFirstMatchingNormal(Mesh mesh,
-	                                             Predicate<Vector3> predicate) {
+	public static int indexOfFirstMatchingNormal(Mesh mesh, Predicate<Vector3> predicate) {
 		return indexOfFirstMatchingNormal(mesh, 0, predicate);
 	}
 
 	public static int indexOfFirstMatchingNormal(Mesh mesh,
-	                                             int startIndex,
-	                                             Predicate<Vector3> predicate) {
+			int startIndex,
+			Predicate<Vector3> predicate) {
 		FloatBuffer buffer = mesh.getVerticesBuffer(true);
 		int norOffset = mesh.getVertexAttribute(VertexAttributes.Usage.Normal).offset;
 		Vector3 normal = new Vector3();
 
 		for(int i = startIndex; i < mesh.getNumVertices(); i++) {
-			//noinspection RedundantCast
+			// noinspection RedundantCast
 			((Buffer)buffer).position(i * mesh.getVertexSize() / 4 + norOffset / 4);
 			float x = buffer.get();
 			float y = buffer.get();
@@ -901,15 +976,17 @@ public class MeshBuilderUtil {
 	}
 
 	public static int indexOfFirstMatchingNormal(MeshBuilder meshBuilder,
-	                                             Predicate<Vector3> predicate) {
+			Predicate<Vector3> predicate) {
 		return indexOfFirstMatchingNormal(meshBuilder, 0, predicate);
 	}
 
 	public static int indexOfFirstMatchingNormal(MeshBuilder meshBuilder,
-	                                             int startIndex,
-	                                             Predicate<Vector3> predicate) {
+			int startIndex,
+			Predicate<Vector3> predicate) {
 		FloatArray buffer = ReflectionUtil.get(meshBuilder, "vertices");
-		int norOffset = meshBuilder.getAttributes().findByUsage(VertexAttributes.Usage.Normal).offset;
+		int norOffset = meshBuilder.getAttributes()
+								.findByUsage(VertexAttributes.Usage.Normal)
+								.offset;
 		Vector3 normal = new Vector3();
 
 		for(int i = startIndex; i < meshBuilder.getNumVertices(); i++) {
@@ -929,75 +1006,131 @@ public class MeshBuilderUtil {
 	}
 
 	public static Model createTwoTexturedCylinder(ModelBuilder builder,
-	                                              float width, float height, float depth,
-	                                              int divisions,
-												  Material material,
-												  long attributes,
-	                                              TextureRegion sideRegion,
-	                                              TextureRegion topRegion) {
-		Model cylinder = builder.createCylinder(width, height, depth, divisions,
-				material, attributes);
+			float width,
+			float height,
+			float depth,
+			int divisions,
+			Material material,
+			long attributes,
+			TextureRegion sideRegion,
+			TextureRegion topRegion) {
+		Model cylinder = builder.createCylinder(width,
+				height,
+				depth,
+				divisions,
+				material,
+				attributes);
 		int index = MeshBuilderUtil.indexOfFirstMatchingNormal(cylinder.meshes.get(0),
 				nor -> abs(nor.y) == 1f);
 
 		if(index == -1)
-			throw new IllegalStateException("Failure to identify index of start of top and " +
-					"bottom in generated cylinder mesh");
+			throw new IllegalStateException("Failure to identify index of start of top and "
+					+ "bottom in generated cylinder mesh");
 		MeshBuilderUtil.transformUVs(cylinder.meshes.get(0), 0, index, sideRegion);
-		MeshBuilderUtil.transformUVs(cylinder.meshes.get(0), index,
-				cylinder.meshes.get(0).getNumVertices(), topRegion);
+		MeshBuilderUtil.transformUVs(cylinder.meshes.get(0),
+				index,
+				cylinder.meshes.get(0).getNumVertices(),
+				topRegion);
 		return cylinder;
 	}
 
 	public static void createTwoTexturedCylinder(MeshBuilder builder,
-	                                             float width, float height, float depth,
-	                                             int divisions,
-	                                             TextureRegion sideRegion,
-	                                             TextureRegion topRegion) {
+			float width,
+			float height,
+			float depth,
+			int divisions,
+			TextureRegion sideRegion,
+			TextureRegion topRegion) {
 		int startIndex = builder.getNumVertices();
 		CylinderShapeBuilder.build(builder, width, height, depth, divisions);
-		int index = MeshBuilderUtil.indexOfFirstMatchingNormal(builder, startIndex,
+		int index = MeshBuilderUtil.indexOfFirstMatchingNormal(builder,
+				startIndex,
 				nor -> abs(nor.y) == 1f);
 
 		if(index == -1)
-			throw new IllegalStateException("Failure to identify index of start of top and " +
-					"bottom in generated cylinder mesh");
+			throw new IllegalStateException("Failure to identify index of start of top and "
+					+ "bottom in generated cylinder mesh");
 		MeshBuilderUtil.transformUVs(builder, startIndex, index, sideRegion);
 		MeshBuilderUtil.transformUVs(builder, index, builder.getNumVertices(), topRegion);
 	}
 
 	public static void createTippedCylinder(MeshBuilder builder,
-	                                        float width, float height, float depth,
-	                                        float tipHeight,
-	                                        int divisions,
-	                                        TextureRegion sideRegion,
-	                                        TextureRegion topTipRegion,
-	                                        TextureRegion bottomTipRegion,
-											boolean flipBottomRegion,
-	                                        TextureRegion topRegion) {
+			float width,
+			float height,
+			float depth,
+			float tipHeight,
+			int divisions,
+			TextureRegion sideRegion,
+			TextureRegion topTipRegion,
+			TextureRegion bottomTipRegion,
+			boolean flipBottomRegion,
+			TextureRegion topRegion) {
 		if(height < tipHeight * 2f)
 			throw new IllegalArgumentException("height must be greater than twice the tipHeight");
 
 		Matrix4 tmpMat4 = new Matrix4();
 
 		int startIndex = builder.getNumVertices();
-		CylinderShapeBuilder.build(builder, width, height - tipHeight * 2f, depth, divisions, 0f, 360f, false);
-		MeshBuilderUtil.transform(builder, tmpMat4.setToTranslation(0f, -height / 2f + tipHeight / 2f, 0f));
+		CylinderShapeBuilder.build(builder,
+				width,
+				height - tipHeight * 2f,
+				depth,
+				divisions,
+				0f,
+				360f,
+				false);
+		MeshBuilderUtil.transform(builder,
+				tmpMat4.setToTranslation(0f, -height / 2f + tipHeight / 2f, 0f));
 		int sideIndex = builder.getNumVertices();
 
 		CylinderShapeBuilder.build(builder, width, tipHeight, depth, divisions, 0f, 360f, false);
 		MeshBuilderUtil.transform(builder, tmpMat4.setToTranslation(0f, height - tipHeight, 0f));
 		int tipIndex = builder.getNumVertices();
 		CylinderShapeBuilder.build(builder, width, tipHeight, depth, divisions, 0f, 360f, false);
-		MeshBuilderUtil.transform(builder, tmpMat4.setToTranslation(0f, -height / 2f + tipHeight / 2f, 0f));
+		MeshBuilderUtil.transform(builder,
+				tmpMat4.setToTranslation(0f, -height / 2f + tipHeight / 2f, 0f));
 		int bottomTipIndex = builder.getNumVertices();
 
 		EllipseShapeBuilder.build(builder,
-				width, depth, 0, 0, divisions,
-				0, height / 2f, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0f, 360f);
+				width,
+				depth,
+				0,
+				0,
+				divisions,
+				0,
+				height / 2f,
+				0,
+				0,
+				1,
+				0,
+				1,
+				0,
+				0,
+				0,
+				0,
+				1,
+				0f,
+				360f);
 		EllipseShapeBuilder.build(builder,
-				width, depth, 0, 0, divisions,
-				0, -height / 2f, 0, 0, -1, 0, -1, 0, 0, 0, 0, 1, -180f, 180f);
+				width,
+				depth,
+				0,
+				0,
+				divisions,
+				0,
+				-height / 2f,
+				0,
+				0,
+				-1,
+				0,
+				-1,
+				0,
+				0,
+				0,
+				0,
+				1,
+				-180f,
+				180f);
 
 		MeshBuilderUtil.transformUVs(builder, startIndex, sideIndex, sideRegion);
 		MeshBuilderUtil.transformUVs(builder, sideIndex, tipIndex, topTipRegion);
@@ -1008,7 +1141,9 @@ public class MeshBuilderUtil {
 	}
 
 	public static void createSixSidedBox(MeshBuilder builder,
-	                                     float width, float height, float depth) {
+			float width,
+			float height,
+			float depth) {
 		Vector3 position = new Vector3();
 		Vector3 perp1 = new Vector3();
 		Vector3 perp2 = new Vector3();
@@ -1055,18 +1190,20 @@ public class MeshBuilderUtil {
 		return attrs;
 	}
 
-	public static void dynamicUVTransform(MeshBuilder partBuilder,
-	                                      DynamicUVTransform uvTransform) {
+	public static void dynamicUVTransform(MeshBuilder partBuilder, DynamicUVTransform uvTransform) {
 		dynamicUVTransform(partBuilder, 0, partBuilder.getNumVertices(), uvTransform);
 	}
 
 	public static void dynamicUVTransform(MeshBuilder meshBuilder,
-	                                      int startIndex,
-	                                      int endIndex,
-	                                      DynamicUVTransform uvTransform) {
+			int startIndex,
+			int endIndex,
+			DynamicUVTransform uvTransform) {
 		int posOffset = ReflectionUtil.get(meshBuilder, "posOffset");
 		int norOffset = ReflectionUtil.get(meshBuilder, "norOffset");
-		int uvOffset = meshBuilder.getAttributes().findByUsage(VertexAttributes.Usage.TextureCoordinates).offset / 4;
+		int uvOffset = meshBuilder.getAttributes()
+							   .findByUsage(VertexAttributes.Usage.TextureCoordinates)
+							   .offset
+				/ 4;
 		FloatArray vertices = ReflectionUtil.get(meshBuilder, "vertices");
 
 		Vector3 pos = new Vector3(), nor = new Vector3();
@@ -1085,7 +1222,6 @@ public class MeshBuilderUtil {
 		}
 	}
 
-
 	/**
 	 * Subdivides the edge by adding a new vertex at the mid point. See
 	 * {@link #subdivideEdge(MeshBuilder, short, short, MeshPartBuilder.VertexInfo)} for more info.
@@ -1096,9 +1232,7 @@ public class MeshBuilderUtil {
 	 * @param vB id of second vertex in the edge
 	 * @return id of vertex that was added or -1 if the edge was not found
 	 */
-	public static short subdivideEdge(MeshBuilder meshBuilder,
-	                                 short vA,
-	                                 short vB) {
+	public static short subdivideEdge(MeshBuilder meshBuilder, short vA, short vB) {
 		return subdivideEdge(meshBuilder, vA, vB, null);
 	}
 
@@ -1122,13 +1256,13 @@ public class MeshBuilderUtil {
 	 * @return id of vertex that was added or -1 if the edge was not found
 	 */
 	public static short subdivideEdge(MeshBuilder meshBuilder,
-	                                 short vA,
-	                                 short vB,
-	                                 MeshPartBuilder.VertexInfo newVertex) {
+			short vA,
+			short vB,
+			MeshPartBuilder.VertexInfo newVertex) {
 		ensureNotNull(meshBuilder, "meshBuilder");
 		if(vA == vB)
-			throw new IllegalArgumentException("Vertices A and B must be the bounds of an edge " +
-					"and cannot be the same");
+			throw new IllegalArgumentException("Vertices A and B must be the bounds of an edge "
+					+ "and cannot be the same");
 
 		if(newVertex == null) {
 			FloatArray vertices = ReflectionUtil.get(meshBuilder, "vertices");
@@ -1143,22 +1277,34 @@ public class MeshBuilderUtil {
 			Vector2 uv2 = new Vector2();
 
 			if(posOffset != -1) {
-				BufferUtil.getVector3(vertices, vA * meshBuilder.getFloatsPerVertex() + posOffset, v1);
-				BufferUtil.getVector3(vertices, vB * meshBuilder.getFloatsPerVertex() + posOffset, v2);
+				BufferUtil.getVector3(vertices,
+						vA * meshBuilder.getFloatsPerVertex() + posOffset,
+						v1);
+				BufferUtil.getVector3(vertices,
+						vB * meshBuilder.getFloatsPerVertex() + posOffset,
+						v2);
 				newVertex.position.set(v1).scl(0.5f).mulAdd(v2, 0.5f);
 				newVertex.hasPosition = true;
 			}
 
 			if(norOffset != -1) {
-				BufferUtil.getVector3(vertices, vA * meshBuilder.getFloatsPerVertex() + norOffset, v1);
-				BufferUtil.getVector3(vertices, vB * meshBuilder.getFloatsPerVertex() + norOffset, v2);
+				BufferUtil.getVector3(vertices,
+						vA * meshBuilder.getFloatsPerVertex() + norOffset,
+						v1);
+				BufferUtil.getVector3(vertices,
+						vB * meshBuilder.getFloatsPerVertex() + norOffset,
+						v2);
 				newVertex.normal.set(v1).scl(0.5f).mulAdd(v2, 0.5f).nor();
 				newVertex.hasNormal = true;
 			}
 
 			if(uvOffset != -1) {
-				BufferUtil.getVector2(vertices, vA * meshBuilder.getFloatsPerVertex() + uvOffset, uv1);
-				BufferUtil.getVector2(vertices, vB * meshBuilder.getFloatsPerVertex() + uvOffset, uv2);
+				BufferUtil.getVector2(vertices,
+						vA * meshBuilder.getFloatsPerVertex() + uvOffset,
+						uv1);
+				BufferUtil.getVector2(vertices,
+						vB * meshBuilder.getFloatsPerVertex() + uvOffset,
+						uv2);
 				newVertex.uv.set(uv1).scl(0.5f).mulAdd(uv2, 0.5f);
 				newVertex.hasUV = true;
 			}
@@ -1207,14 +1353,11 @@ public class MeshBuilderUtil {
 
 	@FunctionalInterface
 	public interface DynamicTransform {
-		void transform(Vector3 position,
-		               Matrix4 transformOut,
-		               Matrix4 normalTransformOut);
+		void transform(Vector3 position, Matrix4 transformOut, Matrix4 normalTransformOut);
 	}
 
 	@FunctionalInterface
 	public interface DynamicUVTransform {
 		void transform(Vector3 position, Vector3 normal, Vector2 uv);
 	}
-
 }

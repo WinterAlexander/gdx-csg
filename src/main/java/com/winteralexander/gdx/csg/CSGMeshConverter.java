@@ -115,11 +115,13 @@ public class CSGMeshConverter {
 
 		return new CSGMesh(vertices, faces, mesh.getVertexAttributes());
 	}
+
 	public static CSGMesh partBuilderToCSGMesh(MeshPartBuilder partBuilder) {
 		return partBuilderToCSGMesh(partBuilder, null);
 	}
 
-	public static CSGMesh partBuilderToCSGMesh(MeshPartBuilder partBuilder, IntArray vertexIndices) {
+	public static CSGMesh partBuilderToCSGMesh(MeshPartBuilder partBuilder,
+			IntArray vertexIndices) {
 		if(!(partBuilder instanceof MeshBuilder))
 			throw new IllegalArgumentException("Unsupported builder: " + partBuilder);
 
@@ -141,7 +143,7 @@ public class CSGMeshConverter {
 
 		int otherAttrCount = builder.getFloatsPerVertex()
 				- (3 + (norOffset == -1 ? 0 : 3) + (biNorOffset == -1 ? 0 : 3)
-				+ (tanOffset == -1 ? 0 : 3));
+						+ (tanOffset == -1 ? 0 : 3));
 
 		int count = vertexIndices == null ? builder.getNumVertices() : vertexIndices.size;
 		for(int i = 0; i < count; i++) {
@@ -388,7 +390,9 @@ public class CSGMeshConverter {
 		tmpVertexIndices.clear();
 	}
 
-	public static void csgMeshToPartBuilder(CSGMesh csgMesh, MeshPartBuilder partBuilder, IntArray insertIndices) {
+	public static void csgMeshToPartBuilder(CSGMesh csgMesh,
+			MeshPartBuilder partBuilder,
+			IntArray insertIndices) {
 		if(insertIndices == null) {
 			csgMeshToPartBuilder(csgMesh, partBuilder);
 			return;
@@ -414,7 +418,8 @@ public class CSGMeshConverter {
 		tmpDeadTriangles.clear();
 		getTrianglesOfVertices(idxBuffer, insertVerticesSet, tmpDeadTriangles);
 
-		buffer.ensureCapacity(Math.max(0, (csgMesh.getVertices().size - insertIndices.size) * vertexSize));
+		buffer.ensureCapacity(Math.max(0,
+				(csgMesh.getVertices().size - insertIndices.size) * vertexSize));
 		for(int i = 0; i < csgMesh.getVertices().size; i++) {
 			MeshVertex vertex = csgMesh.getVertices().get(i);
 
@@ -431,7 +436,8 @@ public class CSGMeshConverter {
 		if(csgMesh.getVertices().size < insertIndices.size)
 			buffer.setSize((insertIndices.get(csgMesh.getVertices().size - 1) + 1) * vertexSize);
 
-		idxBuffer.ensureCapacity(Math.max(0, (csgMesh.getFaces().size - tmpDeadTriangles.size) * 3));
+		idxBuffer.ensureCapacity(Math.max(0,
+				(csgMesh.getFaces().size - tmpDeadTriangles.size) * 3));
 		for(int i = 0; i < csgMesh.getFaces().size; i++) {
 			int index = idxBuffer.size / 3;
 			if(i < tmpDeadTriangles.size)
@@ -458,8 +464,8 @@ public class CSGMeshConverter {
 	}
 
 	private static void getTrianglesOfVertices(ShortArray idxBuffer,
-	                                           IntSet indices,
-	                                           IntArray outTriangles) {
+			IntSet indices,
+			IntArray outTriangles) {
 		for(int tri = 0; tri < idxBuffer.size / 3; tri++) {
 			int v1 = idxBuffer.get(tri * 3);
 			int v2 = idxBuffer.get(tri * 3 + 1);
@@ -510,16 +516,15 @@ public class CSGMeshConverter {
 		}
 	}
 
-
 	private static void readVertex(MeshBuilder builder,
-	                               FloatArray buffer,
-	                               VertexAttributes attrs,
-	                               int posOffset,
-	                               int norOffset,
-	                               int biNorOffset,
-	                               int tanOffset,
-	                               int vertexIndex,
-	                               MeshVertex out) {
+			FloatArray buffer,
+			VertexAttributes attrs,
+			int posOffset,
+			int norOffset,
+			int biNorOffset,
+			int tanOffset,
+			int vertexIndex,
+			MeshVertex out) {
 
 		BufferUtil.getVector3(buffer,
 				vertexIndex * builder.getFloatsPerVertex() + posOffset,
@@ -557,10 +562,10 @@ public class CSGMeshConverter {
 	}
 
 	private static void writeVertex(FloatArray buffer,
-	                                MeshVertex vertex,
-	                                int index,
-	                                int vertexSize,
-	                                VertexAttributes attributes) {
+			MeshVertex vertex,
+			int index,
+			int vertexSize,
+			VertexAttributes attributes) {
 		int posOffset = attributes.getOffset(VertexAttributes.Usage.Position, -1);
 		int norOffset = attributes.getOffset(VertexAttributes.Usage.Normal, -1);
 		int biNorOffset = attributes.getOffset(VertexAttributes.Usage.BiNormal, -1);
@@ -592,9 +597,9 @@ public class CSGMeshConverter {
 	}
 
 	private static void writeFace(ShortArray idxBuffer,
-	                              MeshFace face,
-	                              int index,
-	                              ObjectIntMap<MeshVertex> vertexIndices) {
+			MeshFace face,
+			int index,
+			ObjectIntMap<MeshVertex> vertexIndices) {
 
 		int idx1 = vertexIndices.get(face.getV1(), -1);
 		int idx2 = vertexIndices.get(face.getV2(), -1);
@@ -609,5 +614,4 @@ public class CSGMeshConverter {
 		idxBuffer.set(index * 3 + 1, (short)idx2);
 		idxBuffer.set(index * 3 + 2, (short)idx3);
 	}
-
 }

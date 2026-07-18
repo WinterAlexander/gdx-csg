@@ -167,13 +167,15 @@ public class CSGMesh implements Serializable {
 					continue;
 
 				if(intersectTriangleTriangle(face.getTriangle(),
-						otherFace.getTriangle(),
-						config.tolerance,
-						intersectSegment) != COPLANAR_FACE_FACE)
+						   otherFace.getTriangle(),
+						   config.tolerance,
+						   intersectSegment)
+						!= COPLANAR_FACE_FACE)
 					continue;
 
 				overlapTris.add(otherFace.getTriangle());
-				coveredArea += Intersector3D.computeOverlapArea(face.getTriangle(), otherFace.getTriangle());
+				coveredArea += Intersector3D.computeOverlapArea(face.getTriangle(),
+						otherFace.getTriangle());
 			}
 
 			coveredArea /= face.getTriangle().getArea();
