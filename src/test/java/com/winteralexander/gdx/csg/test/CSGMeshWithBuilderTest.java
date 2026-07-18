@@ -329,10 +329,10 @@ public class CSGMeshWithBuilderTest {
 				insideTestDirection.set(1f, 0f, 0f);
 			}
 		});
-		CSGMeshViewer.start(result);
+		// CSGMeshViewer.start(result);
 
 		result.toBuilder(partBuilder,
 				CollectionUtil.arrayFromRange(0, partBuilder.getNumVertices()));
-		ModelViewer.start(builder);
+		// ModelViewer.start(builder);
 	}
 }
