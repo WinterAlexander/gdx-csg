@@ -154,6 +154,14 @@ public class CSGMeshWithBuilderTest {
 		float ROOF_HEIGHT = 0.5f;
 
 		int startIdx = partBuilder.getNumVertices();
+
+		tmpV0.set(0f, -1f, 0f);
+		tmpV1.set(-BOTTOM_WIDTH / 2f, 0f, -BOTTOM_WIDTH / 2f);
+		tmpV2.set(BOTTOM_WIDTH / 2f, 0f, -BOTTOM_WIDTH / 2f);
+		tmpV3.set(-BOTTOM_WIDTH / 2f, 0f, BOTTOM_WIDTH / 2f);
+		tmpV4.set(BOTTOM_WIDTH / 2f, 0f, BOTTOM_WIDTH / 2f);
+		MeshBuilderUtil.quad(partBuilder, tmpV1, tmpV2, tmpV4, tmpV3, tmpV0);
+
 		tmpV0.set(0f, 0f, 1f);
 		tmpV1.set(-BOTTOM_WIDTH / 2f, 0f, BOTTOM_WIDTH / 2f);
 		tmpV2.set(BOTTOM_WIDTH / 2f, 0f, BOTTOM_WIDTH / 2f);
@@ -279,7 +287,9 @@ public class CSGMeshWithBuilderTest {
 		CSGMesh cube = CSGMesh.fromBuilder(partBuilder,
 				CollectionUtil.arrayFromRange(houseEnd, partBuilder.getNumVertices()));
 
-		CSGMesh result = CSGUtil.subtraction(house, cube);
+		CSGMesh result = CSGUtil.subtraction(house, cube, new CSGConfiguration() {{
+			insideTestDirection.set(1f, 0f, 0f);
+		}});
 		CSGMeshViewer.start(result);
 
 		result.toBuilder(partBuilder, CollectionUtil.arrayFromRange(0, partBuilder.getNumVertices()));
