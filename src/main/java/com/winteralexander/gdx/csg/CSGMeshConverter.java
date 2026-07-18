@@ -433,7 +433,7 @@ public class CSGMeshConverter {
 
 		idxBuffer.ensureCapacity(Math.max(0, (csgMesh.getFaces().size - tmpDeadTriangles.size) * 3));
 		for(int i = 0; i < csgMesh.getFaces().size; i++) {
-			int index = idxBuffer.size / 3 + 1;
+			int index = idxBuffer.size / 3;
 			if(i < tmpDeadTriangles.size)
 				index = tmpDeadTriangles.get(i);
 
