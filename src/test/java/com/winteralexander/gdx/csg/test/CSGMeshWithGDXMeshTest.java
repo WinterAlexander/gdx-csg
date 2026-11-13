@@ -44,7 +44,7 @@ import static org.junit.Assert.assertNotSame;
  *
  * @author Alexander Winter
  */
-@Ignore
+//@Ignore
 public class CSGMeshWithGDXMeshTest {
 
 	private final static int DEFAULT_ATTRIBUTES = VertexAttributes.Usage.Position

@@ -17,12 +17,12 @@
         <dependency>
             <groupId>com.badlogicgames.gdx</groupId>
             <artifactId>gdx</artifactId>
-            <version>[1.13.0, 1.14.0)</version>
+            <version>[1.14.0, 1.15.0)</version>
         </dependency>
         <dependency>
             <groupId>com.github.WinterAlexander</groupId>
             <artifactId>gdx-utils</artifactId>
-            <version>[15.8.0, 16.0.0)</version>
+            <version>[16.0.0, 17.0.0)</version>
         </dependency>
         <!-- Test dependencies -->
         <dependency>
@@ -34,13 +34,13 @@
         <dependency>
             <groupId>com.badlogicgames.gdx</groupId>
             <artifactId>gdx-backend-lwjgl</artifactId>
-            <version>[1.13.0, 1.14.0)</version>
+            <version>[1.14.0, 1.15.0)</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.badlogicgames.gdx</groupId>
             <artifactId>gdx-platform</artifactId>
-            <version>[1.13.0, 1.14.0)</version>
+            <version>[1.14.0, 1.15.0)</version>
             <classifier>natives-desktop</classifier>
             <scope>test</scope>
         </dependency>
