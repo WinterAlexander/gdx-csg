@@ -29,6 +29,7 @@ import org.lwjgl.opengl.Display;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.nio.Buffer;
 import java.nio.FloatBuffer;
 
 import static com.badlogic.gdx.graphics.GL20.GL_TRIANGLES;
@@ -627,7 +628,8 @@ public class CSGMeshWithGDXMeshTest {
 		for(Mesh mesh : box.meshes) {
 			FloatBuffer buffer = mesh.getVerticesBuffer(true);
 			for(int i = 0; i < mesh.getNumVertices(); i++) {
-				buffer.position(i * mesh.getVertexSize() / 4
+				//noinspection RedundantCast
+				((Buffer)buffer).position(i * mesh.getVertexSize() / 4
 						+ mesh.getVertexAttribute(VertexAttributes.Usage.ColorPacked).offset / 4);
 
 				buffer.put(Color.RED.toFloatBits());
@@ -646,7 +648,8 @@ public class CSGMeshWithGDXMeshTest {
 		for(Mesh mesh : sphere.meshes) {
 			FloatBuffer buffer = mesh.getVerticesBuffer(true);
 			for(int i = 0; i < mesh.getNumVertices(); i++) {
-				buffer.position(i * mesh.getVertexSize() / 4
+				//noinspection RedundantCast
+				((Buffer)buffer).position(i * mesh.getVertexSize() / 4
 						+ mesh.getVertexAttribute(VertexAttributes.Usage.ColorPacked).offset / 4);
 
 				buffer.put(Color.BLUE.toFloatBits());
@@ -664,7 +667,8 @@ public class CSGMeshWithGDXMeshTest {
 		for(Mesh mesh : cylinder.meshes) {
 			FloatBuffer buffer = mesh.getVerticesBuffer(true);
 			for(int i = 0; i < mesh.getNumVertices(); i++) {
-				buffer.position(i * mesh.getVertexSize() / 4
+				//noinspection RedundantCast
+				((Buffer)buffer).position(i * mesh.getVertexSize() / 4
 						+ mesh.getVertexAttribute(VertexAttributes.Usage.ColorPacked).offset / 4);
 
 				buffer.put(Color.GREEN.toFloatBits());

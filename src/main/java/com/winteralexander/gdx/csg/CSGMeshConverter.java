@@ -211,26 +211,30 @@ public class CSGMeshConverter {
 		tmpVertexIndices.clear();
 		for(int i = 0; i < vertices.size; i++) {
 			MeshVertex vertex = vertices.get(i);
-			buffer.position(vOffset + i * vertexSize + posOffset);
+			//noinspection RedundantCast
+			((Buffer)buffer).position(vOffset + i * vertexSize + posOffset);
 			buffer.put(vertex.getPosition().x);
 			buffer.put(vertex.getPosition().y);
 			buffer.put(vertex.getPosition().z);
 			if(norOffset != -1) {
-				buffer.position(vOffset + i * vertexSize + norOffset);
+				//noinspection RedundantCast
+				((Buffer)buffer).position(vOffset + i * vertexSize + norOffset);
 				buffer.put(vertex.getNormal().x);
 				buffer.put(vertex.getNormal().y);
 				buffer.put(vertex.getNormal().z);
 			}
 
 			if(biNorOffset != -1) {
-				buffer.position(vOffset + i * vertexSize + biNorOffset);
+				//noinspection RedundantCast
+				((Buffer)buffer).position(vOffset + i * vertexSize + biNorOffset);
 				buffer.put(vertex.getBinormal().x);
 				buffer.put(vertex.getBinormal().y);
 				buffer.put(vertex.getBinormal().z);
 			}
 
 			if(tanOffset != -1) {
-				buffer.position(vOffset + i * vertexSize + tanOffset);
+				//noinspection RedundantCast
+				((Buffer)buffer).position(vOffset + i * vertexSize + tanOffset);
 				buffer.put(vertex.getTangent().x);
 				buffer.put(vertex.getTangent().y);
 				buffer.put(vertex.getTangent().z);
@@ -243,7 +247,8 @@ public class CSGMeshConverter {
 						|| attr.usage == VertexAttributes.Usage.Tangent)
 					continue;
 
-				buffer.position(vOffset + i * vertexSize + attr.offset / 4);
+				//noinspection RedundantCast
+				((Buffer)buffer).position(vOffset + i * vertexSize + attr.offset / 4);
 				for(int k = 0; k < attr.getSizeInBytes() / 4; k++)
 					buffer.put(vertex.getOtherAttributes()[j++]);
 			}
@@ -255,7 +260,8 @@ public class CSGMeshConverter {
 
 		for(int i = 0; i < faces.size; i++) {
 			MeshFace face = faces.get(i);
-			idxBuffer.position(fOffset + i * 3);
+			//noinspection RedundantCast
+			((Buffer)idxBuffer).position(fOffset + i * 3);
 
 			int idx1 = tmpVertexIndices.get(face.getV1(), -1);
 			int idx2 = tmpVertexIndices.get(face.getV2(), -1);
@@ -306,26 +312,30 @@ public class CSGMeshConverter {
 		tmpVertexIndices.clear();
 		for(int i = 0; i < vertices.size; i++) {
 			MeshVertex vertex = vertices.get(i);
-			buffer.position(i * vertexSize + posOffset);
+			//noinspection RedundantCast
+			((Buffer)buffer).position(i * vertexSize + posOffset);
 			buffer.put(vertex.getPosition().x);
 			buffer.put(vertex.getPosition().y);
 			buffer.put(vertex.getPosition().z);
 			if(norOffset != -1) {
-				buffer.position(i * vertexSize + norOffset);
+				//noinspection RedundantCast
+				((Buffer)buffer).position(i * vertexSize + norOffset);
 				buffer.put(vertex.getNormal().x);
 				buffer.put(vertex.getNormal().y);
 				buffer.put(vertex.getNormal().z);
 			}
 
 			if(biNorOffset != -1) {
-				buffer.position(i * vertexSize + biNorOffset);
+				//noinspection RedundantCast
+				((Buffer)buffer).position(i * vertexSize + biNorOffset);
 				buffer.put(vertex.getBinormal().x);
 				buffer.put(vertex.getBinormal().y);
 				buffer.put(vertex.getBinormal().z);
 			}
 
 			if(tanOffset != -1) {
-				buffer.position(i * vertexSize + tanOffset);
+				//noinspection RedundantCast
+				((Buffer)buffer).position(i * vertexSize + tanOffset);
 				buffer.put(vertex.getTangent().x);
 				buffer.put(vertex.getTangent().y);
 				buffer.put(vertex.getTangent().z);
@@ -338,7 +348,8 @@ public class CSGMeshConverter {
 						|| attr.usage == VertexAttributes.Usage.Tangent)
 					continue;
 
-				buffer.position(i * vertexSize + attr.offset / 4);
+				//noinspection RedundantCast
+				((Buffer)buffer).position(i * vertexSize + attr.offset / 4);
 				for(int k = 0; k < attr.getSizeInBytes() / 4; k++)
 					buffer.put(vertex.getOtherAttributes()[j++]);
 			}
@@ -348,7 +359,8 @@ public class CSGMeshConverter {
 
 		for(int i = 0; i < faces.size; i++) {
 			MeshFace face = faces.get(i);
-			idxBuffer.position(i * 3);
+			//noinspection RedundantCast
+			((Buffer)idxBuffer).position(i * 3);
 
 			int idx1 = tmpVertexIndices.get(face.getV1(), -1);
 			int idx2 = tmpVertexIndices.get(face.getV2(), -1);
