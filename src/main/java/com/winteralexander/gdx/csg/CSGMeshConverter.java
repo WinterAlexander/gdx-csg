@@ -11,6 +11,7 @@ import com.winteralexander.gdx.utils.BufferUtil;
 import com.winteralexander.gdx.utils.ReflectionUtil;
 import com.winteralexander.gdx.utils.collection.CollectionUtil;
 
+import java.nio.Buffer;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 import java.util.UUID;
@@ -200,8 +201,10 @@ public class CSGMeshConverter {
 		int biNorOffset = biNorAttr == null ? -1 : biNorAttr.offset / 4;
 		int tanOffset = tanAttr == null ? -1 : tanAttr.offset / 4;
 
-		buffer.limit((mesh.getNumVertices() + vertices.size) * vertexSize);
-		idxBuffer.limit(mesh.getNumIndices() + faces.size * 3);
+		//noinspection RedundantCast
+		((Buffer)buffer).limit((mesh.getNumVertices() + vertices.size) * vertexSize);
+		//noinspection RedundantCast
+		((Buffer)idxBuffer).limit(mesh.getNumIndices() + faces.size * 3);
 
 		int vOffset = mesh.getNumVertices() * vertexSize;
 
@@ -295,8 +298,10 @@ public class CSGMeshConverter {
 		int biNorOffset = biNorAttr == null ? -1 : biNorAttr.offset / 4;
 		int tanOffset = tanAttr == null ? -1 : tanAttr.offset / 4;
 
-		buffer.limit(vertices.size * vertexSize);
-		idxBuffer.limit(faces.size * 3);
+		//noinspection RedundantCast
+		((Buffer)buffer).limit(vertices.size * vertexSize);
+		//noinspection RedundantCast
+		((Buffer)idxBuffer).limit(faces.size * 3);
 
 		tmpVertexIndices.clear();
 		for(int i = 0; i < vertices.size; i++) {
