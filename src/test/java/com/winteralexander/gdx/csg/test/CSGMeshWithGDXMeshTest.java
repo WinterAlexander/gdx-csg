@@ -45,7 +45,7 @@ import static org.junit.Assert.assertNotSame;
  *
  * @author Alexander Winter
  */
-//@Ignore
+@Ignore("not headless")
 public class CSGMeshWithGDXMeshTest {
 
 	private final static int DEFAULT_ATTRIBUTES = VertexAttributes.Usage.Position
@@ -688,7 +688,6 @@ public class CSGMeshWithGDXMeshTest {
 		cylMesh.transform(new Matrix4().setToRotation(new Vector3(0f, 1f, 0f), 90f));
 
 		CSGMesh cylinder3 = CSGMesh.fromMesh(cylMesh);
-		;
 
 		CSGMesh roundedBox = CSGUtil.intersection(boxCSG, sphereCSG);
 
